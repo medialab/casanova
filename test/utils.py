@@ -1,5 +1,3 @@
 # =============================================================================
-# Casanova Library Endpoint
+# Casanova Unit Tests Utilities
 # =============================================================================
-#
-from casanova.reader import CasanovaReader as reader
