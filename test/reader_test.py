@@ -28,6 +28,16 @@ class TestReader(object):
 
             assert surnames == ['Matthews', 'Sue', 'Stone']
 
+        with open('./test/resources/people.csv') as f:
+            surnames = []
+
+            reader = casanova.reader(f, column='surname')
+
+            for row in reader.rows():
+                surnames.append(row[reader.pos])
+
+            assert surnames == ['Matthews', 'Sue', 'Stone']
+
     def test_no_headers(self):
         with open('./test/resources/no_headers.csv') as f:
             surnames = []
@@ -59,3 +69,16 @@ class TestReader(object):
 
         #     assert surnames == ['Matthews', 'Sue', 'Stone']
         #     assert names == ['John', 'Mary', 'Julia']
+
+        with open('./test/resources/people.csv') as f:
+            surnames = []
+            names = []
+
+            reader = casanova.reader(f, columns=('name', 'surname'))
+
+            for row in reader.rows():
+                surnames.append(row[reader.pos.surname])
+                names.append(row[reader.pos.name])
+
+            assert surnames == ['Matthews', 'Sue', 'Stone']
+            assert names == ['John', 'Mary', 'Julia']

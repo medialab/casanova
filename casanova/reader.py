@@ -68,6 +68,9 @@ class CasanovaReader(object):
                 except ValueError:
                     raise MissingHeaderException(column)
 
+            t = namedtuple('CasanovaReaderPositions', columns)
+            self.pos = t(*self.pos)
+
     def __iter__(self):
         return self
 

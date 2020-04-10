@@ -26,11 +26,18 @@ def bench(path, column, headers=True):
             for value in casanova.reader(f, column=int(column) if not headers else column, no_headers=not headers):
                 a = value
 
-    with Timer('casanova.reader: record'):
+    with Timer('casanova.reader: record destructuring'):
         with open(path) as f:
-            for record in casanova.reader(f, columns=[int(column) if not headers else column], no_headers=not headers):
+            for record, in casanova.reader(f, columns=[int(column) if not headers else column], no_headers=not headers):
                 a = record
 
+    with Timer('casanova.reader: record pos'):
+        with open(path) as f:
+            reader = casanova.reader(f, columns=[int(column) if not headers else column], no_headers=not headers)
+            pos = reader.pos[0]
+
+            for record in reader:
+                a = record[pos]
 
 if __name__ == '__main__':
     bench()
