@@ -27,3 +27,12 @@ class TestReader(object):
                 surnames.append(surname)
 
             assert surnames == ['Matthews', 'Sue', 'Stone']
+
+    def test_no_headers(self):
+        with open('./test/resources/no_headers.csv') as f:
+            surnames = []
+
+            for surname in casanova.reader(f, column=1, no_headers=True):
+                surnames.append(surname)
+
+            assert surnames == ['Matthews', 'Sue', 'Stone']
