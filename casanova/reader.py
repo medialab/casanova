@@ -12,6 +12,8 @@ from casanova.exceptions import EmptyFileException, MissingHeaderException
 
 
 class CasanovaRecord(object):
+    __slots__ = ('columns', 'pos', 'length', 'row', 'attr_to_pos')
+
     def __init__(self, columns, pos):
         self.columns = columns
         self.pos = pos
