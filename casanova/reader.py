@@ -16,15 +16,15 @@ class CasanovaRecord(object):
         self.columns = columns
         self.pos = pos
         self.length = len(pos)
-        self.line = None
+        self.row = None
 
         self.attr_to_pos = {}
 
         for i, column in enumerate(self.columns):
             self.attr_to_pos[column] = self.pos[i]
 
-    def set_line(self, line):
-        self.line = line
+    def set_row(self, row):
+        self.row = row
 
     def __len__(self):
         return self.length
@@ -33,7 +33,7 @@ class CasanovaRecord(object):
         if index >= self.length:
             raise IndexError
 
-        return self.line[index]
+        return self.row[index]
 
     def __getattr__(self, attr):
         index = self.attr_to_pos.get(attr)
@@ -41,17 +41,17 @@ class CasanovaRecord(object):
         if index is None:
             raise AttributeError
 
-        return self.line[index]
+        return self.row[index]
 
     def __iter__(self):
         for pos in self.pos:
-            yield self.line[pos]
+            yield self.row[pos]
 
     def __repr__(self):
         parts = []
 
         for i, column in enumerate(self.columns):
-            parts.append('%s=%s' % (column, self.line[self.pos[i]]))
+            parts.append('%s=%s' % (column, self.row[self.pos[i]]))
 
         return 'CasanovaRecord(' + ', '.join(parts) + ')'
 
@@ -67,6 +67,7 @@ class CasanovaReader(object):
         # Target file
         self.f = f
         self.reader = csv.reader(f)
+        self.current_row = None
         self.record = None
 
         if not no_headers:
@@ -119,12 +120,13 @@ class CasanovaReader(object):
         return self
 
     def __next__(self):
-        line = next(self.reader)
+        row = next(self.reader)
+        self.current_row = row
 
         if self.single_pos:
-            return line[self.pos]
+            return row[self.pos]
         else:
-            self.record.set_line(line)
+            self.record.set_row(row)
             return self.record
 
     def rows(self):
