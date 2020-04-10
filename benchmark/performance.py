@@ -46,5 +46,12 @@ def bench(path, column, headers=True):
             for record in reader:
                 a = record.url
 
+    with Timer('casanova.reader: raw pos'):
+        with open(path) as f:
+            reader = casanova.reader(f, column=int(column) if not headers else column, no_headers=not headers)
+
+            for row in reader.rows():
+                a = row[reader.pos]
+
 if __name__ == '__main__':
     bench()
