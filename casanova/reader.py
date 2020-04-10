@@ -22,6 +22,7 @@ class CasanovaReader(object):
         # Target file
         self.f = f
         self.reader = csv.reader(f)
+        self.current_row = None
         self.record = None
 
         if not no_headers:
@@ -74,6 +75,7 @@ class CasanovaReader(object):
 
     def __next__(self):
         row = next(self.reader)
+        self.current_row = row
 
         if self.single_pos:
             return row[self.pos]
