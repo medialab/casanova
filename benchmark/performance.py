@@ -3,6 +3,7 @@ import click
 import sys
 import csv
 import casanova
+import csvmonkey
 
 
 @click.command()
@@ -10,6 +11,11 @@ import casanova
 @click.argument('column')
 @click.option('--headers/--no-headers', default=True)
 def bench(path, column, headers=True):
+    with Timer('csvmonkey'):
+        with open(path, 'rb') as f:
+            for line in csvmonkey.from_file(f, header=headers):
+                a = line[column]
+
     with Timer('csv.reader'):
         with open(path) as f:
             for line in csv.reader(f):
