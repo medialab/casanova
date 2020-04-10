@@ -42,13 +42,13 @@ with open('./file.csv') as f:
   for url in casanova.reader(f, column='url'):
     print(url)
 
-  # Interested in several columns
-  for title, url in casanova.reader(f, columns=('title', 'url')):
-    print(title, url)
-
   # No headers?
   for url in casanova.reader(f, column=0, no_headers=True):
     print(url)
+
+  # Interested in several columns
+  for title, url in casanova.reader(f, columns=('title', 'url')):
+    print(title, url)
 
   # Working on records
   for record in casanova.reader(f, columns=('title', 'url')):
@@ -56,7 +56,7 @@ with open('./file.csv') as f:
     print(record[0], record.url)
 
   # Records slow you down? Need to go faster?
-  # You can iterate on row and use the reader's positions
+  # You can iterate directly on rows and use the reader's recorded positions
   reader = casanova.reader(f, columns=('title', 'url'))
   url_pos = reader.pos.url
 
