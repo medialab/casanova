@@ -21,10 +21,15 @@ def bench(path, column, headers=True):
                 for line in csv.DictReader(f):
                     a = line[column]
 
-    with Timer('casanova.reader'):
+    with Timer('casanova.reader: value'):
         with open(path) as f:
             for value in casanova.reader(f, column=int(column) if not headers else column, no_headers=not headers):
                 a = value
+
+    with Timer('casanova.reader: record'):
+        with open(path) as f:
+            for record in casanova.reader(f, columns=[int(column) if not headers else column], no_headers=not headers):
+                a = record
 
 
 if __name__ == '__main__':

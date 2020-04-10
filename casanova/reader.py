@@ -6,6 +6,8 @@
 # with csv.DictReader which is nice but very slow.
 #
 import csv
+from collections import namedtuple
+
 from casanova.exceptions import EmptyFileException, MissingHeaderException
 
 
@@ -20,6 +22,7 @@ class CasanovaReader(object):
         # Target file
         self.f = f
         self.reader = csv.reader(f)
+        self.record = None
 
         if not no_headers:
             try:
@@ -42,7 +45,28 @@ class CasanovaReader(object):
                 else:
                     self.pos = self.headers.index(column)
             except ValueError:
-                raise MissingHeaderException
+                raise MissingHeaderException(column)
+
+        if columns is not None:
+            columns = list(columns)
+
+            self.single_pos = False
+            self.columns = columns
+            self.pos = []
+
+            self.record = [None] * len(columns)
+
+            for column in columns:
+                if no_headers and not isinstance(column, int):
+                    raise TypeError('casanova.reader: `columns` should only contain ints if `no_headers` is True!')
+
+                try:
+                    if isinstance(column, int):
+                        self.pos.append(column)
+                    else:
+                        self.pos.append(self.headers.index(column))
+                except ValueError:
+                    raise MissingHeaderException(column)
 
     def __iter__(self):
         return self
@@ -52,3 +76,10 @@ class CasanovaReader(object):
 
         if self.single_pos:
             return line[self.pos]
+        else:
+            for i, pos in enumerate(self.pos):
+                self.record[i] = line[pos]
+            return self.record
+
+    def rows(self):
+        return iter(self.reader)

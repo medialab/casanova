@@ -36,3 +36,26 @@ class TestReader(object):
                 surnames.append(surname)
 
             assert surnames == ['Matthews', 'Sue', 'Stone']
+
+    def test_columns(self):
+        with open('./test/resources/people.csv') as f:
+            surnames = []
+            names = []
+
+            for name, surname in casanova.reader(f, columns=('name', 'surname')):
+                surnames.append(surname)
+                names.append(name)
+
+            assert surnames == ['Matthews', 'Sue', 'Stone']
+            assert names == ['John', 'Mary', 'Julia']
+
+        # with open('./test/resources/people.csv') as f:
+        #     surnames = []
+        #     names = []
+
+        #     for record in casanova.reader(f, columns=('name', 'surname')):
+        #         surnames.append(record.surname)
+        #         names.append(record.name)
+
+        #     assert surnames == ['Matthews', 'Sue', 'Stone']
+        #     assert names == ['John', 'Mary', 'Julia']
