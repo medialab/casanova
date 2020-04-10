@@ -11,8 +11,11 @@ from casanova.exceptions import EmptyFileException, MissingHeaderException
 
 class CasanovaReader(object):
     def __init__(self, f, column=None, columns=None, no_headers=False):
-        assert column is not None or columns is not None, 'casanova.reader: expecting at least `column` or `columns`.'
-        assert (column is None) != (columns is None), 'casanova.reader: expecting `column` or `columns` but not both.'
+        if column is None and columns is None:
+            raise TypeError('casanova.reader: expecting at least `column` or `columns`!')
+
+        if column is not None and columns is not None:
+            raise TypeError('casanova.reader: expecting `column` or `columns` but not both!')
 
         # Target file
         self.f = f
@@ -29,6 +32,9 @@ class CasanovaReader(object):
         if column is not None:
             self.single_pos = True
             self.column = column
+
+            if no_headers and not isinstance(column, int):
+                raise TypeError('casanova.reader: `column` should be an int if `no_headers` is True!')
 
             try:
                 if isinstance(column, int):
