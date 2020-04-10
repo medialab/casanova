@@ -59,16 +59,19 @@ class TestReader(object):
             assert surnames == ['Matthews', 'Sue', 'Stone']
             assert names == ['John', 'Mary', 'Julia']
 
-        # with open('./test/resources/people.csv') as f:
-        #     surnames = []
-        #     names = []
+        with open('./test/resources/people.csv') as f:
+            surnames = []
+            names = []
 
-        #     for record in casanova.reader(f, columns=('name', 'surname')):
-        #         surnames.append(record.surname)
-        #         names.append(record.name)
+            for record in casanova.reader(f, columns=('name', 'surname')):
+                surnames.append(record.surname)
+                names.append(record.name)
 
-        #     assert surnames == ['Matthews', 'Sue', 'Stone']
-        #     assert names == ['John', 'Mary', 'Julia']
+                with pytest.raises(AttributeError):
+                    record.test
+
+            assert surnames == ['Matthews', 'Sue', 'Stone']
+            assert names == ['John', 'Mary', 'Julia']
 
         with open('./test/resources/people.csv') as f:
             surnames = []
@@ -79,6 +82,9 @@ class TestReader(object):
             for row in reader.rows():
                 surnames.append(row[reader.pos.surname])
                 names.append(row[reader.pos.name])
+
+                with pytest.raises(IndexError):
+                    record[3]
 
             assert surnames == ['Matthews', 'Sue', 'Stone']
             assert names == ['John', 'Mary', 'Julia']

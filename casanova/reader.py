@@ -11,6 +11,51 @@ from collections import namedtuple
 from casanova.exceptions import EmptyFileException, MissingHeaderException
 
 
+class CasanovaRecord(object):
+    def __init__(self, columns, pos):
+        self.columns = columns
+        self.pos = pos
+        self.length = len(pos)
+        self.line = None
+
+        self.attr_to_pos = {}
+
+        for i, column in enumerate(self.columns):
+            self.attr_to_pos[column] = self.pos[i]
+
+    def set_line(self, line):
+        self.line = line
+
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, index):
+        if index >= self.length:
+            raise IndexError
+
+        return self.line[index]
+
+    def __getattr__(self, attr):
+        index = self.attr_to_pos.get(attr)
+
+        if index is None:
+            raise AttributeError
+
+        return self.line[index]
+
+    def __iter__(self):
+        for pos in self.pos:
+            yield self.line[pos]
+
+    def __repr__(self):
+        parts = []
+
+        for i, column in enumerate(self.columns):
+            parts.append('%s=%s' % (column, self.line[self.pos[i]]))
+
+        return 'CasanovaRecord(' + ', '.join(parts) + ')'
+
+
 class CasanovaReader(object):
     def __init__(self, f, column=None, columns=None, no_headers=False):
         if column is None and columns is None:
@@ -54,8 +99,6 @@ class CasanovaReader(object):
             self.columns = columns
             self.pos = []
 
-            self.record = [None] * len(columns)
-
             for column in columns:
                 if no_headers and not isinstance(column, int):
                     raise TypeError('casanova.reader: `columns` should only contain ints if `no_headers` is True!')
@@ -70,6 +113,7 @@ class CasanovaReader(object):
 
             t = namedtuple('CasanovaReaderPositions', columns)
             self.pos = t(*self.pos)
+            self.record = CasanovaRecord(columns, self.pos)
 
     def __iter__(self):
         return self
@@ -80,8 +124,7 @@ class CasanovaReader(object):
         if self.single_pos:
             return line[self.pos]
         else:
-            for i, pos in enumerate(self.pos):
-                self.record[i] = line[pos]
+            self.record.set_line(line)
             return self.record
 
     def rows(self):
