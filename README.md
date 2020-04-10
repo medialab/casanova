@@ -32,3 +32,54 @@ pip install casanova
 * [reader](#reader)
 
 ## reader
+
+```python
+import casanova
+
+with open('./file.csv') as f:
+
+  # Interested in a single column?
+  for url in casanova.reader(f, column='url'):
+    print(url)
+
+  # Interested in several columns
+  for title, url in casanova.reader(f, columns=('title', 'url')):
+    print(title, url)
+
+  # No headers?
+  for url in casanova.reader(f, column=0, no_headers=True):
+    print(url)
+
+  # Working on records
+  for record in casanova.reader(f, columns=('title', 'url')):
+    # record is a namedtuple based on your columns
+    print(record[0], record.url)
+
+  # Records slow you down? Need to go faster?
+  # You can iterate on row and use the reader's positions
+  reader = casanova.reader(f, columns=('title', 'url'))
+  url_pos = reader.pos.url
+
+  for row in reader.rows():
+    print(row[url_pos])
+```
+
+### Arguments
+
+* **file** *file*: file object to read.
+* **column** *?str|int*: name or index of target column.
+* **colums** *?iterable<str|int>*: iterable of name or index of target columns.
+
+### Attributes
+
+* *pos* *int|namedtuple<int>*: index of target column or named tuple of target columns.
+
+### Methods
+
+#### __iter__
+
+Lets you iterate on a single value or on a namedtuple record.
+
+#### rows
+
+Lets you iterate over the original `csv.reader`.
