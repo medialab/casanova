@@ -12,7 +12,7 @@ from casanova.exceptions import EmptyFileException, MissingHeaderException
 
 
 class CasanovaReader(object):
-    def __init__(self, f, column=None, columns=None, no_headers=False):
+    def __init__(self, input_file, column=None, columns=None, no_headers=False):
         if column is None and columns is None:
             raise TypeError('casanova.reader: expecting at least `column` or `columns`!')
 
@@ -20,8 +20,8 @@ class CasanovaReader(object):
             raise TypeError('casanova.reader: expecting `column` or `columns` but not both!')
 
         # Target file
-        self.f = f
-        self.reader = csv.reader(f)
+        self.input_file = input_file
+        self.reader = csv.reader(input_file)
         self.current_row = None
         self.record = None
 
