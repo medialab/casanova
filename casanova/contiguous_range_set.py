@@ -22,8 +22,9 @@ class ContiguousRangeSet(object):
         # NOTE: replace this by `blist` if not performany enough
         self.intervals = []
         self.current_stateful_interval = 0
+        self.length = 0
 
-    def __len__(self):
+    def count(self):
         count = 0
 
         for start, end in self.intervals:
@@ -31,11 +32,17 @@ class ContiguousRangeSet(object):
 
         return count
 
+    def __len__(self):
+        return self.length
+
     def add(self, point):
         """
         Method adding a single point to the set. We assume that the point
         cannot yet be in the set.
         """
+
+        # NOTE: this would break if you add the same point twice
+        self.length += 1
 
         interval = (point, point)
         N = len(self.intervals)
