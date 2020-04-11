@@ -12,6 +12,7 @@ from casanova.reader import CasanovaReader
 from casanova.exceptions import MissingHeaderException, ColumnNumberMismatch
 
 
+# how to resume? flag that tell its the case? resume() iterator? callback?
 class CasanovaEnricher(CasanovaReader):
     def __init__(self, input_file, output_file, column=None, columns=None,
                  no_headers=False, resumable=False, keep=None, add=None):
@@ -83,6 +84,7 @@ class CasanovaEnricher(CasanovaReader):
         self.writerow(self.__filter_row(self.current_row) + additions)
 
 
+# TODO: lock for events
 class ThreadSafeCasanovaEnricher(CasanovaEnricher):
     def enrichrow(self, row, additions=None):
         if len(additions) != self.cells:
