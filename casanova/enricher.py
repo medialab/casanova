@@ -3,7 +3,7 @@
 # =============================================================================
 #
 # A CSV reader/writer combo that can be used to read an input CSV file and
-# easily ouput a similar CSV file while editing, adding and filtering cells.
+# easily ouput a similar CSV file while editing, adding and filtering cell_count.
 #
 import csv
 from collections import namedtuple
@@ -55,12 +55,16 @@ class CasanovaEnricher(CasanovaReader):
             self.keep_pos = self.keep_record(*self.keep_pos)
 
         # Columns to add
+        self.additional_cell_count = 0
+
         if add is not None:
-            fieldnames += list(add)
+            add = list(add)
+            fieldnames += add
+            self.additional_cell_count = len(add)
 
         self.fieldnames = fieldnames
-        self.cells = len(fieldnames)
-        self.padding = [''] * self.cells
+        self.cell_count = len(fieldnames)
+        self.padding = [''] * self.cell_count
 
         if not resumable:
             self.writer.writerow(fieldnames)
@@ -75,7 +79,7 @@ class CasanovaEnricher(CasanovaReader):
         self.writer.writerow(row)
 
     def enrichrow(self, additions=None):
-        if len(additions) != self.cells:
+        if len(additions) != self.additional_cell_count:
             raise ColumnNumberMismatch
 
         if additions is None:
@@ -84,10 +88,10 @@ class CasanovaEnricher(CasanovaReader):
         self.writerow(self.__filter_row(self.current_row) + additions)
 
 
-# TODO: lock for events
+# TODO: lock for events, #TODO: we cannot really resume with iterator here...
 class ThreadSafeCasanovaEnricher(CasanovaEnricher):
     def enrichrow(self, row, additions=None):
-        if len(additions) != self.cells:
+        if len(additions) != self.cell_count:
             raise ColumnNumberMismatch
 
         if additions is None:
