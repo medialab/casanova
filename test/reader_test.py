@@ -12,7 +12,7 @@ from casanova.exceptions import (
 
 
 class TestReader(object):
-    def test_basics(self):
+    def test_exceptions(self):
         with pytest.raises(EmptyFileException):
             casanova.reader(StringIO(''), column='test')
 
@@ -20,6 +20,7 @@ class TestReader(object):
             with pytest.raises(MissingHeaderException):
                 casanova.reader(f, column='notfound')
 
+    def test_basics(self):
         with open('./test/resources/people.csv') as f:
             surnames = []
 
@@ -35,6 +36,15 @@ class TestReader(object):
 
             for row in reader.rows():
                 surnames.append(row[reader.pos])
+
+            assert surnames == ['Matthews', 'Sue', 'Stone']
+
+    def test_raw(self):
+        with open('./test/resources/no_headers.csv') as f:
+            surnames = []
+
+            for row in casanova.reader(f, no_headers=True):
+                surnames.append(row[1])
 
             assert surnames == ['Matthews', 'Sue', 'Stone']
 

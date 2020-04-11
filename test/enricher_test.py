@@ -18,7 +18,7 @@ def collect_csv_file(path):
 
 
 class TestEnricher(object):
-    def test_basics(self, tmpdir):
+    def test_exceptions(self):
         with pytest.raises(EmptyFileException):
             casanova.enricher(StringIO(''), StringIO(''), column='test')
 
@@ -26,6 +26,7 @@ class TestEnricher(object):
             with pytest.raises(MissingHeaderException):
                 casanova.enricher(f, StringIO(''), column='notfound')
 
+    def test_basics(self, tmpdir):
         output_path = tmpdir.join('./enriched.csv')
         with open('./test/resources/people.csv') as f, \
              open(output_path, 'w') as of:
