@@ -8,6 +8,8 @@ If you often find yourself reading CSV files using python, you will quickly noti
 # To read a 1.5G CSV file:
 csv.reader: 24s
 csv.DictReader: 84s
+casanova.reader: 25s
+casanova_monkey.reader: 3s
 ```
 
 Casanova is therefore an attempt to stick to `csv.reader` performance while still keeping a comfortable interface, still able to consider headers etc.

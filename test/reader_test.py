@@ -11,80 +11,88 @@ from casanova.exceptions import (
 )
 
 
-class TestReader(object):
-    def test_exceptions(self):
-        with pytest.raises(EmptyFileError):
-            casanova.reader(StringIO(''))
+def make_reader_test(name, reader_fn):
+    class AbstractTestReader(object):
+        __name__ = name
 
-    def test_basics(self):
-        with open('./test/resources/people.csv') as f:
-            reader = casanova.reader(f)
+        def test_exceptions(self):
+            with pytest.raises(EmptyFileError):
+                reader_fn(StringIO(''))
 
-            assert reader.pos.name == 0
-            assert reader.pos.surname == 1
+        def test_basics(self):
+            with open('./test/resources/people.csv') as f:
+                reader = reader_fn(f)
 
-            assert reader.pos['name'] == 0
-            assert reader.pos['surname'] == 1
+                assert reader.pos.name == 0
+                assert reader.pos.surname == 1
 
-            assert reader.pos[0] == 0
-            assert reader.pos[1] == 1
+                assert reader.pos['name'] == 0
+                assert reader.pos['surname'] == 1
 
-            assert len(reader.pos) == 2
-            assert reader.fieldnames == ['name', 'surname']
+                assert reader.pos[0] == 0
+                assert reader.pos[1] == 1
 
-            with pytest.raises(KeyError):
-                reader.pos['whatever']
+                assert len(reader.pos) == 2
+                assert reader.fieldnames == ['name', 'surname']
 
-            with pytest.raises(IndexError):
-                reader.pos[3]
+                with pytest.raises(KeyError):
+                    reader.pos['whatever']
 
-            surnames = [row[reader.pos.surname] for row in reader]
-            assert surnames == ['Matthews', 'Sue', 'Stone']
+                with pytest.raises(IndexError):
+                    reader.pos[3]
 
-    def test_cells(self):
-        with open('./test/resources/people.csv') as f:
-            reader = casanova.reader(f)
+                surnames = [row[reader.pos.surname] for row in reader]
+                assert surnames == ['Matthews', 'Sue', 'Stone']
 
-            with pytest.raises(MissingHeaderError):
-                reader.cells('whatever')
+        def test_cells(self):
+            with open('./test/resources/people.csv') as f:
+                reader = reader_fn(f)
 
-            names = [name for name in reader.cells('name')]
+                with pytest.raises(MissingHeaderError):
+                    reader.cells('whatever')
 
-            assert names == ['John', 'Mary', 'Julia']
+                names = [name for name in reader.cells('name')]
 
-    def test_records(self):
-        with open('./test/resources/people.csv') as f:
-            reader = casanova.reader(f)
+                assert names == ['John', 'Mary', 'Julia']
 
-            with pytest.raises(MissingHeaderError):
-                reader.records(['whatever'])
+        def test_records(self):
+            with open('./test/resources/people.csv') as f:
+                reader = reader_fn(f)
 
-            names = []
-            surnames = []
+                with pytest.raises(MissingHeaderError):
+                    reader.records(['whatever'])
 
-            for name, surname in reader.cells(['name', 'surname']):
-                names.append(name)
-                surnames.append(surname)
+                names = []
+                surnames = []
 
-            assert names == ['John', 'Mary', 'Julia']
-            assert surnames == ['Matthews', 'Sue', 'Stone']
+                for name, surname in reader.cells(['name', 'surname']):
+                    names.append(name)
+                    surnames.append(surname)
 
-    def test_no_headers(self):
-        with open('./test/resources/no_headers.csv') as f:
-            reader = casanova.reader(f, no_headers=True)
+                assert names == ['John', 'Mary', 'Julia']
+                assert surnames == ['Matthews', 'Sue', 'Stone']
 
-            assert reader.fieldnames is None
+        def test_no_headers(self):
+            with open('./test/resources/no_headers.csv') as f:
+                reader = reader_fn(f, no_headers=True)
 
-            surnames = [row[1] for row in reader]
-            assert surnames == ['Matthews', 'Sue', 'Stone']
+                assert reader.fieldnames is None
 
-    def test_cells_no_headers(self):
-        with open('./test/resources/no_headers.csv') as f:
-            reader = casanova.reader(f, no_headers=True)
+                surnames = [row[1] for row in reader]
+                assert surnames == ['Matthews', 'Sue', 'Stone']
 
-            with pytest.raises(MissingHeaderError):
-                reader.cells(4)
+        def test_cells_no_headers(self):
+            with open('./test/resources/no_headers.csv') as f:
+                reader = reader_fn(f, no_headers=True)
 
-            names = [name for name in reader.cells(0)]
+                with pytest.raises(MissingHeaderError):
+                    reader.cells(4)
 
-            assert names == ['John', 'Mary', 'Julia']
+                names = [name for name in reader.cells(0)]
+
+                assert names == ['John', 'Mary', 'Julia']
+
+    return AbstractTestReader
+
+
+TestReader = make_reader_test('TestReader', casanova.reader)
