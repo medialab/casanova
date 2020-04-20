@@ -2,8 +2,9 @@
 # Casanova Reader Unit Tests
 # =============================================================================
 import casanova
+import casanova_monkey
 import pytest
-from io import StringIO
+from io import StringIO, BytesIO
 
 from casanova.exceptions import (
     EmptyFileError,
@@ -11,16 +12,18 @@ from casanova.exceptions import (
 )
 
 
-def make_reader_test(name, reader_fn):
+def make_reader_test(name, reader_fn, binary=False):
+    flag = 'r' if not binary else 'rb'
+
     class AbstractTestReader(object):
         __name__ = name
 
         def test_exceptions(self):
             with pytest.raises(EmptyFileError):
-                reader_fn(StringIO(''))
+                reader_fn(StringIO('') if not binary else BytesIO(b''))
 
         def test_basics(self):
-            with open('./test/resources/people.csv') as f:
+            with open('./test/resources/people.csv', flag) as f:
                 reader = reader_fn(f)
 
                 assert reader.pos.name == 0
@@ -45,7 +48,7 @@ def make_reader_test(name, reader_fn):
                 assert surnames == ['Matthews', 'Sue', 'Stone']
 
         def test_cells(self):
-            with open('./test/resources/people.csv') as f:
+            with open('./test/resources/people.csv', flag) as f:
                 reader = reader_fn(f)
 
                 with pytest.raises(MissingHeaderError):
@@ -56,7 +59,7 @@ def make_reader_test(name, reader_fn):
                 assert names == ['John', 'Mary', 'Julia']
 
         def test_records(self):
-            with open('./test/resources/people.csv') as f:
+            with open('./test/resources/people.csv', flag) as f:
                 reader = reader_fn(f)
 
                 with pytest.raises(MissingHeaderError):
@@ -73,7 +76,7 @@ def make_reader_test(name, reader_fn):
                 assert surnames == ['Matthews', 'Sue', 'Stone']
 
         def test_no_headers(self):
-            with open('./test/resources/no_headers.csv') as f:
+            with open('./test/resources/no_headers.csv', flag) as f:
                 reader = reader_fn(f, no_headers=True)
 
                 assert reader.fieldnames is None
@@ -82,7 +85,7 @@ def make_reader_test(name, reader_fn):
                 assert surnames == ['Matthews', 'Sue', 'Stone']
 
         def test_cells_no_headers(self):
-            with open('./test/resources/no_headers.csv') as f:
+            with open('./test/resources/no_headers.csv', flag) as f:
                 reader = reader_fn(f, no_headers=True)
 
                 with pytest.raises(MissingHeaderError):
@@ -96,3 +99,4 @@ def make_reader_test(name, reader_fn):
 
 
 TestReader = make_reader_test('TestReader', casanova.reader)
+# TestMonkeyReader = make_reader_test('TestMonkeyReader', casanova_monkey.reader, binary=True)

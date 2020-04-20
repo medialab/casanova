@@ -18,3 +18,7 @@ class EmptyFileError(CasanovaError):
 
 class MissingHeaderError(CasanovaError):
     pass
+
+
+class InvalidFileError(CasanovaError):
+    pass

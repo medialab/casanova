@@ -1,5 +1,5 @@
 # Variables
-SOURCE = casanova
+SOURCE = casanova casanova_monkey
 
 # Functions
 define clean
