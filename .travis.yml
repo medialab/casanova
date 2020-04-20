@@ -10,3 +10,5 @@ install:
   - sudo apt-get install -qq g++-8
   - pip install -r requirements.txt
 script: make
+env:
+  - CASANOVA_TEST_SKIP_CSVMONKEY=1
