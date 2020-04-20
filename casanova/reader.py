@@ -8,6 +8,7 @@
 import csv
 from collections import namedtuple
 
+from casanova.utils import is_contiguous
 from casanova.exceptions import EmptyFileError, MissingHeaderError
 
 
@@ -64,13 +65,45 @@ class CasanovaReader(object):
             yield row
 
     def cells(self, column):
+        if not isinstance(column, (str, int)):
+            return self.records(column)
+
         try:
             pos = self.pos[column]
         except (IndexError, KeyError):
-            raise MissingHeaderError
+            raise MissingHeaderError(column)
 
         def iterator():
             for row in self:
                 yield row[pos]
+
+        return iterator()
+
+    def records(self, columns):
+        pos = []
+
+        for column in columns:
+            try:
+                i = self.pos[column]
+            except (IndexError, KeyError):
+                raise MissingHeaderError(column)
+
+            pos.append(i)
+
+        pos.sort()
+
+        if is_contiguous(pos):
+            if len(pos) == 1:
+                s = slice(pos[0], pos[0] + 1)
+            else:
+                s = slice(pos[0], pos[1] + 1)
+
+            def iterator():
+                for row in self:
+                    yield row[s]
+        else:
+            def iterator():
+                for row in self:
+                    yield [row[i] for i in pos]
 
         return iterator()

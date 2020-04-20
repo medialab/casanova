@@ -52,6 +52,23 @@ class TestReader(object):
 
             assert names == ['John', 'Mary', 'Julia']
 
+    def test_records(self):
+        with open('./test/resources/people.csv') as f:
+            reader = casanova.reader(f)
+
+            with pytest.raises(MissingHeaderError):
+                reader.records(['whatever'])
+
+            names = []
+            surnames = []
+
+            for name, surname in reader.cells(['name', 'surname']):
+                names.append(name)
+                surnames.append(surname)
+
+            assert names == ['John', 'Mary', 'Julia']
+            assert surnames == ['Matthews', 'Sue', 'Stone']
+
     def test_no_headers(self):
         with open('./test/resources/no_headers.csv') as f:
             reader = casanova.reader(f, no_headers=True)
