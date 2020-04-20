@@ -54,6 +54,7 @@ import casanova
 # Or if you want to rely on faster csvmonkey
 import casanova_monkey as casanova
 
+# NOTE: to rely on csvmonkey you will need to open the file in binary mode (e.g. 'rb')!
 with open('./people.csv') as f:
 
   # Creating a reader
