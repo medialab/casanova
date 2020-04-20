@@ -3,7 +3,6 @@
 # =============================================================================
 import os
 import casanova
-import casanova_monkey
 import pytest
 from io import StringIO, BytesIO
 
@@ -105,4 +104,5 @@ def make_reader_test(name, reader_fn, binary=False):
 TestReader = make_reader_test('TestReader', casanova.reader)
 
 if not os.environ.get('CASANOVA_TEST_SKIP_CSVMONKEY'):
+    import casanova_monkey
     TestMonkeyReader = make_reader_test('TestMonkeyReader', casanova_monkey.reader, binary=True)

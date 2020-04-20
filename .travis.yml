@@ -3,14 +3,8 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
-before_install:
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get update -qq
 install:
-  - sudo apt-get install -qq gcc-9 g++-9
-  - pip install -r requirements.txt
+  - pip install -r requirements-travis.txt
 script: make
 env:
-  - CC=g++
-  - CXX=g++
   - CASANOVA_TEST_SKIP_CSVMONKEY=1
