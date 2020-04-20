@@ -8,81 +8,40 @@
 import csv
 from collections import namedtuple
 
-from casanova.exceptions import EmptyFileException, MissingHeaderException
+from casanova.exceptions import EmptyFileException
+
+
+def make_headers_namedtuple(headers):
+    class HeadersPositions(namedtuple('HeadersPositions', headers)):
+        __slots__ = ()
+        pass
+
+    return HeadersPositions(*range(len(headers)))
 
 
 class CasanovaReader(object):
-    def __init__(self, input_file, column=None, columns=None, no_headers=False):
-        if column is not None and columns is not None:
-            raise TypeError('casanova.reader: expecting `column` or `columns` but not both!')
+    def __init__(self, input_file, no_headers=False):
 
-        # Target file
         self.input_file = input_file
         self.reader = csv.reader(input_file)
+        self.fieldnames = None
         self.current_row = None
-        self.record = None
-        self.raw = column is None and columns is None
+        self.started = False
 
-        if not no_headers:
+        if no_headers:
             try:
-                self.headers = next(self.reader)
+                self.current_row = next(self.reader)
             except StopIteration:
                 raise EmptyFileException
+
+            self.pos = make_headers_namedtuple(range(len(self.current_row)))
         else:
-            self.headers = None
-
-        if column is not None:
-            self.single_pos = True
-            self.column = column
-
-            if no_headers and not isinstance(column, int):
-                raise TypeError('casanova.reader: `column` should be an int if `no_headers` is True!')
-
             try:
-                if isinstance(column, int):
-                    self.pos = column
-                else:
-                    self.pos = self.headers.index(column)
-            except ValueError:
-                raise MissingHeaderException(column)
+                self.fieldnames = next(self.reader)
+            except StopIteration:
+                raise EmptyFileException
 
-        if columns is not None:
-            columns = list(columns)
-
-            self.single_pos = False
-            self.columns = columns
-            self.pos = []
-
-            for column in columns:
-                if no_headers and not isinstance(column, int):
-                    raise TypeError('casanova.reader: `columns` should only contain ints if `no_headers` is True!')
-
-                try:
-                    if isinstance(column, int):
-                        self.pos.append(column)
-                    else:
-                        self.pos.append(self.headers.index(column))
-                except ValueError:
-                    raise MissingHeaderException(column)
-
-            self.record = namedtuple('CasanovaRecord', columns)
-            self.pos = self.record(*self.pos)
+            self.pos = make_headers_namedtuple(self.fieldnames)
 
     def __iter__(self):
-        return self
-
-    def __next__(self):
-        row = next(self.reader)
-        self.current_row = row
-
-        if self.raw:
-            return row
-
-        if self.single_pos:
-            return row[self.pos]
-        else:
-            record = self.record(*(row[pos] for pos in self.pos))
-            return record
-
-    def rows(self):
         return iter(self.reader)

@@ -4,17 +4,17 @@
 #
 
 
-class CasanovaException(Exception):
+class CasanovaError(Exception):
     pass
 
 
-class ColumnNumberMismatch(CasanovaException):
+class ColumnNumberMismatch(CasanovaError):
     pass
 
 
-class EmptyFileException(CasanovaException):
+class EmptyFileException(CasanovaError):
     pass
 
 
-class MissingHeaderException(CasanovaException):
+class MissingHeaderException(CasanovaError):
     pass
