@@ -41,5 +41,11 @@ def bench(path, column, headers=True):
             for row in reader:
                 a = row[pos]
 
+    with Timer('casanova.reader: cells'):
+        with open(path) as f:
+            reader = casanova.reader(f, no_headers=not headers)
+            for value in reader.cells(column):
+                a = value
+
 if __name__ == '__main__':
     bench()

@@ -8,7 +8,7 @@
 import csv
 from collections import namedtuple
 
-from casanova.exceptions import EmptyFileException
+from casanova.exceptions import EmptyFileError, MissingHeaderError
 
 
 def make_headers_namedtuple(headers):
@@ -43,14 +43,14 @@ class CasanovaReader(object):
             try:
                 self.current_row = next(self.reader)
             except StopIteration:
-                raise EmptyFileException
+                raise EmptyFileError
 
             self.pos = make_headers_namedtuple(len(self.current_row))
         else:
             try:
                 self.fieldnames = next(self.reader)
             except StopIteration:
-                raise EmptyFileException
+                raise EmptyFileError
 
             self.pos = make_headers_namedtuple(self.fieldnames)
 
@@ -62,3 +62,15 @@ class CasanovaReader(object):
 
         for row in self.reader:
             yield row
+
+    def cells(self, column):
+        try:
+            pos = self.pos[column]
+        except (IndexError, KeyError):
+            raise MissingHeaderError
+
+        def iterator():
+            for row in self:
+                yield row[pos]
+
+        return iterator()

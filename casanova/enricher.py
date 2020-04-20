@@ -9,7 +9,7 @@ import csv
 from collections import namedtuple
 
 from casanova.reader import CasanovaReader
-from casanova.exceptions import MissingHeaderException, ColumnNumberMismatch
+from casanova.exceptions import MissingHeaderError, ColumnNumberMismatchError
 
 
 # TODO: we must go with events for resuming
@@ -50,7 +50,7 @@ class CasanovaEnricher(CasanovaReader):
                     else:
                         self.keep_pos.append(self.headers.index(column))
                 except ValueError:
-                    raise MissingHeaderException(column)
+                    raise MissingHeaderError(column)
 
             self.keep_record = namedtuple('CasanovaRecord', self.keep)
             self.keep_pos = self.keep_record(*self.keep_pos)

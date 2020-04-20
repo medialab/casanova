@@ -8,13 +8,13 @@ class CasanovaError(Exception):
     pass
 
 
-class ColumnNumberMismatch(CasanovaError):
+class ColumnNumberMismatchError(CasanovaError):
     pass
 
 
-class EmptyFileException(CasanovaError):
+class EmptyFileError(CasanovaError):
     pass
 
 
-class MissingHeaderException(CasanovaError):
+class MissingHeaderError(CasanovaError):
     pass

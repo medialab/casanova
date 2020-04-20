@@ -6,13 +6,14 @@ import pytest
 from io import StringIO
 
 from casanova.exceptions import (
-    EmptyFileException
+    EmptyFileError,
+    MissingHeaderError
 )
 
 
 class TestReader(object):
     def test_exceptions(self):
-        with pytest.raises(EmptyFileException):
+        with pytest.raises(EmptyFileError):
             casanova.reader(StringIO(''))
 
     def test_basics(self):
@@ -40,6 +41,17 @@ class TestReader(object):
             surnames = [row[reader.pos.surname] for row in reader]
             assert surnames == ['Matthews', 'Sue', 'Stone']
 
+    def test_cells(self):
+        with open('./test/resources/people.csv') as f:
+            reader = casanova.reader(f)
+
+            with pytest.raises(MissingHeaderError):
+                reader.cells('whatever')
+
+            names = [name for name in reader.cells('name')]
+
+            assert names == ['John', 'Mary', 'Julia']
+
     def test_no_headers(self):
         with open('./test/resources/no_headers.csv') as f:
             reader = casanova.reader(f, no_headers=True)
@@ -48,3 +60,14 @@ class TestReader(object):
 
             surnames = [row[1] for row in reader]
             assert surnames == ['Matthews', 'Sue', 'Stone']
+
+    def test_cells_no_headers(self):
+        with open('./test/resources/no_headers.csv') as f:
+            reader = casanova.reader(f, no_headers=True)
+
+            with pytest.raises(MissingHeaderError):
+                reader.cells(4)
+
+            names = [name for name in reader.cells(0)]
+
+            assert names == ['John', 'Mary', 'Julia']
