@@ -35,7 +35,7 @@ If you want to be able to use the faster `casanova_monkey` namespace relying on 
 ```
 pip install csvmonkey
 # If this fails, typically on ubuntu, run the following:
-apt install clang
+sudo apt-get install clang
 CC=clang pip install csvmonkey
 ```
 
