@@ -8,7 +8,7 @@
 import csv
 from collections import namedtuple
 
-from casanova.reader import CasanovaReader
+from casanova.reader import CasanovaReader, collect_column_indices
 from casanova.exceptions import MissingColumnError, ColumnNumberMismatchError
 
 
@@ -27,11 +27,7 @@ class CasanovaEnricher(CasanovaReader):
         self.writer = csv.writer(output_file)
 
         self.keep = keep
-        self.keep_indices = None
-
-        # if keep is not None:
-        #     for column in keep:
-        #         i = self.pos.get()
+        self.keep_indices = collect_column_indices(self.pos, keep)
 
 
 # TODO: lock for events

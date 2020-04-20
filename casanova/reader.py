@@ -45,6 +45,22 @@ def get_column_index(pos, key, default=None):
         return default
 
 
+def collect_column_indices(pos, columns):
+    indices = []
+
+    for column in columns:
+        i = get_column_index(pos, column)
+
+        if i is None:
+            raise MissingColumnError
+
+        indices.append(i)
+
+    indices.sort()
+
+    return indices
+
+
 class CasanovaReader(object):
     def __init__(self, input_file, no_headers=False):
 
@@ -100,17 +116,7 @@ class CasanovaReader(object):
         return iterator()
 
     def records(self, columns):
-        pos = []
-
-        for column in columns:
-            i = get_column_index(self.pos, column)
-
-            if i is None:
-                raise MissingColumnError(column)
-
-            pos.append(i)
-
-        pos.sort()
+        pos = collect_column_indices(self.pos, columns)
 
         if self.can_slice and is_contiguous(pos):
             if len(pos) == 1:
