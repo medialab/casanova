@@ -28,6 +28,13 @@ def make_headers_namedtuple(headers):
             except AttributeError:
                 raise KeyError
 
+        def __contains__(self, key):
+            try:
+                self[key]
+                return True
+            except (IndexError, KeyError):
+                return False
+
     return HeadersPositions(*range(len(headers)))
 
 

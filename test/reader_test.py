@@ -29,6 +29,9 @@ def make_reader_test(name, reader_fn, binary=False):
                 assert reader.pos.name == 0
                 assert reader.pos.surname == 1
 
+                assert 'name' in reader.pos
+                assert 'whatever' not in reader.pos
+
                 assert reader.pos['name'] == 0
                 assert reader.pos['surname'] == 1
 
