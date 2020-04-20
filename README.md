@@ -44,7 +44,7 @@ pip install casanova[monkey]
 
 ## Usage
 
-* [casanova.reader](#casanovareader)
+* [reader](#reader)
 
 ## reader
 
