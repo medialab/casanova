@@ -12,9 +12,20 @@ from casanova.exceptions import EmptyFileException
 
 
 def make_headers_namedtuple(headers):
+    if isinstance(headers, int):
+        return list(range(headers))
+
     class HeadersPositions(namedtuple('HeadersPositions', headers)):
         __slots__ = ()
-        pass
+
+        def __getitem__(self, key):
+            if isinstance(key, int):
+                return super().__getitem__(key)
+
+            try:
+                return getattr(self, key)
+            except AttributeError:
+                raise KeyError
 
     return HeadersPositions(*range(len(headers)))
 
@@ -34,7 +45,7 @@ class CasanovaReader(object):
             except StopIteration:
                 raise EmptyFileException
 
-            self.pos = make_headers_namedtuple(range(len(self.current_row)))
+            self.pos = make_headers_namedtuple(len(self.current_row))
         else:
             try:
                 self.fieldnames = next(self.reader)
@@ -44,4 +55,10 @@ class CasanovaReader(object):
             self.pos = make_headers_namedtuple(self.fieldnames)
 
     def __iter__(self):
-        return iter(self.reader)
+        if self.fieldnames is None and not self.started:
+            yield self.current_row
+
+        self.started = True
+
+        for row in self.reader:
+            yield row

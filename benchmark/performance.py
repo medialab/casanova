@@ -27,37 +27,19 @@ def bench(path, column, headers=True):
                 for line in csv.DictReader(f):
                     a = line[column]
 
-    with Timer('casanova.reader: value'):
+    with Timer('casanova.reader: basic'):
         with open(path) as f:
-            for value in casanova.reader(f, column=int(column) if not headers else column, no_headers=not headers):
-                a = value
+            reader = casanova.reader(f, no_headers=not headers)
+            for row in reader:
+                a = row[reader.pos[column]]
 
-    with Timer('casanova.reader: record destructuring'):
+    with Timer('casanova.reader: cached pos'):
         with open(path) as f:
-            for record, in casanova.reader(f, columns=[int(column) if not headers else column], no_headers=not headers):
-                a = record
+            reader = casanova.reader(f, no_headers=not headers)
+            pos = reader.pos[column]
 
-    with Timer('casanova.reader: record pos'):
-        with open(path) as f:
-            reader = casanova.reader(f, columns=[int(column) if not headers else column], no_headers=not headers)
-            pos = reader.pos[0]
-
-            for record in reader:
-                a = record[pos]
-
-    with Timer('casanova.reader: record attr'):
-        with open(path) as f:
-            reader = casanova.reader(f, columns=[int(column) if not headers else column], no_headers=not headers)
-
-            for record in reader:
-                a = record.url
-
-    with Timer('casanova.reader: raw pos'):
-        with open(path) as f:
-            reader = casanova.reader(f, column=int(column) if not headers else column, no_headers=not headers)
-
-            for row in reader.rows():
-                a = row[reader.pos]
+            for row in reader:
+                a = row[pos]
 
 if __name__ == '__main__':
     bench()
