@@ -9,7 +9,7 @@ import csv
 from collections import namedtuple
 
 from casanova.utils import is_contiguous
-from casanova.exceptions import EmptyFileError, MissingHeaderError
+from casanova.exceptions import EmptyFileError, MissingColumnError
 
 
 def make_headers_namedtuple(headers):
@@ -38,17 +38,14 @@ def make_headers_namedtuple(headers):
     return HeadersPositions(*range(len(headers)))
 
 
-class CasanovaReader(object):
-    __slots__ = (
-        'can_slice',
-        'current_row',
-        'fieldnames',
-        'input_file',
-        'pos',
-        'reader',
-        'started'
-    )
+def get_column_index(pos, key, default=None):
+    try:
+        return pos[key]
+    except (IndexError, KeyError):
+        return default
 
+
+class CasanovaReader(object):
     def __init__(self, input_file, no_headers=False):
 
         self.input_file = input_file
@@ -91,14 +88,14 @@ class CasanovaReader(object):
         if not isinstance(column, (str, int)):
             return self.records(column)
 
-        try:
-            pos = self.pos[column]
-        except (IndexError, KeyError):
-            raise MissingHeaderError(column)
+        i = get_column_index(self.pos, column)
+
+        if i is None:
+            raise MissingColumnError(column)
 
         def iterator():
             for row in self:
-                yield row[pos]
+                yield row[i]
 
         return iterator()
 
@@ -106,10 +103,10 @@ class CasanovaReader(object):
         pos = []
 
         for column in columns:
-            try:
-                i = self.pos[column]
-            except (IndexError, KeyError):
-                raise MissingHeaderError(column)
+            i = get_column_index(self.pos, column)
+
+            if i is None:
+                raise MissingColumnError(column)
 
             pos.append(i)
 

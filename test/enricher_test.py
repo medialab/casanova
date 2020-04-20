@@ -8,7 +8,7 @@ from io import StringIO
 
 from casanova.exceptions import (
     EmptyFileError,
-    MissingHeaderError
+    MissingColumnError
 )
 
 
@@ -23,7 +23,7 @@ def collect_csv_file(path):
 #             casanova.enricher(StringIO(''), StringIO(''), column='test')
 
 #         with open('./test/resources/people.csv') as f:
-#             with pytest.raises(MissingHeaderError):
+#             with pytest.raises(MissingColumnError):
 #                 casanova.enricher(f, StringIO(''), column='notfound')
 
 #     def test_basics(self, tmpdir):

@@ -8,7 +8,7 @@ from io import StringIO, BytesIO
 
 from casanova.exceptions import (
     EmptyFileError,
-    MissingHeaderError
+    MissingColumnError
 )
 
 
@@ -54,7 +54,7 @@ def make_reader_test(name, reader_fn, binary=False):
             with open('./test/resources/people.csv', flag) as f:
                 reader = reader_fn(f)
 
-                with pytest.raises(MissingHeaderError):
+                with pytest.raises(MissingColumnError):
                     reader.cells('whatever')
 
                 names = [name for name in reader.cells('name')]
@@ -65,7 +65,7 @@ def make_reader_test(name, reader_fn, binary=False):
             with open('./test/resources/people.csv', flag) as f:
                 reader = reader_fn(f)
 
-                with pytest.raises(MissingHeaderError):
+                with pytest.raises(MissingColumnError):
                     reader.records(['whatever'])
 
                 names = []
@@ -91,7 +91,7 @@ def make_reader_test(name, reader_fn, binary=False):
             with open('./test/resources/no_headers.csv', flag) as f:
                 reader = reader_fn(f, no_headers=True)
 
-                with pytest.raises(MissingHeaderError):
+                with pytest.raises(MissingColumnError):
                     reader.cells(4)
 
                 names = [name for name in reader.cells(0)]
