@@ -3,6 +3,7 @@ import click
 import sys
 import csv
 import casanova
+import casanova_monkey
 import csvmonkey
 
 
@@ -13,19 +14,27 @@ import csvmonkey
 def bench(path, column, headers=True):
     with Timer('csvmonkey'):
         with open(path, 'rb') as f:
-            for line in csvmonkey.from_file(f, header=headers):
-                a = line[column]
+            for row in csvmonkey.from_file(f, header=headers):
+                a = row[column]
+
+    with Timer('casanova_monkey: basic'):
+        with open(path, 'rb') as f:
+            reader = casanova_monkey.reader(f, no_headers=not headers)
+            pos = reader.pos[column]
+
+            for row in reader:
+                a = row[pos]
 
     with Timer('csv.reader'):
         with open(path) as f:
-            for line in csv.reader(f):
-                a = line[0]
+            for row in csv.reader(f):
+                a = row[0]
 
     if headers:
         with Timer('csv.DictReader'):
             with open(path) as f:
-                for line in csv.DictReader(f):
-                    a = line[column]
+                for row in csv.DictReader(f):
+                    a = row[column]
 
     with Timer('casanova.reader: basic'):
         with open(path) as f:

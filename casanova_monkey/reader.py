@@ -17,15 +17,7 @@ class CasanovaMonkeyReader(CasanovaReader):
             raise binary_error
 
         self.input_file = input_file
-
-        try:
-            self.reader = csvmonkey.from_file(input_file, header=not no_headers)
-        except OSError as err:
-            if 'Could not read header row' in str(err):
-                raise EmptyFileError
-
-            raise err
-
+        self.reader = csvmonkey.from_file(input_file, header=False)
         self.fieldnames = None
         self.current_row = None
         self.started = False
@@ -40,7 +32,7 @@ class CasanovaMonkeyReader(CasanovaReader):
             self.pos = make_headers_namedtuple(len(self.current_row))
         else:
             try:
-                self.fieldnames = self.reader.get_header()
+                self.fieldnames = list(next(self.reader))
             except StopIteration:
                 raise EmptyFileError
 
