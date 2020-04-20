@@ -9,6 +9,7 @@ If you often find yourself reading CSV files using python, you will quickly noti
 csv.reader: 24s
 csv.DictReader: 84s
 casanova.reader: 25s
+csvmonkey: 3s
 casanova_monkey.reader: 3s
 ```
 
@@ -29,59 +30,72 @@ You can install `casanova` with pip with the following command:
 pip install casanova
 ```
 
+If you want to be able to use the faster `casanova_monkey` namespace relying on the fantastic [csvmonkey](https://github.com/dw/csvmonkey) library, you will also need to install it alongside:
+
+```
+pip install csvmonkey
+```
+
+or you can also install `casanova` likewise:
+
+```
+pip install casanova[monkey]
+```
+
 ## Usage
 
-* [reader](#reader)
+* [casanova.reader](#casanovareader)
 
 ## reader
 
 ```python
+# For the raw python version
 import casanova
+# Or if you want to rely on faster csvmonkey
+import casanova_monkey as casanova
 
-with open('./file.csv') as f:
+with open('./people.csv') as f:
 
-  # Interested in a single column?
-  for url in casanova.reader(f, column='url'):
-    print(url)
+  # Creating a reader
+  reader = casanova.reader(f)
 
-  # No headers?
-  for url in casanova.reader(f, column=0, no_headers=True):
-    print(url)
+  # Getting header information
+  reader.fieldnames
+  >>> ['name', 'surname']
 
-  # Interested in several columns
-  for title, url in casanova.reader(f, columns=('title', 'url')):
-    print(title, url)
+  reader.pos
+  >>> HeadersPositions(name=0, surname=1)
 
-  # Working on records
-  for record in casanova.reader(f, columns=('title', 'url')):
-    # record is a namedtuple based on your columns
-    print(record[0], record.url)
+  name_pos = reader.pos.name
+  name_pos = reader.pos['name']
+  name_pos = reader.pos[0]
 
-  # Records slow you down? Need to go faster?
-  # You can iterate directly on rows and use the reader's recorded positions
-  reader = casanova.reader(f, columns=('title', 'url'))
-  url_pos = reader.pos.url
+  'name' in reader.pos
+  >>> True
 
-  for row in reader.rows():
-    print(row[url_pos])
+  # Iterating over the rows
+  for row in reader:
+    name = row[name_pos] # it's better to cache your pos outside the loop
+    name = row[reader.pos.name] # this works, but is slower
+
+  # Intersted in a single column?
+  for name in reader.cells('name'):
+    print(name)
+
+  # Interested in several columns (handy but has a slight perf cost!)
+  for name, surname in reader.cells(['name', 'surname']):
+    print(name, surname)
+
+  # No headers? No problem.
+  reader = casanov.reader(f, no_headers=True)
 ```
 
-### Arguments
+*Arguments*
 
 * **file** *file*: file object to read.
-* **column** *?str|int*: name or index of target column.
-* **colums** *?iterable<str|int>*: iterable of name or index of target columns.
+* **no_headers** *?bool* [`False`]: whether your CSV file is headless.
 
-### Attributes
+*Attributes*
 
-* *pos* *int|namedtuple<int>*: index of target column or named tuple of target columns.
-
-### Methods
-
-#### __iter__
-
-Lets you iterate on a single value or on a namedtuple record.
-
-#### rows
-
-Lets you iterate over the original `csv.reader`.
+* **fieldnames** *list<str>*: field names in order.
+* **pos** *int|namedtuple<int>*: header positions object.

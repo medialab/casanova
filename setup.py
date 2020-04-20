@@ -17,4 +17,7 @@ setup(name='casanova',
       packages=find_packages(exclude=['benchmark', 'test']),
       package_data={'docs': ['README.md']},
       install_requires=[],
+      extras_require={
+          'monkey': ['csvmonkey==0.0.5']
+      },
       zip_safe=True)
