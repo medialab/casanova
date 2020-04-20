@@ -33,6 +33,7 @@ def make_headers_namedtuple(headers):
 
 class CasanovaReader(object):
     __slots__ = (
+        'can_slice',
         'current_row',
         'fieldnames',
         'input_file',
@@ -48,6 +49,7 @@ class CasanovaReader(object):
         self.fieldnames = None
         self.current_row = None
         self.started = False
+        self.can_slice = True
 
         if no_headers:
             try:
@@ -106,7 +108,7 @@ class CasanovaReader(object):
 
         pos.sort()
 
-        if is_contiguous(pos):
+        if self.can_slice and is_contiguous(pos):
             if len(pos) == 1:
                 s = slice(pos[0], pos[0] + 1)
             else:

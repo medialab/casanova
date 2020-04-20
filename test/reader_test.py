@@ -99,4 +99,4 @@ def make_reader_test(name, reader_fn, binary=False):
 
 
 TestReader = make_reader_test('TestReader', casanova.reader)
-# TestMonkeyReader = make_reader_test('TestMonkeyReader', casanova_monkey.reader, binary=True)
+TestMonkeyReader = make_reader_test('TestMonkeyReader', casanova_monkey.reader, binary=True)
