@@ -87,7 +87,7 @@ with open('./people.csv') as f:
     print(name, surname)
 
   # No headers? No problem.
-  reader = casanov.reader(f, no_headers=True)
+  reader = casanova.reader(f, no_headers=True)
 ```
 
 *Arguments*
