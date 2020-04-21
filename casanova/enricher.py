@@ -42,7 +42,7 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
 
             # Need to write headers?
             if not no_headers:
-                self.writer.writerow(self.output_fieldnames)
+                self.writeheader()
 
         def filterrow(self, row):
             if self.keep_indices is not None:
@@ -51,6 +51,9 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
                 row = list(row)
 
             return row
+
+        def writeheader(self):
+            self.writer.writerow(self.output_fieldnames)
 
         def writerow(self, row):
             self.writer.writerow(row)
