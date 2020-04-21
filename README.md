@@ -119,11 +119,11 @@ with open('./people.csv', 'rb') as f:
 
 ## enricher
 
-The enricher is basically the smart combination of a `csv.reader` and a `csv.writer` and can be used to transform a given CSV file. You can then edit existing cells, add new ones and select which one from the input to keep in the output very easily, while remaining as performant as possible.
+The enricher is basically a smart combination of a `csv.reader` and a `csv.writer`. It can be used to transform a given CSV file. You can then edit existing cells, add new ones and select which one from the input to keep in the output very easily, while remaining as performant as possible.
 
-What's more, casanova's enricher are automatically resumable, meaning that if your process exits for whatever reason, it will be easy to resume where you left last time.
+What's more, casanova's enrichers are automatically resumable, meaning that if your process exits for whatever reason, it will be easy to restart where you left last time.
 
-Also, if you need to output lines in an arbitrary order, typically when performing tasks in a multithreaded fashion (e.g. when fetching a large numbers of web pages), casanova exports a threadsafe version of its enricher. What's more, this enricher is also resumable thanks to a data structure you can read about in this blog [post](https://yomguithereal.github.io/posts/contiguous-range-set).
+Also, if you need to output lines in an arbitrary order, typically when performing tasks in a multithreaded fashion (e.g. when fetching a large numbers of web pages), casanova exports a threadsafe version of its enricher. This enricher is also resumable thanks to a data structure you can read about in this blog [post](https://yomguithereal.github.io/posts/contiguous-range-set).
 
 Resuming typically requires `O(n)` time, `n` being the number of lines already done but only consumes amortized `O(1)` memory.
 
@@ -204,7 +204,6 @@ import casanova
 with open('./people.csv') as f, \
      open('./enriched-people.csv', 'w') as of:
 
-  # This will automatically start where it stopped last time
   enricher = casanova.threadsafe_enricher(f, of, add=['age', 'hair'])
 
   for index, row in enricher:
