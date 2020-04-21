@@ -150,13 +150,13 @@ with open('./people.csv') as f, \
   enricher = casanova.enricher(f, of, add=['age', 'hair'])
 
   for row in enricher:
-    enricher.enrichrow(row, ['34', 'blond'])
+    enricher.writerow(row, ['34', 'blond'])
 
   # Want to keep only some columns from input?
   enricher = casanova.enricher(f, of, add=['age'], keep=['surname'])
 
   for row in enricher:
-    enricher.enrichrow(row, ['45'])
+    enricher.writerow(row, ['45'])
 ```
 
 *Arguments*
@@ -194,9 +194,11 @@ with open('./people.csv') as f, \
 
 *Threadsafe version*
 
-To be safely resumable, the threadsafe version needs you to add an index column to the output so we can make sense of what was already done. Therefore, its `enrichrow` method is a bit different because it takes an additional argument being the original index of the row you need to enrich.
+To be safely resumable, the threadsafe version needs you to add an index column to the output so we can make sense of what was already done. Therefore, its `writerow` method is a bit different because it takes an additional argument being the original index of the row you need to enrich.
 
 To help you doing so, all the enricher's iteration methods therefore yield the index alongside the row.
+
+Note finally that resuming is only possible if one line in the input is meant to produce exactly one line in the output.
 
 ```python
 import casanova
@@ -207,7 +209,7 @@ with open('./people.csv') as f, \
   enricher = casanova.threadsafe_enricher(f, of, add=['age', 'hair'])
 
   for index, row in enricher:
-    enricher.enrichrow(index, row, ['67', 'blond'])
+    enricher.writerow(index, row, ['67', 'blond'])
 ```
 
 *Threadsafe arguments*

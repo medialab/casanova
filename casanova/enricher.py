@@ -141,13 +141,13 @@ def make_enricher(name, namespace, Reader):
                 if add is None:
                     add = self.padding
                 else:
-                    assert len(add) == self.added_count, '%s.enrichrow: expected %i additional cells but got %i.' % (namespace, self.added_count, len(add))
+                    assert len(add) == self.added_count, '%s.writerow: expected %i additional cells but got %i.' % (namespace, self.added_count, len(add))
 
                 row = self.filterrow(row) + add
 
             # No additions
             else:
-                assert add is None, '%s.enrichrow: expected no additions.' % namespace
+                assert add is None, '%s.writerow: expected no additions.' % namespace
 
                 row = self.filterrow(row)
 
@@ -159,10 +159,7 @@ def make_enricher(name, namespace, Reader):
         def writeheader(self):
             self.writer.writerow(self.output_fieldnames)
 
-        def writerow(self, row):
-            self.writer.writerow(row)
-
-        def enrichrow(self, row, add=None):
+        def writerow(self, row, add=None):
             self.writer.writerow(self.formatrow(row, add))
 
     class AbstractThreadsafeCasanovaEnricher(AbstractCasanovaEnricher):
@@ -242,7 +239,7 @@ def make_enricher(name, namespace, Reader):
         def records(self, columns):
             yield from enumerate(super().records(columns))
 
-        def enrichrow(self, index, row, add=None):
+        def writerow(self, index, row, add=None):
             self.writer.writerow(self.formatrow(row, add, index=index))
 
     return AbstractThreadsafeCasanovaEnricher, AbstractCasanovaEnricher

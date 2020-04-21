@@ -46,7 +46,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 enricher = enricher_fn(f, of, add=('line',))
 
                 for i, row in enumerate(enricher):
-                    enricher.enrichrow(row, [i])
+                    enricher.writerow(row, [i])
 
             assert collect_csv_file(output_path) == [
                 ['name', 'surname', 'line'],
@@ -62,7 +62,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 enricher = enricher_fn(f, of, keep=('name',), add=('line',))
 
                 for i, row in enumerate(enricher):
-                    enricher.enrichrow(row, [i])
+                    enricher.writerow(row, [i])
 
             assert collect_csv_file(output_path) == [
                 ['name', 'line'],
@@ -91,7 +91,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 )
 
                 row = next(iter(enricher))
-                enricher.enrichrow(row, [2])
+                enricher.writerow(row, [2])
 
             assert collect_csv_file(output_path) == [
                 ['name', 'x2'],
@@ -110,7 +110,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 )
 
                 for i, row in enumerate(enricher):
-                    enricher.enrichrow(row, [(i + 2) * 2])
+                    enricher.writerow(row, [(i + 2) * 2])
 
             assert collect_csv_file(output_path) == [
                 ['name', 'x2'],
@@ -143,7 +143,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 )
 
                 for i, row in imap_unordered(enricher, job, 3):
-                    enricher.enrichrow(i, row, [(i + 1) * 2])
+                    enricher.writerow(i, row, [(i + 1) * 2])
 
             assert collect_csv_file(output_path) == [
                 ['index', 'name', 'x2'],
@@ -221,7 +221,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 )
 
                 for j, (i, row) in enumerate(imap_unordered(enricher, job, 3)):
-                    enricher.enrichrow(i, row, [(i + 1) * 2])
+                    enricher.writerow(i, row, [(i + 1) * 2])
 
                     if j == 1:
                         break
@@ -244,7 +244,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 )
 
                 for j, (i, row) in enumerate(imap_unordered(enricher, job, 3)):
-                    enricher.enrichrow(i, row, [(i + 1) * 2])
+                    enricher.writerow(i, row, [(i + 1) * 2])
 
             assert collect_csv_file(output_path) == [
                 ['index', 'name', 'x2'],
