@@ -7,7 +7,7 @@
 from casanova_monkey.reader import CasanovaMonkeyReader
 from casanova.enricher import make_enricher
 
-CasanovaMonkeyEnricher = make_enricher(
+ThreadsafeCasanovaMonkeyEnricher, CasanovaMonkeyEnricher = make_enricher(
     'CasanovaMonkeyEnricher',
     'casanova_monkey.enricher',
     CasanovaMonkeyReader,

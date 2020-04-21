@@ -175,10 +175,13 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
 
             self.writer.writerow(self.formatrow(row, add, index=index))
 
-    return AbstractCasanovaEnricher
+    class AbstractThreadsafeCasanovaEnricher(AbstractCasanovaEnricher):
+        pass
+
+    return AbstractThreadsafeCasanovaEnricher, AbstractCasanovaEnricher
 
 
-CasanovaEnricher = make_enricher(
+ThreadsafeCasanovaEnricher, CasanovaEnricher = make_enricher(
     'CasanovaEnricher',
     'casanova.enricher',
     CasanovaReader
