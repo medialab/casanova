@@ -48,16 +48,15 @@ pip install casanova[monkey]
 ## Usage
 
 * [reader](#reader)
+* [enricher](#enricher)
 
 ## reader
 
-```python
-# For the raw python version
-import casanova
-# Or if you want to rely on faster csvmonkey
-import casanova_monkey as casanova
+Straightforward CSV reader exposing some information and indices about the given file's headers.
 
-# NOTE: to rely on csvmonkey you will need to open the file in binary mode (e.g. 'rb')!
+```python
+import casanova
+
 with open('./people.csv') as f:
 
   # Creating a reader
@@ -94,14 +93,34 @@ with open('./people.csv') as f:
   reader = casanova.reader(f, no_headers=True)
 ```
 
+*casanova_monkey*
+
+```python
+import casanova_monkey
+
+# NOTE: to rely on csvmonkey you will need to open the file in binary mode (e.g. 'rb')!
+with open('./people.csv', 'rb') as f:
+  reader = casanova_monkey.reader(f)
+
+  # For the lazy, slightly faster version
+  reader = casanova_monkey.reader(f, lazy=True)
+```
+
 *Arguments*
 
 * **file** *file*: file object to read.
 * **no_headers** *?bool* [`False`]: whether your CSV file is headless.
+* **lazy** *?bool* [`False`]: only for `casanova_monkey`, whether to yield `csvmonkey` raw lazy-decoding items or cast them as `list` for better compatibility.
 
 *Attributes*
 
 * **fieldnames** *list<str>*: field names in order.
 * **pos** *int|namedtuple<int>*: header positions object.
 
-TODO: https://yomguithereal.github.io/posts/contiguous-range-set
+## enricher
+
+The enricher is basically the smart combination of a `csv.reader` and a `csv.writer` and can be used to transform a given CSV file. You can then edit existing cells, add new ones and select which one from the input to keep in the output very easily, while remaining as performant as possible.
+
+What's more, casanova's enricher are automatically resumable, meaning that if your process exits for whatever reason, it will be easy to resume where you left last time.
+
+Also, if you need to output lines in an arbitrary order, typically when performing tasks in a multithreaded fashion (e.g. when fetching a large numbers of web pages), casanova exports a threadsafe version of its enricher. What's more, this enricher is also resumable thanks to a data structure you can read about in this blog [post](https://yomguithereal.github.io/posts/contiguous-range-set).
