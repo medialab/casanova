@@ -12,50 +12,61 @@ from casanova.reader import CasanovaReader, collect_column_indices
 
 # TODO: we must go with events for resuming
 # TODO: util to handle column and create pos
-class CasanovaEnricher(CasanovaReader):
-    def __init__(self, input_file, output_file, no_headers=False,
-                 resumable=False, keep=None, add=None):
+def make_enricher(name, namespace, Reader):
 
-        # Inheritance
-        super().__init__(
-            input_file,
-            no_headers=no_headers
-        )
+    class AbstractCasanovaEnricher(Reader):
+        def __init__(self, input_file, output_file, no_headers=False,
+                     resumable=False, keep=None, add=None):
 
-        self.writer = csv.writer(output_file)
-        self.keep_indices = None
-        self.output_fieldnames = self.fieldnames
-        self.added_count = 0
-        self.padding = None
+            # Inheritance
+            super().__init__(
+                input_file,
+                no_headers=no_headers
+            )
 
-        if keep is not None:
-            self.keep_indices = collect_column_indices(self.pos, keep)
+            self.writer = csv.writer(output_file)
+            self.keep_indices = None
+            self.output_fieldnames = self.fieldnames
+            self.added_count = 0
+            self.padding = None
 
-        if add is not None:
-            self.output_fieldnames += add
-            self.added_count = len(add)
-            self.padding = [''] * self.added_count
+            if keep is not None:
+                self.keep_indices = collect_column_indices(self.pos, keep)
 
-        # Need to write headers?
-        if not no_headers:
-            self.writer.writerow(self.output_fieldnames)
+            if add is not None:
+                self.output_fieldnames += add
+                self.added_count = len(add)
+                self.padding = [''] * self.added_count
 
-    def writerow(self, row):
-        self.writer.writerow(row)
+            # Need to write headers?
+            if not no_headers:
+                self.writer.writerow(self.output_fieldnames)
 
-    def enrichrow(self, row, add=None):
-
-        # Additions
-        if self.added_count > 0:
-            if add is None:
-                add = self.padding
-            else:
-                assert len(add) == self.added_count, 'casanova.enricher.enrichrow: expected %i additional cells but got %i.' % (self.added_count, len(add))
-
-            self.writer.writerow(row + add)
-
-        # No additions
-        else:
-            assert add is None, 'casanova.enricher.enrichrow: expected no additions.'
-
+        def writerow(self, row):
             self.writer.writerow(row)
+
+        def enrichrow(self, row, add=None):
+
+            # Additions
+            if self.added_count > 0:
+                if add is None:
+                    add = self.padding
+                else:
+                    assert len(add) == self.added_count, '%s.enrichrow: expected %i additional cells but got %i.' % (namespace, self.added_count, len(add))
+
+                self.writer.writerow(row + add)
+
+            # No additions
+            else:
+                assert add is None, '%s.enrichrow: expected no additions.' % namespace
+
+                self.writer.writerow(row)
+
+    return AbstractCasanovaEnricher
+
+
+CasanovaEnricher = make_enricher(
+    'CasanovaEnricher',
+    'casanova.enricher',
+    CasanovaReader
+)
