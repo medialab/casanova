@@ -98,7 +98,7 @@ with open('./people.csv') as f:
 ```python
 import casanova_monkey
 
-# NOTE: to rely on csvmonkey you will need to open the file in binary mode (e.g. 'rb')!
+# NOTE: to rely on csvmonkey you will need to open the file in binary mode (e.g. "rb")!
 with open('./people.csv', 'rb') as f:
   reader = casanova_monkey.reader(f)
 
@@ -124,3 +124,105 @@ The enricher is basically the smart combination of a `csv.reader` and a `csv.wri
 What's more, casanova's enricher are automatically resumable, meaning that if your process exits for whatever reason, it will be easy to resume where you left last time.
 
 Also, if you need to output lines in an arbitrary order, typically when performing tasks in a multithreaded fashion (e.g. when fetching a large numbers of web pages), casanova exports a threadsafe version of its enricher. What's more, this enricher is also resumable thanks to a data structure you can read about in this blog [post](https://yomguithereal.github.io/posts/contiguous-range-set).
+
+Resuming typically requires `O(n)` time, `n` being the number of lines already done but only consumes amortized `O(1)` memory.
+
+```python
+import casanova
+
+with open('./people.csv') as f, \
+     open('./enriched-people.csv', 'w') as of:
+  enricher = casanova.enricher(f, of)
+
+  # The enricher inherits from casanova.reader
+  enricher.pos
+  >>> HeadersPositions(name=0, surname=1)
+
+  # You can iterate over its rows
+  name_pos = enricher.pos.name
+  for row in enricher:
+
+    # Editing a cell, so that everyone is called John
+    row[name_pos] = 'John'
+    enricher.writerow(row)
+
+  # Want to add columns?
+  enricher = casanova.enricher(f, of, add=['age', 'hair'])
+
+  for row in enricher:
+    enricher.enrichrow(row, ['34', 'blond'])
+
+  # Want to keep only some columns from input?
+  enricher = casanova.enricher(f, of, add=['age'], keep=['surname'])
+
+  for row in enricher:
+    enricher.enrichrow(row, ['45'])
+```
+
+*Arguments*
+
+* **input_file** *file*: file object to read.
+* **output_file** *file*: file object to write.
+* **no_headers** *?bool* [`False`]: whether your CSV file is headless.
+* **add** *?iterable<str|int>*: names of columns to add to output.
+* **keep** *?iterable<str|int>*: names of colums to keep from input.
+* **resumable** *?bool* [`False`]: whether the enricher should be able to resume.
+* **listener** *?callable*: a function listening to the enricher's events.
+
+*Resuming an enricher*
+
+```python
+import casanova
+
+# NOTE: to be able to resume you will need to open the output file with "a+"
+with open('./people.csv') as f, \
+     open('./enriched-people.csv', 'a+') as of:
+
+  # This will automatically start where it stopped last time
+  enricher = casanova.enricher(f, of, resumable=True)
+
+  for row in enricher:
+    row[1] = 'John'
+    enricher.writerow(row)
+
+  # You can also listen to events if you need to advance loading bars etc.
+  def listener(event, row):
+    print(event, row)
+
+  enricher = casanova.enricher(f, of, resumable=True, listener=listener)
+```
+
+*Threadsafe version*
+
+To be safely resumable, the threadsafe version needs you to add an index column to the output so we can make sense of what was already done. Therefore, its `enrichrow` method is a bit different because it takes an additional argument being the original index of the row you need to enrich.
+
+To help you doing so, all the enricher's iteration methods therefore yield the index alongside the row.
+
+```python
+import casanova
+
+with open('./people.csv') as f, \
+     open('./enriched-people.csv', 'w') as of:
+
+  # This will automatically start where it stopped last time
+  enricher = casanova.threadsafe_enricher(f, of, add=['age', 'hair'])
+
+  for index, row in enricher:
+    enricher.enrichrow(index, row, ['67', 'blond'])
+```
+
+*Threadsafe arguments*
+
+* **index_column** *?str* [`index`]: name of the index column.
+
+*casanova_monkey*
+
+```python
+import casanova_monkey
+
+with open('./people.csv') as f, \
+     open('./enriched-people.csv', 'w') as of:
+
+  enricher = casanova_monkey.enricher(f, of)
+  enricher = casanova_monkey.threadsafe_enricher(f, of)
+```
