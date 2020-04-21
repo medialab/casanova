@@ -23,6 +23,7 @@ class CasanovaMonkeyReader(CasanovaReader):
         self.fieldnames = None
         self.first_row = None
         self.can_slice = False
+        self.binary = True
 
         if no_headers:
             try:

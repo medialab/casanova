@@ -69,6 +69,7 @@ class CasanovaReader(object):
         self.fieldnames = None
         self.first_row = None
         self.can_slice = True
+        self.binary = False
 
         if no_headers:
             try:

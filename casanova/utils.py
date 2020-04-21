@@ -4,7 +4,7 @@
 #
 # Miscellaneous utility functions.
 #
-from io import BytesIO, BufferedReader
+from io import BytesIO, BufferedReader, TextIOWrapper
 
 
 def iter_with_prev(iterator):
@@ -36,7 +36,7 @@ def is_binary_buffer(buf):
 
 
 def is_resumable_buffer(buf):
-    if not isinstance(buf, BufferedReader):
+    if not isinstance(buf, (BufferedReader, TextIOWrapper)):
         return False
 
     if 'a' not in buf.mode and '+' not in buf.mode:

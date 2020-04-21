@@ -68,6 +68,20 @@ def make_enricher_test(name, enricher_fn, binary=False):
                 ['Julia', '2']
             ]
 
+        def test_resumable(self, tmpdir):
+            output_path = str(tmpdir.join('./enriched-resumable.csv'))
+            with open('./test/resources/people.csv', flag) as f, \
+                 open(output_path, 'a+') as of:
+                enricher = enricher_fn(f, of, add=('x2', ), keep=('name',), resumable=True)
+
+                row = next(iter(enricher))
+                enricher.enrichrow(row, [2])
+
+            assert collect_csv_file(output_path) == [
+                ['name', 'x2'],
+                ['John', '2']
+            ]
+
     return AbstractTestEnricher
 
 

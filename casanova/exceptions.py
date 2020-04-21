@@ -26,3 +26,7 @@ class InvalidFileError(CasanovaError):
 
 class NotResumableError(CasanovaError):
     pass
+
+
+class ResumeError(CasanovaError):
+    pass
