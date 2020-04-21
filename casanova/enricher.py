@@ -31,7 +31,7 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
 
             # Sanity tests
             if resumable and not is_resumable_buffer(output_file):
-                raise NotResumableError('%s: expecting an "a+" or "a+b" buffer.')
+                raise NotResumableError('%s: expecting an "a+" or "a+b" buffer.' % namespace)
 
             self.writer = csv.writer(output_file)
             self.keep_indices = None
