@@ -33,3 +33,17 @@ def is_binary_buffer(buf):
         return False
 
     return True
+
+
+def is_resumable_buffer(buf):
+    if not isinstance(buf, BufferedReader):
+        return False
+
+    if 'a' not in buf.mode and '+' not in buf.mode:
+        return False
+
+    return True
+
+
+def is_empty_buffer(buf):
+    return buf.tell() == 0
