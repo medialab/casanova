@@ -80,7 +80,7 @@ class CasanovaReader(object):
             self.pos = make_headers_namedtuple(len(self.first_row))
         else:
             try:
-                self.fieldnames = list(next(self.reader))
+                self.fieldnames = next(self.reader)
             except StopIteration:
                 raise EmptyFileError
 
@@ -96,8 +96,7 @@ class CasanovaReader(object):
             yield self.first_row
             self.first_row = None
 
-        for row in self.reader:
-            yield row
+        yield from self.reader
 
     def __iter__(self):
         return self.iter()

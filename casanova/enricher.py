@@ -27,7 +27,7 @@ from casanova.utils import (
 )
 
 
-def make_enricher(name, namespace, Reader, immutable_rows=False):
+def make_enricher(name, namespace, Reader):
 
     class AbstractCasanovaEnricher(Reader):
         __name__ = name
@@ -52,8 +52,6 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
             self.output_fieldnames = self.fieldnames
             self.added_count = 0
             self.padding = None
-
-            self.immutable_rows = immutable_rows
 
             self.resumable = resumable
             self.resume_offset = 0
@@ -133,8 +131,6 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
         def filterrow(self, row):
             if self.keep_indices is not None:
                 row = [row[i] for i in self.keep_indices]
-            elif self.immutable_rows:
-                row = row.aslist()
 
             return row
 
@@ -197,9 +193,6 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
             should_emit = callable(self.listener)
 
             for index, row in iterator:
-                if self.binary:
-                    row = row.aslist()
-
                 if self.already_done.stateful_contains(index):
                     if should_emit:
                         with self.event_lock:

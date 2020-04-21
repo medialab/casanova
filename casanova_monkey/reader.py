@@ -12,7 +12,7 @@ from casanova.exceptions import InvalidFileError, EmptyFileError
 
 
 class CasanovaMonkeyReader(CasanovaReader):
-    def __init__(self, input_file, no_headers=False):
+    def __init__(self, input_file, no_headers=False, lazy=False):
 
         # Ensuring we are reading a binary buffer
         if not is_binary_buffer(input_file):
@@ -24,6 +24,7 @@ class CasanovaMonkeyReader(CasanovaReader):
         self.first_row = None
         self.can_slice = False
         self.binary = True
+        self.lazy = lazy
 
         if no_headers:
             try:
@@ -34,8 +35,22 @@ class CasanovaMonkeyReader(CasanovaReader):
             self.pos = make_headers_namedtuple(len(self.first_row))
         else:
             try:
-                self.fieldnames = list(next(self.reader))
+                self.fieldnames = next(self.reader).aslist()
             except StopIteration:
                 raise EmptyFileError
 
             self.pos = make_headers_namedtuple(self.fieldnames)
+
+    def iter(self):
+        if self.first_row is not None:
+            if self.lazy:
+                yield self.first_row
+            else:
+                yield self.first_row.aslist()
+            self.first_row = None
+
+        if self.lazy:
+            yield from self.reader
+        else:
+            for row in self.reader:
+                yield row.aslist()

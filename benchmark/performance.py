@@ -11,11 +11,13 @@ import csvmonkey
 @click.argument('path')
 @click.argument('column')
 @click.option('--headers/--no-headers', default=True)
-def bench(path, column, headers=True):
-    with Timer('csvmonkey'):
-        with open(path, 'rb') as f:
-            for row in csvmonkey.from_file(f, header=headers):
-                a = row[column]
+@click.option('--skip-std/--no-skip-std', default=True)
+def bench(path, column, headers=True, skip_std=True):
+    if not skip_std:
+        with Timer('csvmonkey'):
+            with open(path, 'rb') as f:
+                for row in csvmonkey.from_file(f, header=headers):
+                    a = row[column]
 
     with Timer('casanova_monkey: basic'):
         with open(path, 'rb') as f:
@@ -25,16 +27,25 @@ def bench(path, column, headers=True):
             for row in reader:
                 a = row[pos]
 
-    with Timer('csv.reader'):
-        with open(path) as f:
-            for row in csv.reader(f):
-                a = row[0]
+    with Timer('casanova_monkey: lazy'):
+        with open(path, 'rb') as f:
+            reader = casanova_monkey.reader(f, no_headers=not headers, lazy=True)
+            pos = reader.pos[column]
 
-    if headers:
-        with Timer('csv.DictReader'):
+            for row in reader:
+                a = row[pos]
+
+    if not skip_std:
+        with Timer('csv.reader'):
             with open(path) as f:
-                for row in csv.DictReader(f):
-                    a = row[column]
+                for row in csv.reader(f):
+                    a = row[0]
+
+        if headers:
+            with Timer('csv.DictReader'):
+                with open(path) as f:
+                    for row in csv.DictReader(f):
+                        a = row[column]
 
     with Timer('casanova.reader: basic'):
         with open(path) as f:

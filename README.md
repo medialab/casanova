@@ -10,7 +10,7 @@ csv.reader: 24s
 csv.DictReader: 84s
 casanova.reader: 25s
 csvmonkey: 3s
-casanova_monkey.reader: 3s
+casanova_monkey.reader: 4s
 ```
 
 Casanova is therefore an attempt to stick to `csv.reader` performance while still keeping a comfortable interface, still able to consider headers etc.

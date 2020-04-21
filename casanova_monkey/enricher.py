@@ -10,6 +10,5 @@ from casanova.enricher import make_enricher
 ThreadsafeCasanovaMonkeyEnricher, CasanovaMonkeyEnricher = make_enricher(
     'CasanovaMonkeyEnricher',
     'casanova_monkey.enricher',
-    CasanovaMonkeyReader,
-    immutable_rows=True
+    CasanovaMonkeyReader
 )
