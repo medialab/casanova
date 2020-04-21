@@ -84,6 +84,17 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
                 columns_info
             )
 
+        # def __iter__(self):
+        #     if self.unordered and self.binary:
+
+        #         def iter():
+        #             for row in super().__iter__():
+        #                 yield row.aslist()
+
+        #         return iter()
+
+        #     return super().__iter__()
+
         def resume(self):
 
             # Rolling back to beginning of file
@@ -120,11 +131,14 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
                 except StopIteration:
                     raise ResumeError('%s.resume: output has more lines than input.' % namespace)
 
-        def filterrow(self, row):
+        def filterrow(self, row, index=None):
             if self.keep_indices is not None:
                 row = [row[i] for i in self.keep_indices]
-            elif self.immutable_rows:
-                row = list(row)
+            elif self.immutable_rows and not self.unordered:
+                row = row.aslist()
+
+            if index is not None:
+                return [index] + row
 
             return row
 
@@ -152,7 +166,14 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
             self.writer.writerow(row)
 
         def enrichrow(self, row, add=None):
+            assert not self.unordered, '%s.enrichrow: use enrichrow_unordered instead.' % namespace
+
             self.writer.writerow(self.formatrow(row, add))
+
+        def enrichrow_unordered(self, index, row, add=None):
+            assert self.unordered, '%s.enrichrow: use enrichrow instead.' % namespace
+
+            self.writer.writerow(self.formatrow(row, add, index=index))
 
     return AbstractCasanovaEnricher
 
