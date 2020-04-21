@@ -4,6 +4,7 @@
 #
 # Miscellaneous utility functions.
 #
+from io import BytesIO, BufferedReader
 
 
 def iter_with_prev(iterator):
@@ -20,5 +21,15 @@ def is_contiguous(l):
     for p, n in iter_with_prev(l):
         if p != n - 1:
             return False
+
+    return True
+
+
+def is_binary_buffer(buf):
+    if isinstance(buf, BufferedReader):
+        if 'b' not in buf.mode:
+            return False
+    elif not isinstance(buf, BytesIO):
+        return False
 
     return True

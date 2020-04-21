@@ -5,22 +5,18 @@
 # A Casanova reader relying on csvmonkey for performance.
 #
 import csvmonkey
-from io import BytesIO, BufferedReader
-from casanova.reader import CasanovaReader, make_headers_namedtuple
-from casanova.exceptions import InvalidFileError, EmptyFileError
 
-binary_error = InvalidFileError('casanova_monkey.reader: expecting file in binary mode (e.g. "rb") or BytesIO.')
+from casanova.reader import CasanovaReader, make_headers_namedtuple
+from casanova.utils import is_binary_buffer
+from casanova.exceptions import InvalidFileError, EmptyFileError
 
 
 class CasanovaMonkeyReader(CasanovaReader):
     def __init__(self, input_file, no_headers=False):
 
         # Ensuring we are reading a binary buffer
-        if isinstance(input_file, BufferedReader):
-            if 'b' not in input_file.mode:
-                raise binary_error
-        elif not isinstance(input_file, BytesIO):
-            raise binary_error
+        if not is_binary_buffer(input_file):
+            raise InvalidFileError('casanova_monkey.reader: expecting file in binary mode (e.g. "rb") or BytesIO.')
 
         self.input_file = input_file
         self.reader = csvmonkey.from_file(input_file, header=False)
