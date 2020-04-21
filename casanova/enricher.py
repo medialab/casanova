@@ -12,7 +12,7 @@ from casanova.reader import CasanovaReader, collect_column_indices
 
 # TODO: we must go with events for resuming
 # TODO: util to handle column and create pos
-def make_enricher(name, namespace, Reader):
+def make_enricher(name, namespace, Reader, immutable_rows=False):
 
     class AbstractCasanovaEnricher(Reader):
         def __init__(self, input_file, output_file, no_headers=False,
@@ -29,6 +29,7 @@ def make_enricher(name, namespace, Reader):
             self.output_fieldnames = self.fieldnames
             self.added_count = 0
             self.padding = None
+            self.immutable_rows = immutable_rows
 
             if keep is not None:
                 self.keep_indices = collect_column_indices(self.pos, keep)
@@ -53,6 +54,9 @@ def make_enricher(name, namespace, Reader):
                     add = self.padding
                 else:
                     assert len(add) == self.added_count, '%s.enrichrow: expected %i additional cells but got %i.' % (namespace, self.added_count, len(add))
+
+                if self.immutable_rows:
+                    row = list(row)
 
                 self.writer.writerow(row + add)
 

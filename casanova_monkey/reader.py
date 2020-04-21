@@ -1,3 +1,9 @@
+# =============================================================================
+# Casanova Monkey Reader
+# =============================================================================
+#
+# A Casanova reader relying on csvmonkey for performance.
+#
 import csvmonkey
 from io import BytesIO, BufferedReader
 from casanova.reader import CasanovaReader, make_headers_namedtuple

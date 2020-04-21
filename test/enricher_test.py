@@ -1,6 +1,7 @@
 # =============================================================================
 # Casanova Enricher Unit Tests
 # =============================================================================
+import os
 import csv
 import casanova
 import pytest
@@ -18,18 +19,19 @@ def collect_csv_file(path):
 
 
 def make_enricher_test(name, enricher_fn, binary=False):
-    def get_relevant_empty_io():
-        return StringIO('') if binary else BytesIO(b'')
+    flag = 'r' if not binary else 'rb'
+
+    def get_empty_io():
+        return StringIO('') if not binary else BytesIO(b'')
 
     class AbstractTestEnricher(object):
         def test_exceptions(self):
             with pytest.raises(EmptyFileError):
-                enricher_fn(get_relevant_empty_io(), get_relevant_empty_io())
+                enricher_fn(get_empty_io(), get_empty_io())
 
         def test_basics(self, tmpdir):
             output_path = str(tmpdir.join('./enriched.csv'))
-
-            with open('./test/resources/people.csv') as f, \
+            with open('./test/resources/people.csv', flag) as f, \
                  open(output_path, 'w') as of:
                 enricher = enricher_fn(f, of, add=('line',))
 
@@ -48,6 +50,6 @@ def make_enricher_test(name, enricher_fn, binary=False):
 
 TestEnricher = make_enricher_test('TestEnricher', casanova.enricher)
 
-# if not os.environ.get('CASANOVA_TEST_SKIP_CSVMONKEY'):
-#     import casanova_monkey
-#     TestMonkeyEnricher = make_enricher_test('TestMonkeyEnricher', casanova_monkey.enricher, binary=True)
+if not os.environ.get('CASANOVA_TEST_SKIP_CSVMONKEY'):
+    import casanova_monkey
+    TestMonkeyEnricher = make_enricher_test('TestMonkeyEnricher', casanova_monkey.enricher, binary=True)
