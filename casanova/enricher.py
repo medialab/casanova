@@ -22,7 +22,7 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
     class AbstractCasanovaEnricher(Reader):
         def __init__(self, input_file, output_file, no_headers=False,
                      resumable=False, keep=None, add=None, listener=None,
-                     unordered=False, index_column='index'):
+                     prepend=None):
 
             # Inheritance
             super().__init__(
@@ -43,12 +43,10 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
 
             self.immutable_rows = immutable_rows
 
-            self.unordered = unordered
             self.resumable = resumable
             self.resume_offset = 0
 
             self.listener = listener
-            self.event_lock = Lock()
 
             if keep is not None:
                 self.keep_indices = collect_column_indices(self.pos, keep)
@@ -59,8 +57,8 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
                 self.added_count = len(add)
                 self.padding = [''] * self.added_count
 
-            if unordered:
-                self.output_fieldnames = [index_column] + self.output_fieldnames
+            if prepend is not None:
+                self.output_fieldnames = prepend + self.output_fieldnames
 
             # Need to write headers?
             output_buffer_is_empty = is_empty_buffer(output_file)
@@ -80,20 +78,9 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
             return '<%s%s%s %s>' % (
                 namespace,
                 ' resumable' if self.resumable else '',
-                ' unordered' if self.unordered else '',
+                ' unordered' if getattr(self, 'unordered', False) else '',
                 columns_info
             )
-
-        # def __iter__(self):
-        #     if self.unordered and self.binary:
-
-        #         def iter():
-        #             for row in super().__iter__():
-        #                 yield row.aslist()
-
-        #         return iter()
-
-        #     return super().__iter__()
 
         def resume(self):
 
@@ -131,18 +118,15 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
                 except StopIteration:
                     raise ResumeError('%s.resume: output has more lines than input.' % namespace)
 
-        def filterrow(self, row, index=None):
+        def filterrow(self, row):
             if self.keep_indices is not None:
                 row = [row[i] for i in self.keep_indices]
-            elif self.immutable_rows and not self.unordered:
+            elif self.immutable_rows:
                 row = row.aslist()
-
-            if index is not None:
-                return [index] + row
 
             return row
 
-        def formatrow(self, row, add=None):
+        def formatrow(self, row, add=None, index=None):
 
             # Additions
             if self.added_count > 0:
@@ -151,13 +135,18 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
                 else:
                     assert len(add) == self.added_count, '%s.enrichrow: expected %i additional cells but got %i.' % (namespace, self.added_count, len(add))
 
-                return self.filterrow(row) + add
+                row = self.filterrow(row) + add
 
             # No additions
             else:
                 assert add is None, '%s.enrichrow: expected no additions.' % namespace
 
-                return self.filterrow(row)
+                row = self.filterrow(row)
+
+            if index is not None:
+                row = [index] + row
+
+            return row
 
         def writeheader(self):
             self.writer.writerow(self.output_fieldnames)
@@ -166,17 +155,29 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
             self.writer.writerow(row)
 
         def enrichrow(self, row, add=None):
-            assert not self.unordered, '%s.enrichrow: use enrichrow_unordered instead.' % namespace
-
             self.writer.writerow(self.formatrow(row, add))
 
-        def enrichrow_unordered(self, index, row, add=None):
-            assert self.unordered, '%s.enrichrow: use enrichrow instead.' % namespace
-
-            self.writer.writerow(self.formatrow(row, add, index=index))
-
     class AbstractThreadsafeCasanovaEnricher(AbstractCasanovaEnricher):
-        pass
+        def __init__(self, input_file, output_file, no_headers=False,
+                     resumable=False, keep=None, add=None, listener=None,
+                     index_column='index'):
+
+            self.event_lock = Lock()
+
+            # Inheritance
+            super().__init__(
+                input_file,
+                output_file,
+                no_headers=False,
+                resumable=False,
+                keep=None,
+                add=None,
+                listener=None,
+                prepend=[index_column]
+            )
+
+        def enrichrow(self, index, row, add=None):
+            self.writer.writerow(self.formatrow(row, add, index=index))
 
     return AbstractThreadsafeCasanovaEnricher, AbstractCasanovaEnricher
 
