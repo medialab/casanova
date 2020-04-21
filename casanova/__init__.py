@@ -5,8 +5,7 @@
 from casanova.contiguous_range_set import ContiguousRangeSet
 
 from casanova.enricher import (
-    CasanovaEnricher as enricher,
-    ThreadSafeCasanovaEnricher as threadsafe_enricher
+    CasanovaEnricher as enricher
 )
 
 from casanova.reader import (

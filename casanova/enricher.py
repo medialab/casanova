@@ -6,10 +6,8 @@
 # easily ouput a similar CSV file while editing, adding and filtering cell_count.
 #
 import csv
-from collections import namedtuple
 
 from casanova.reader import CasanovaReader, collect_column_indices
-from casanova.exceptions import MissingColumnError, ColumnNumberMismatchError
 
 
 # TODO: we must go with events for resuming
@@ -25,11 +23,39 @@ class CasanovaEnricher(CasanovaReader):
         )
 
         self.writer = csv.writer(output_file)
+        self.keep_indices = None
+        self.output_fieldnames = self.fieldnames
+        self.added_count = 0
+        self.padding = None
 
-        self.keep = keep
-        self.keep_indices = collect_column_indices(self.pos, keep)
+        if keep is not None:
+            self.keep_indices = collect_column_indices(self.pos, keep)
 
+        if add is not None:
+            self.output_fieldnames += add
+            self.added_count = len(add)
+            self.padding = [''] * self.added_count
 
-# TODO: lock for events
-class ThreadSafeCasanovaEnricher(CasanovaEnricher):
-    pass
+        # Need to write headers?
+        if not no_headers:
+            self.writer.writerow(self.output_fieldnames)
+
+    def writerow(self, row):
+        self.writer.writerow(row)
+
+    def enrichrow(self, row, add=None):
+
+        # Additions
+        if self.added_count > 0:
+            if add is None:
+                add = self.padding
+            else:
+                assert len(add) == self.added_count, 'casanova.enricher.enrichrow: expected %i additional cells but got %i.' % (self.added_count, len(add))
+
+            self.writer.writerow(row + add)
+
+        # No additions
+        else:
+            assert add is None, 'casanova.enricher.enrichrow: expected no additions.'
+
+            self.writer.writerow(row)

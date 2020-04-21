@@ -4,7 +4,7 @@
 import csv
 import casanova
 import pytest
-from io import StringIO
+from io import StringIO, BytesIO
 
 from casanova.exceptions import (
     EmptyFileError,
@@ -17,27 +17,36 @@ def collect_csv_file(path):
         return list(csv.reader(f))
 
 
-# class TestEnricher(object):
-#     def test_exceptions(self):
-#         with pytest.raises(EmptyFileError):
-#             casanova.enricher(StringIO(''), StringIO(''), column='test')
+def make_enricher_test(name, enricher_fn, binary=False):
+    def get_relevant_empty_io():
+        return StringIO('') if binary else BytesIO(b'')
 
-#         with open('./test/resources/people.csv') as f:
-#             with pytest.raises(MissingColumnError):
-#                 casanova.enricher(f, StringIO(''), column='notfound')
+    class AbstractTestEnricher(object):
+        def test_exceptions(self):
+            with pytest.raises(EmptyFileError):
+                enricher_fn(get_relevant_empty_io(), get_relevant_empty_io())
 
-#     def test_basics(self, tmpdir):
-#         output_path = tmpdir.join('./enriched.csv')
-#         with open('./test/resources/people.csv') as f, \
-#              open(output_path, 'w') as of:
-#             enricher = casanova.enricher(f, of, add=('line',))
+        def test_basics(self, tmpdir):
+            output_path = tmpdir.join('./enriched.csv')
+            with open('./test/resources/people.csv') as f, \
+                 open(output_path, 'w') as of:
+                enricher = enricher_fn(f, of, add=('line',))
 
-#             for i, _ in enumerate(enricher):
-#                 enricher.enrichrow([i])
+                for i, row in enumerate(enricher):
+                    enricher.enrichrow(row, [i])
 
-#         assert collect_csv_file(output_path) == [
-#             ['name', 'surname', 'line'],
-#             ['John', 'Matthews', '0'],
-#             ['Mary', 'Sue', '1'],
-#             ['Julia', 'Stone', '2']
-#         ]
+            assert collect_csv_file(output_path) == [
+                ['name', 'surname', 'line'],
+                ['John', 'Matthews', '0'],
+                ['Mary', 'Sue', '1'],
+                ['Julia', 'Stone', '2']
+            ]
+
+    return AbstractTestEnricher
+
+
+TestEnricher = make_enricher_test('TestEnricher', casanova.enricher)
+
+# if not os.environ.get('CASANOVA_TEST_SKIP_CSVMONKEY'):
+#     import casanova_monkey
+#     TestMonkeyEnricher = make_enricher_test('TestMonkeyEnricher', casanova_monkey.enricher, binary=True)

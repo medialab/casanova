@@ -19,17 +19,16 @@ class CasanovaMonkeyReader(CasanovaReader):
         self.input_file = input_file
         self.reader = csvmonkey.from_file(input_file, header=False)
         self.fieldnames = None
-        self.current_row = None
-        self.started = False
+        self.first_row = None
         self.can_slice = False
 
         if no_headers:
             try:
-                self.current_row = next(self.reader)
+                self.first_row = next(self.reader)
             except StopIteration:
                 raise EmptyFileError
 
-            self.pos = make_headers_namedtuple(len(self.current_row))
+            self.pos = make_headers_namedtuple(len(self.first_row))
         else:
             try:
                 self.fieldnames = list(next(self.reader))
