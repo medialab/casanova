@@ -82,6 +82,20 @@ def make_enricher_test(name, enricher_fn, binary=False):
                 ['John', '2']
             ]
 
+            with open('./test/resources/people.csv', flag) as f, \
+                 open(output_path, 'a+') as of:
+                enricher = enricher_fn(f, of, add=('x2', ), keep=('name',), resumable=True)
+
+                for i, row in enumerate(enricher):
+                    enricher.enrichrow(row, [(i + 2) * 2])
+
+            assert collect_csv_file(output_path) == [
+                ['name', 'x2'],
+                ['John', '2'],
+                ['Mary', '4'],
+                ['Julia', '6']
+            ]
+
     return AbstractTestEnricher
 
 

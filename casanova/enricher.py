@@ -104,6 +104,8 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
 
                     if should_emit:
                         self.listener('resume.input', row)
+
+                    i += 1
                 except StopIteration:
                     raise ResumeError('%s.resume: output has more lines than input.' % namespace)
 
