@@ -100,7 +100,7 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
 
             while i < self.resume_offset:
                 try:
-                    next(self.reader)
+                    row = next(self.reader)
 
                     if should_emit:
                         self.listener('resume.input', row)

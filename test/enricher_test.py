@@ -6,6 +6,7 @@ import csv
 import casanova
 import pytest
 from io import StringIO, BytesIO
+from collections import defaultdict
 
 from casanova.exceptions import (
     EmptyFileError,
@@ -69,10 +70,23 @@ def make_enricher_test(name, enricher_fn, binary=False):
             ]
 
         def test_resumable(self, tmpdir):
+
+            log = defaultdict(list)
+
+            def listener(name, row):
+                log[name].append(list(row))
+
             output_path = str(tmpdir.join('./enriched-resumable.csv'))
             with open('./test/resources/people.csv', flag) as f, \
                  open(output_path, 'a+') as of:
-                enricher = enricher_fn(f, of, add=('x2', ), keep=('name',), resumable=True)
+
+                enricher = enricher_fn(
+                    f, of,
+                    add=('x2', ),
+                    keep=('name',),
+                    resumable=True,
+                    listener=listener
+                )
 
                 row = next(iter(enricher))
                 enricher.enrichrow(row, [2])
@@ -84,7 +98,14 @@ def make_enricher_test(name, enricher_fn, binary=False):
 
             with open('./test/resources/people.csv', flag) as f, \
                  open(output_path, 'a+') as of:
-                enricher = enricher_fn(f, of, add=('x2', ), keep=('name',), resumable=True)
+
+                enricher = enricher_fn(
+                    f, of,
+                    add=('x2', ),
+                    keep=('name',),
+                    resumable=True,
+                    listener=listener
+                )
 
                 for i, row in enumerate(enricher):
                     enricher.enrichrow(row, [(i + 2) * 2])
@@ -95,6 +116,11 @@ def make_enricher_test(name, enricher_fn, binary=False):
                 ['Mary', '4'],
                 ['Julia', '6']
             ]
+
+            assert log == {
+                'resume.output': [['John', '2']],
+                'resume.input': [['John', 'Matthews']]
+            }
 
     return AbstractTestEnricher
 
