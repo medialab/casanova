@@ -22,7 +22,7 @@ def collect_csv_file(path):
         return list(csv.reader(f))
 
 
-def make_enricher_test(name, enricher_fn, binary=False):
+def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
     flag = 'r' if not binary else 'rb'
 
     def get_empty_io():
@@ -124,42 +124,92 @@ def make_enricher_test(name, enricher_fn, binary=False):
                 'resume.input': [['John', 'Matthews']]
             }
 
-        # def test_unordered(self, tmpdir):
-        #     log = defaultdict(list)
+        def test_threadsafe(self, tmpdir):
+            def job(payload):
+                i, row = payload
+                s = int(row[2])
+                time.sleep(s * .1)
 
-        #     def job(payload):
-        #         i, row = payload
-        #         s = int(row[2])
-        #         time.sleep(s * .1)
+                return i, row
 
-        #         return i, row
+            output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
+            with open('./test/resources/people-unordered.csv', flag) as f, \
+                 open(output_path, 'a+') as of:
 
-        #     output_path = str(tmpdir.join('./enriched-resumable-unordered.csv'))
-        #     with open('./test/resources/people-unordered.csv', flag) as f, \
-        #          open(output_path, 'a+') as of:
+                enricher = threadsafe_enricher_fn(
+                    f, of,
+                    add=('x2',),
+                    keep=('name',)
+                )
 
-        #         enricher = enricher_fn(
-        #             f, of,
-        #             add=('x2',),
-        #             keep=('name',),
-        #             unordered=True
-        #         )
+                for i, row in imap_unordered(enricher, job, 3):
+                    enricher.enrichrow(i, row, [(i + 1) * 2])
 
-        #         for i, row in imap_unordered(enumerate(enricher), job, 3):
-        #             enricher.enrichrow(row, [(i + 1) * 2])
+            assert collect_csv_file(output_path) == [
+                ['index', 'name', 'x2'],
+                ['1', 'Mary', '4'],
+                ['2', 'Julia', '6'],
+                ['0', 'John', '2']
+            ]
 
-        #     assert collect_csv_file(output_path) == [
-        #         ['index', 'name', 'x2'],
-        #         ['1', 'Mary', '4'],
-        #         ['2', 'Julia', '6'],
-        #         ['0', 'John', '2']
-        #     ]
+        def test_threadsafe_cells(self, tmpdir):
+            def job(payload):
+                i, row = payload
+                s = int(row[2])
+                time.sleep(s * .1)
+
+                return i, row
+
+            output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
+            with open('./test/resources/people-unordered.csv', flag) as f, \
+                 open(output_path, 'a+') as of:
+
+                enricher = threadsafe_enricher_fn(
+                    f, of,
+                    add=('x2',),
+                    keep=('name',)
+                )
+
+                names = [t for t in enricher.cells('name')]
+
+            assert names == [(0, 'John'), (1, 'Mary'), (2, 'Julia')]
+
+        def test_threadsafe_records(self, tmpdir):
+            def job(payload):
+                i, row = payload
+                s = int(row[2])
+                time.sleep(s * .1)
+
+                return i, row
+
+            output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
+            with open('./test/resources/people-unordered.csv', flag) as f, \
+                 open(output_path, 'a+') as of:
+
+                enricher = threadsafe_enricher_fn(
+                    f, of,
+                    add=('x2',),
+                    keep=('name',)
+                )
+
+                records = [t for t in enricher.cells(['name', 'time'])]
+
+            assert records == [(0, (0, ['John', '3'])), (1, (1, ['Mary', '1'])), (2, (2, ['Julia', '2']))]
 
     return AbstractTestEnricher
 
 
-TestEnricher = make_enricher_test('TestEnricher', casanova.enricher)
+TestEnricher = make_enricher_test(
+    'TestEnricher',
+    casanova.enricher,
+    casanova.threadsafe_enricher
+)
 
 if not os.environ.get('CASANOVA_TEST_SKIP_CSVMONKEY'):
     import casanova_monkey
-    TestMonkeyEnricher = make_enricher_test('TestMonkeyEnricher', casanova_monkey.enricher, binary=True)
+    TestMonkeyEnricher = make_enricher_test(
+        'TestMonkeyEnricher',
+        casanova_monkey.enricher,
+        casanova_monkey.threadsafe_enricher,
+        binary=True
+    )

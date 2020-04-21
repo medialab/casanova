@@ -168,13 +168,28 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
             super().__init__(
                 input_file,
                 output_file,
-                no_headers=False,
-                resumable=False,
-                keep=None,
-                add=None,
-                listener=None,
+                no_headers=no_headers,
+                resumable=resumable,
+                keep=keep,
+                add=add,
+                listener=listener,
                 prepend=[index_column]
             )
+
+        def __iter__(self):
+            iterator = enumerate(super().__iter__())
+
+            if self.binary:
+                for index, row in iterator:
+                    yield index, row.aslist()
+            else:
+                yield from iterator
+
+        def cells(self, column):
+            yield from enumerate(super().cells(column))
+
+        def records(self, columns):
+            yield from enumerate(super().records(columns))
 
         def enrichrow(self, index, row, add=None):
             self.writer.writerow(self.formatrow(row, add, index=index))

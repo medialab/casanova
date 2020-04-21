@@ -91,13 +91,16 @@ class CasanovaReader(object):
 
         return '<%s %s>' % (namespace, columns_info)
 
-    def __iter__(self):
+    def iter(self):
         if self.first_row is not None:
             yield self.first_row
             self.first_row = None
 
         for row in self.reader:
             yield row
+
+    def __iter__(self):
+        return self.iter()
 
     def cells(self, column):
         if not isinstance(column, (str, int)):
@@ -109,7 +112,7 @@ class CasanovaReader(object):
             raise MissingColumnError(column)
 
         def iterator():
-            for row in self:
+            for row in self.iter():
                 yield row[i]
 
         return iterator()
@@ -124,11 +127,11 @@ class CasanovaReader(object):
                 s = slice(pos[0], pos[1] + 1)
 
             def iterator():
-                for row in self:
+                for row in self.iter():
                     yield row[s]
         else:
             def iterator():
-                for row in self:
+                for row in self.iter():
                     yield [row[i] for i in pos]
 
         return iterator()
