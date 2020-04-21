@@ -17,14 +17,12 @@ from casanova.utils import (
 )
 
 
-# TODO: we must go with events for resuming
-# TODO: util to handle column and create pos
 def make_enricher(name, namespace, Reader, immutable_rows=False):
 
     class AbstractCasanovaEnricher(Reader):
         def __init__(self, input_file, output_file, no_headers=False,
                      resumable=False, keep=None, add=None, listener=None,
-                     unordered=False):
+                     unordered=False, index_column='index'):
 
             # Inheritance
             super().__init__(
@@ -60,6 +58,9 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
                 self.output_fieldnames += add
                 self.added_count = len(add)
                 self.padding = [''] * self.added_count
+
+            if unordered:
+                self.output_fieldnames = [index_column] + self.output_fieldnames
 
             # Need to write headers?
             output_buffer_is_empty = is_empty_buffer(output_file)
@@ -127,13 +128,7 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
 
             return row
 
-        def writeheader(self):
-            self.writer.writerow(self.output_fieldnames)
-
-        def writerow(self, row):
-            self.writer.writerow(row)
-
-        def enrichrow(self, row, add=None):
+        def formatrow(self, row, add=None):
 
             # Additions
             if self.added_count > 0:
@@ -142,13 +137,22 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
                 else:
                     assert len(add) == self.added_count, '%s.enrichrow: expected %i additional cells but got %i.' % (namespace, self.added_count, len(add))
 
-                self.writer.writerow(self.filterrow(row) + add)
+                return self.filterrow(row) + add
 
             # No additions
             else:
                 assert add is None, '%s.enrichrow: expected no additions.' % namespace
 
-                self.writer.writerow(self.fieldnames(row))
+                return self.filterrow(row)
+
+        def writeheader(self):
+            self.writer.writerow(self.output_fieldnames)
+
+        def writerow(self, row):
+            self.writer.writerow(row)
+
+        def enrichrow(self, row, add=None):
+            self.writer.writerow(self.formatrow(row, add))
 
     return AbstractCasanovaEnricher
 

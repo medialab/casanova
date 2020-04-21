@@ -5,8 +5,10 @@ import os
 import csv
 import casanova
 import pytest
+import time
 from io import StringIO, BytesIO
 from collections import defaultdict
+from quenouille import imap_unordered
 
 from casanova.exceptions import (
     EmptyFileError,
@@ -121,6 +123,37 @@ def make_enricher_test(name, enricher_fn, binary=False):
                 'resume.output': [['John', '2']],
                 'resume.input': [['John', 'Matthews']]
             }
+
+        # def test_unordered(self, tmpdir):
+        #     log = defaultdict(list)
+
+        #     def job(payload):
+        #         i, row = payload
+        #         s = int(row[2])
+        #         time.sleep(s * .1)
+
+        #         return i, row
+
+        #     output_path = str(tmpdir.join('./enriched-resumable-unordered.csv'))
+        #     with open('./test/resources/people-unordered.csv', flag) as f, \
+        #          open(output_path, 'a+') as of:
+
+        #         enricher = enricher_fn(
+        #             f, of,
+        #             add=('x2',),
+        #             keep=('name',),
+        #             unordered=True
+        #         )
+
+        #         for i, row in imap_unordered(enumerate(enricher), job, 3):
+        #             enricher.enrichrow(row, [(i + 1) * 2])
+
+        #     assert collect_csv_file(output_path) == [
+        #         ['index', 'name', 'x2'],
+        #         ['1', 'Mary', '4'],
+        #         ['2', 'Julia', '6'],
+        #         ['0', 'John', '2']
+        #     ]
 
     return AbstractTestEnricher
 
