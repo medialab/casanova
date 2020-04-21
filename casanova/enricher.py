@@ -73,6 +73,16 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
             if resumable and not output_buffer_is_empty:
                 self.resume()
 
+        def __repr__(self):
+            columns_info = ' '.join('%s=%s' % t for t in zip(self.pos._fields, self.pos))
+
+            return '<%s%s%s %s>' % (
+                namespace,
+                ' resumable' if self.resumable else '',
+                ' unordered' if self.unordered else '',
+                columns_info
+            )
+
         def resume(self):
 
             # Rolling back to beginning of file
