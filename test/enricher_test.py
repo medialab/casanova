@@ -27,7 +27,8 @@ def make_enricher_test(name, enricher_fn, binary=False):
                 enricher_fn(get_relevant_empty_io(), get_relevant_empty_io())
 
         def test_basics(self, tmpdir):
-            output_path = tmpdir.join('./enriched.csv')
+            output_path = str(tmpdir.join('./enriched.csv'))
+
             with open('./test/resources/people.csv') as f, \
                  open(output_path, 'w') as of:
                 enricher = enricher_fn(f, of, add=('line',))
