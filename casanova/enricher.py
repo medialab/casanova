@@ -9,8 +9,18 @@ import os
 import csv
 from threading import Lock
 
-from casanova.exceptions import NotResumableError, ResumeError
-from casanova.reader import CasanovaReader, collect_column_indices
+from casanova.contiguous_range_set import ContiguousRangeSet
+from casanova.exceptions import (
+    NotResumableError,
+    ResumeError,
+    MissingColumnError,
+    CorruptedIndexColumn
+)
+from casanova.reader import (
+    CasanovaReader,
+    collect_column_indices,
+    get_column_index
+)
 from casanova.utils import (
     is_resumable_buffer,
     is_empty_buffer
@@ -20,6 +30,8 @@ from casanova.utils import (
 def make_enricher(name, namespace, Reader, immutable_rows=False):
 
     class AbstractCasanovaEnricher(Reader):
+        __name__ = name
+
         def __init__(self, input_file, output_file, no_headers=False,
                      resumable=False, keep=None, add=None, listener=None,
                      prepend=None):
@@ -158,11 +170,15 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
             self.writer.writerow(self.formatrow(row, add))
 
     class AbstractThreadsafeCasanovaEnricher(AbstractCasanovaEnricher):
+        __name__ = 'Threadsafe' + name
+
         def __init__(self, input_file, output_file, no_headers=False,
                      resumable=False, keep=None, add=None, listener=None,
                      index_column='index'):
 
+            self.index_column = index_column
             self.event_lock = Lock()
+            self.already_done = ContiguousRangeSet()
 
             # Inheritance
             super().__init__(
@@ -178,12 +194,54 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
 
         def __iter__(self):
             iterator = enumerate(super().__iter__())
+            should_emit = callable(self.listener)
+
+            for index, row in iterator:
+                if self.binary:
+                    row = row.aslist()
+
+                if self.already_done.stateful_contains(index):
+                    if should_emit:
+                        with self.event_lock:
+                            self.listener('resume.input', row)
+
+                    continue
+
+                yield index, row
+
+        def resume(self):
+
+            # Rolling back to beginning of file
+            output_file = self.output_file
 
             if self.binary:
-                for index, row in iterator:
-                    yield index, row.aslist()
+                output_file = open(output_file.name, 'rb')
             else:
-                yield from iterator
+                output_file.seek(0, os.SEEK_SET)
+
+            reader = Reader(output_file, no_headers=self.fieldnames is None)
+
+            should_emit = callable(self.listener)
+
+            i = get_column_index(reader.pos, self.index_column)
+
+            if i is None:
+                raise MissingColumnError(self.index_column)
+
+            for row in reader:
+                try:
+                    current_index = int(row[i])
+                except ValueError:
+                    raise CorruptedIndexColumn
+
+                self.already_done.add(current_index)
+
+                if should_emit:
+                    with self.event_lock:
+                        self.listener('resume.output', row)
+
+            if self.binary:
+                output_file.close()
 
         def cells(self, column):
             yield from enumerate(super().cells(column))

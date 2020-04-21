@@ -96,6 +96,9 @@ class ContiguousRangeSet(object):
         increasing order.
         """
 
+        if self.length == 0:
+            return False
+
         N = len(self.intervals)
 
         if N == 0 or self.current_stateful_interval >= N:

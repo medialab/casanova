@@ -30,3 +30,7 @@ class NotResumableError(CasanovaError):
 
 class ResumeError(CasanovaError):
     pass
+
+
+class CorruptedIndexColumn(CasanovaError):
+    pass

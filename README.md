@@ -103,3 +103,5 @@ with open('./people.csv') as f:
 
 * **fieldnames** *list<str>*: field names in order.
 * **pos** *int|namedtuple<int>*: header positions object.
+
+TODO: https://yomguithereal.github.io/posts/contiguous-range-set
