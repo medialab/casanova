@@ -10,7 +10,8 @@ import csv
 from casanova.exceptions import NotResumableError
 from casanova.reader import CasanovaReader, collect_column_indices
 from casanova.utils import (
-    is_resumable_buffer
+    is_resumable_buffer,
+    is_empty_buffer
 )
 
 
@@ -50,7 +51,9 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
 
             # Need to write headers?
             if not no_headers:
-                self.writeheader()
+
+                if not resumable or is_empty_buffer(output_file):
+                    self.writeheader()
 
         def filterrow(self, row):
             if self.keep_indices is not None:
