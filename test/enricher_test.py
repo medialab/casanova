@@ -71,6 +71,22 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 ['Julia', '2']
             ]
 
+        def test_padding(self, tmpdir):
+            output_path = str(tmpdir.join('./enriched-padding.csv'))
+            with open('./test/resources/people.csv', flag) as f, \
+                 open(output_path, 'w') as of:
+                enricher = enricher_fn(f, of, keep=('name',), add=('line',))
+
+                for i, row in enumerate(enricher):
+                    enricher.writerow(row)
+
+            assert collect_csv_file(output_path) == [
+                ['name', 'line'],
+                ['John', ''],
+                ['Mary', ''],
+                ['Julia', '']
+            ]
+
         def test_resumable(self, tmpdir):
 
             log = defaultdict(list)
