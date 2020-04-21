@@ -33,6 +33,7 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
 
             if keep is not None:
                 self.keep_indices = collect_column_indices(self.pos, keep)
+                self.output_fieldnames = self.filterrow(self.output_fieldnames)
 
             if add is not None:
                 self.output_fieldnames += add
@@ -42,6 +43,14 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
             # Need to write headers?
             if not no_headers:
                 self.writer.writerow(self.output_fieldnames)
+
+        def filterrow(self, row):
+            if self.keep_indices is not None:
+                row = [row[i] for i in self.keep_indices]
+            elif self.immutable_rows:
+                row = list(row)
+
+            return row
 
         def writerow(self, row):
             self.writer.writerow(row)
@@ -55,16 +64,13 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
                 else:
                     assert len(add) == self.added_count, '%s.enrichrow: expected %i additional cells but got %i.' % (namespace, self.added_count, len(add))
 
-                if self.immutable_rows:
-                    row = list(row)
-
-                self.writer.writerow(row + add)
+                self.writer.writerow(self.filterrow(row) + add)
 
             # No additions
             else:
                 assert add is None, '%s.enrichrow: expected no additions.' % namespace
 
-                self.writer.writerow(row)
+                self.writer.writerow(self.fieldnames(row))
 
     return AbstractCasanovaEnricher
 

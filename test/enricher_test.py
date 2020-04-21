@@ -45,6 +45,22 @@ def make_enricher_test(name, enricher_fn, binary=False):
                 ['Julia', 'Stone', '2']
             ]
 
+        def test_keep(self, tmpdir):
+            output_path = str(tmpdir.join('./enriched-keep.csv'))
+            with open('./test/resources/people.csv', flag) as f, \
+                 open(output_path, 'w') as of:
+                enricher = enricher_fn(f, of, keep=('name',), add=('line',))
+
+                for i, row in enumerate(enricher):
+                    enricher.enrichrow(row, [i])
+
+            assert collect_csv_file(output_path) == [
+                ['name', 'line'],
+                ['John', '0'],
+                ['Mary', '1'],
+                ['Julia', '2']
+            ]
+
     return AbstractTestEnricher
 
 
