@@ -82,7 +82,7 @@ def make_enricher_test(name, enricher_fn, binary=False):
 
                 enricher = enricher_fn(
                     f, of,
-                    add=('x2', ),
+                    add=('x2',),
                     keep=('name',),
                     resumable=True,
                     listener=listener
@@ -101,7 +101,7 @@ def make_enricher_test(name, enricher_fn, binary=False):
 
                 enricher = enricher_fn(
                     f, of,
-                    add=('x2', ),
+                    add=('x2',),
                     keep=('name',),
                     resumable=True,
                     listener=listener
