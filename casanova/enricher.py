@@ -7,7 +7,11 @@
 #
 import csv
 
+from casanova.exceptions import NotResumableError
 from casanova.reader import CasanovaReader, collect_column_indices
+from casanova.utils import (
+    is_resumable_buffer
+)
 
 
 # TODO: we must go with events for resuming
@@ -23,6 +27,10 @@ def make_enricher(name, namespace, Reader, immutable_rows=False):
                 input_file,
                 no_headers=no_headers
             )
+
+            # Sanity tests
+            if resumable and not is_resumable_buffer(output_file):
+                raise NotResumableError('%s: expecting an "a+" or "a+b" buffer.')
 
             self.writer = csv.writer(output_file)
             self.keep_indices = None

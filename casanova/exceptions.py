@@ -22,3 +22,7 @@ class MissingColumnError(CasanovaError):
 
 class InvalidFileError(CasanovaError):
     pass
+
+
+class NotResumableError(CasanovaError):
+    pass
