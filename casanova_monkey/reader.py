@@ -22,7 +22,7 @@ class CasanovaMonkeyReader(CasanovaReader):
         self.reader = csvmonkey.from_file(input_file, header=False)
         self.fieldnames = None
         self.first_row = None
-        self.can_slice = False
+        self.can_slice = not lazy
         self.binary = True
         self.lazy = lazy
 
