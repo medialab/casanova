@@ -61,17 +61,38 @@ def make_reader_test(name, reader_fn, binary=False):
 
                 assert names == ['John', 'Mary', 'Julia']
 
+            with open('./test/resources/people.csv', flag) as f:
+                reader = reader_fn(f)
+
+                names = [(row[1], name) for row, name in reader.cells('name', with_rows=True)]
+
+                assert names == [('Matthews', 'John'), ('Sue', 'Mary'), ('Stone', 'Julia')]
+
         def test_records(self):
             with open('./test/resources/people.csv', flag) as f:
                 reader = reader_fn(f)
 
                 with pytest.raises(MissingColumnError):
-                    reader.records(['whatever'])
+                    reader.cells(['whatever'])
 
                 names = []
                 surnames = []
 
                 for name, surname in reader.cells(['name', 'surname']):
+                    names.append(name)
+                    surnames.append(surname)
+
+                assert names == ['John', 'Mary', 'Julia']
+                assert surnames == ['Matthews', 'Sue', 'Stone']
+
+            with open('./test/resources/people.csv', flag) as f:
+                reader = reader_fn(f)
+
+                names = []
+                surnames = []
+
+                for row, (name, surname) in reader.cells(['name', 'surname'], with_rows=True):
+                    assert len(row) == 2
                     names.append(name)
                     surnames.append(surname)
 

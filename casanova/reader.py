@@ -101,22 +101,7 @@ class CasanovaReader(object):
     def __iter__(self):
         return self.iter()
 
-    def cells(self, column):
-        if not isinstance(column, (str, int)):
-            return self.records(column)
-
-        i = get_column_index(self.pos, column)
-
-        if i is None:
-            raise MissingColumnError(column)
-
-        def iterator():
-            for row in self.iter():
-                yield row[i]
-
-        return iterator()
-
-    def records(self, columns):
+    def __records(self, columns, with_rows=False):
         pos = collect_column_indices(self.pos, columns)
 
         if self.can_slice and is_contiguous(pos):
@@ -125,12 +110,45 @@ class CasanovaReader(object):
             else:
                 s = slice(pos[0], pos[1] + 1)
 
+            if with_rows:
+                def iterator():
+                    for row in self.iter():
+                        yield row, row[s]
+            else:
+                def iterator():
+                    for row in self.iter():
+                        yield row[s]
+        else:
+            if with_rows:
+                def iterator():
+                    for row in self.iter():
+                        yield row, [row[i] for i in pos]
+            else:
+                def iterator():
+                    for row in self.iter():
+                        yield [row[i] for i in pos]
+
+        return iterator()
+
+    def __cells(self, column, with_rows=False):
+        i = get_column_index(self.pos, column)
+
+        if i is None:
+            raise MissingColumnError(column)
+
+        if with_rows:
             def iterator():
                 for row in self.iter():
-                    yield row[s]
+                    yield row, row[i]
         else:
             def iterator():
                 for row in self.iter():
-                    yield [row[i] for i in pos]
+                    yield row[i]
 
         return iterator()
+
+    def cells(self, column, with_rows=False):
+        if not isinstance(column, (str, int)):
+            return self.__records(column, with_rows=with_rows)
+
+        return self.__cells(column, with_rows=with_rows)

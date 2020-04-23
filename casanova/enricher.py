@@ -233,11 +233,14 @@ def make_enricher(name, namespace, Reader):
             if self.binary:
                 output_file.close()
 
-        def cells(self, column):
-            yield from enumerate(super().cells(column))
-
-        def records(self, columns):
-            yield from enumerate(super().records(columns))
+        def cells(self, column, with_rows=False):
+            if with_rows:
+                index = 0
+                for row, value in super().cells(column, with_rows=True):
+                    yield index, row, value
+                    index += 1
+            else:
+                yield from enumerate(super().cells(column))
 
         def writerow(self, index, row, add=None):
             self.writer.writerow(self.formatrow(row, add, index=index))

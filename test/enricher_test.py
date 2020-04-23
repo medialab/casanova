@@ -190,6 +190,19 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
 
             assert names == [(0, 'John'), (1, 'Mary'), (2, 'Julia')]
 
+            with open('./test/resources/people-unordered.csv', flag) as f, \
+                 open(output_path, 'a+') as of:
+
+                enricher = threadsafe_enricher_fn(
+                    f, of,
+                    add=('x2',),
+                    keep=('name',)
+                )
+
+                names = [(i, v) for i, row, v in enricher.cells('name', with_rows=True)]
+
+            assert names == [(0, 'John'), (1, 'Mary'), (2, 'Julia')]
+
         def test_threadsafe_records(self, tmpdir):
             def job(payload):
                 i, row = payload
@@ -210,7 +223,20 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
 
                 records = [t for t in enricher.cells(['name', 'time'])]
 
-            assert records == [(0, (0, ['John', '3'])), (1, (1, ['Mary', '1'])), (2, (2, ['Julia', '2']))]
+            assert records == [(0, ['John', '3']), (1, ['Mary', '1']), (2, ['Julia', '2'])]
+
+            with open('./test/resources/people-unordered.csv', flag) as f, \
+                 open(output_path, 'w') as of:
+
+                enricher = threadsafe_enricher_fn(
+                    f, of,
+                    add=('x2',),
+                    keep=('name',)
+                )
+
+                records = [(i, r) for i, row, r in enricher.cells(['name', 'time'], with_rows=True)]
+
+            assert records == [(0, ['John', '3']), (1, ['Mary', '1']), (2, ['Julia', '2'])]
 
         def test_threadsafe_resumable(self, tmpdir):
             log = defaultdict(list)

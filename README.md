@@ -89,6 +89,10 @@ with open('./people.csv') as f:
   for name, surname in reader.cells(['name', 'surname']):
     print(name, surname)
 
+  # Need also the current row when iterating on cells?
+  for row, (name, surname) in reader.cells(['name', 'surname']):
+    print(row, name, surname)
+
   # No headers? No problem.
   reader = casanova.reader(f, no_headers=True)
 ```
