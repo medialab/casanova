@@ -4,7 +4,7 @@ with open('./README.md', 'r') as f:
     long_description = f.read()
 
 setup(name='casanova',
-      version='0.4.0',
+      version='0.5.0',
       description='Specialized & performant CSV readers, writers and enrichers for python.',
       long_description=long_description,
       long_description_content_type='text/markdown',
