@@ -49,6 +49,7 @@ pip install casanova[monkey]
 
 * [reader](#reader)
 * [enricher](#enricher)
+* [reverse_reader](#reverse_reader)
 
 ## reader
 
@@ -123,7 +124,7 @@ with open('./people.csv', 'rb') as f:
 
 *Arguments*
 
-* **file** *file*: file object to read.
+* **file** *file|path*: file object to read or path to open.
 * **no_headers** *?bool* [`False`]: whether your CSV file is headless.
 * **lazy** *?bool* [`False`]: only for `casanova_monkey`, whether to yield `csvmonkey` raw lazy-decoding items or cast them as `list` for better compatibility.
 
@@ -176,7 +177,7 @@ with open('./people.csv') as f, \
 
 *Arguments*
 
-* **input_file** *file*: file object to read.
+* **input_file** *file|str*: file object to read or path to open.
 * **output_file** *file*: file object to write.
 * **no_headers** *?bool* [`False`]: whether your CSV file is headless.
 * **add** *?iterable<str|int>*: names of columns to add to output.
@@ -241,4 +242,24 @@ with open('./people.csv') as f, \
 
   enricher = casanova_monkey.enricher(f, of)
   enricher = casanova_monkey.threadsafe_enricher(f, of)
+```
+
+## reverse_reader
+
+casanova's reverse reader lets you read a CSV file backwards while still parsing its headers first. It looks silly but it is very useful if you need to read the last lines of a CSV file in constant time when resuming some process.
+
+It is basically identical to `casanova.reader` except lines will be yielded in reverse.
+
+```python
+import casanova
+
+with open('./people.csv', 'rb') as f:
+  reader = casanova.reverse_reader(f)
+
+  next(reader)
+  >>> ['Mr. Last', 'Line']
+
+# It also comes with a static helper if you only need to read last cell
+last_surname = casanova.reverse_reader.last_cell('./people.csv', 'surname')
+>>> 'Mr. Last'
 ```
