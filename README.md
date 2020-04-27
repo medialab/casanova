@@ -246,7 +246,7 @@ with open('./people.csv') as f, \
 
 ## reverse_reader
 
-casanova's reverse reader lets you read a CSV file backwards while still parsing its headers first. It looks silly but it is very useful if you need to read the last lines of a CSV file in constant time when resuming some process.
+casanova's reverse reader lets you read a CSV file backwards while still parsing its headers first. It looks silly but it is very useful if you need to read the last lines of a CSV file in constant time & memory when resuming some process.
 
 It is basically identical to `casanova.reader` except lines will be yielded in reverse.
 
