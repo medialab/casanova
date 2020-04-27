@@ -95,6 +95,17 @@ with open('./people.csv') as f:
 
   # No headers? No problem.
   reader = casanova.reader(f, no_headers=True)
+
+# Note that you can also create a reader from a path
+with casanova.reader('./people.csv') as reader:
+  pass
+
+# And if you need exotic encodings
+with casanova.reader('./people.csv', encoding='latin1') as reader:
+  pass
+
+# Readers can also be closed if you want to avoid context managers
+reader.close()
 ```
 
 *casanova_monkey*

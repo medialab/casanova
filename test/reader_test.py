@@ -119,6 +119,17 @@ def make_reader_test(name, reader_fn, binary=False):
 
                 assert names == ['John', 'Mary', 'Julia']
 
+        def test_path(self):
+            reader = reader_fn('./test/resources/people.csv')
+
+            assert list(reader.cells('name')) == ['John', 'Mary', 'Julia']
+
+            reader.close()
+
+        def test_context(self):
+            with reader_fn('./test/resources/people.csv') as reader:
+                assert list(reader.cells('name')) == ['John', 'Mary', 'Julia']
+
     return AbstractTestReader
 
 

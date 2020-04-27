@@ -14,7 +14,14 @@ from casanova.exceptions import InvalidFileError, EmptyFileError
 class CasanovaMonkeyReader(CasanovaReader):
     namespace = 'casanova_monkey.reader'
 
-    def __init__(self, input_file, no_headers=False, lazy=False):
+    def __init__(self, input_file, no_headers=False, encoding='utf-8', lazy=False):
+
+        # Should we open a file for the user?
+        if isinstance(input_file, str):
+            if encoding.lower().replace('-', '') != 'utf8':
+                input_file = codecs.open(input_file, 'rb', encoding=encoding)
+            else:
+                input_file = open(input_file, 'rb')
 
         # Ensuring we are reading a binary buffer
         if not is_binary_buffer(input_file):

@@ -6,6 +6,7 @@
 # with csv.DictReader which is nice but very slow.
 #
 import csv
+import codecs
 from collections import namedtuple
 
 from casanova.utils import is_contiguous
@@ -64,7 +65,14 @@ def collect_column_indices(pos, columns):
 class CasanovaReader(object):
     namespace = 'casanova.reader'
 
-    def __init__(self, input_file, no_headers=False):
+    def __init__(self, input_file, no_headers=False, encoding='utf-8'):
+
+        # Should we open a file for the user?
+        if isinstance(input_file, str):
+            if encoding.lower().replace('-', '') != 'utf8':
+                input_file = codecs.open(input_file, encoding=encoding)
+            else:
+                input_file = open(input_file)
 
         self.input_file = input_file
         self.reader = csv.reader(input_file)
@@ -154,3 +162,12 @@ class CasanovaReader(object):
             return self.__records(column, with_rows=with_rows)
 
         return self.__cells(column, with_rows=with_rows)
+
+    def close(self):
+        self.input_file.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
