@@ -62,6 +62,8 @@ def collect_column_indices(pos, columns):
 
 
 class CasanovaReader(object):
+    namespace = 'casanova.reader'
+
     def __init__(self, input_file, no_headers=False):
 
         self.input_file = input_file
@@ -89,7 +91,7 @@ class CasanovaReader(object):
     def __repr__(self):
         columns_info = ' '.join('%s=%s' % t for t in zip(self.pos._fields, self.pos))
 
-        return '<%s %s>' % (namespace, columns_info)
+        return '<%s %s>' % (self.namespace, columns_info)
 
     def iter(self):
         if self.first_row is not None:

@@ -10,3 +10,6 @@ from casanova.enricher import (
 from casanova.reader import (
     CasanovaReader as reader
 )
+from casanova.reverse_reader import (
+    CasanovaReverseReader as reverse_reader
+)

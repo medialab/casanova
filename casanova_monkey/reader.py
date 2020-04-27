@@ -12,6 +12,8 @@ from casanova.exceptions import InvalidFileError, EmptyFileError
 
 
 class CasanovaMonkeyReader(CasanovaReader):
+    namespace = 'casanova_monkey.reader'
+
     def __init__(self, input_file, no_headers=False, lazy=False):
 
         # Ensuring we are reading a binary buffer

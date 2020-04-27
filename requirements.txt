@@ -1,3 +1,5 @@
+file-read-backwards==2.0.0
+
 # Dev Dependencies
 click==7.1.1
 csvmonkey==0.0.5

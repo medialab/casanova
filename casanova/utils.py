@@ -8,13 +8,27 @@ from io import BytesIO, BufferedReader, TextIOWrapper
 
 
 def iter_with_prev(iterator):
-    prev = None
+    prev_item = None
 
     for item in iterator:
-        if prev is not None:
-            yield prev, item
+        if prev_item is not None:
+            yield prev_item, item
 
-        prev = item
+        prev_item = item
+
+
+def lookahead(iterator):
+
+    try:
+        last = next(iterator)
+    except StopIteration:
+        return
+
+    for item in iterator:
+        yield last, True
+        last = item
+
+    yield last, False
 
 
 def is_contiguous(l):
