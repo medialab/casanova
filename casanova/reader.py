@@ -57,8 +57,6 @@ def collect_column_indices(pos, columns):
 
         indices.append(i)
 
-    indices.sort()
-
     return indices
 
 

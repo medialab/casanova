@@ -12,6 +12,7 @@ from file_read_backwards.file_read_backwards import FileReadBackwardsIterator
 
 from casanova.reader import CasanovaReader
 from casanova.utils import lookahead
+from casanova.exceptions import EmptyFileError
 
 
 class CasanovaReverseReader(CasanovaReader):
@@ -20,11 +21,11 @@ class CasanovaReverseReader(CasanovaReader):
     def __init__(self, input_file, **kwargs):
         super().__init__(input_file, **kwargs)
 
-        self.backwards_file = open(input_file.name, 'rb')
+        self.backwards_file = open(self.input_file.name, 'rb')
 
         backwards_iterator = FileReadBackwardsIterator(
             self.backwards_file,
-            input_file.encoding,
+            self.input_file.encoding,
             DEFAULT_BUFFER_SIZE
         )
 
@@ -44,5 +45,14 @@ class CasanovaReverseReader(CasanovaReader):
             self.first_row = None
 
     def close(self):
-        self.input_file.close()
+        super().close()
         self.backwards_file.close()
+
+    @staticmethod
+    def last_cell(input_file, column, **kwargs):
+        with CasanovaReverseReader(input_file, **kwargs) as reader:
+            try:
+                for record in reader.cells(column):
+                    return record
+            except StopIteration:
+                raise EmptyFileError
