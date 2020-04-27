@@ -144,7 +144,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
             def job(payload):
                 i, row = payload
                 s = int(row[2])
-                time.sleep(s * .1)
+                time.sleep(s * .01)
 
                 return i, row
 
@@ -172,7 +172,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
             def job(payload):
                 i, row = payload
                 s = int(row[2])
-                time.sleep(s * .1)
+                time.sleep(s * .01)
 
                 return i, row
 
@@ -207,7 +207,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
             def job(payload):
                 i, row = payload
                 s = int(row[2])
-                time.sleep(s * .1)
+                time.sleep(s * .01)
 
                 return i, row
 
@@ -247,7 +247,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
             def job(payload):
                 i, row = payload
                 s = int(row[2])
-                time.sleep(s * .1)
+                time.sleep(s * .01)
 
                 return i, row
 
