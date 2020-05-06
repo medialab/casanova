@@ -173,6 +173,10 @@ with open('./people.csv') as f, \
 
   for row in enricher:
     enricher.writerow(row, ['45'])
+
+  # You can of course still use #.cells
+  for row, name in enricher.cells('name', with_rows=True):
+    print(row, name)
 ```
 
 *Arguments*
