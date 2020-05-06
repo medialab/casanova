@@ -18,6 +18,7 @@ from casanova.exceptions import (
 )
 from casanova.reader import (
     CasanovaReader,
+    get_column_index,
     collect_column_indices
 )
 from casanova.utils import (
@@ -212,7 +213,7 @@ def make_enricher(name, namespace, Reader):
 
             should_emit = callable(self.listener)
 
-            i = reader.pos.get(self.index_column)
+            i = get_column_index(reader.pos, self.index_column)
 
             if i is None:
                 raise MissingColumnError(self.index_column)

@@ -72,7 +72,6 @@ with open('./people.csv') as f:
 
   name_pos = reader.pos.name
   name_pos = reader.pos['name']
-  name_pos = reader.pos.get('name')
 
   'name' in reader.pos
   >>> True

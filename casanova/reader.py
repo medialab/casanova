@@ -7,7 +7,6 @@
 #
 import csv
 import codecs
-from collections import namedtuple
 
 from casanova.utils import is_contiguous
 from casanova.exceptions import EmptyFileError, MissingColumnError
@@ -17,32 +16,37 @@ class HeadersPositions(object):
     def __init__(self, headers):
         if isinstance(headers, int):
             self.__headers = list(range(headers))
-            self.__dict = {i: i for i in self.__headers}
+            self._dict = {i: i for i in self.__headers}
         else:
             self.__headers = headers
-            self.__dict = {h: i for i, h in enumerate(self.__headers)}
+            self._dict = {h: i for i, h in enumerate(self.__headers)}
 
-            for name, value in self.__dict.items():
-                setattr(self, name, value)
+            for name, value in self._dict.items():
+                if name.isidentifier():
+                    setattr(self, name, value)
 
     def __len__(self):
         return len(self.__headers)
 
     def __getitem__(self, key):
-        return self.__dict[key]
+        return self._dict[key]
 
     def __contains__(self, key):
-        return key in self.__dict
+        return key in self._dict
 
-    def get(self, key, default=None):
-        return self.__dict.get(key, default)
+
+def get_column_index(pos, key, default=None):
+    try:
+        return pos[key]
+    except KeyError:
+        return default
 
 
 def collect_column_indices(pos, columns):
     indices = []
 
     for column in columns:
-        i = pos.get(column)
+        i = get_column_index(pos, column)
 
         if i is None:
             raise MissingColumnError
@@ -131,7 +135,7 @@ class CasanovaReader(object):
         return iterator()
 
     def __cells(self, column, with_rows=False):
-        i = self.pos.get(column)
+        i = get_column_index(self.pos, column)
 
         if i is None:
             raise MissingColumnError(column)
