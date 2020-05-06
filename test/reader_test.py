@@ -130,6 +130,11 @@ def make_reader_test(name, reader_fn, binary=False):
             with reader_fn('./test/resources/people.csv') as reader:
                 assert list(reader.cells('name')) == ['John', 'Mary', 'Julia']
 
+        def test_invalid_identifier_headers(self):
+            return
+            with reader_fn('./test/resources/invalid_headers.csv') as reader:
+                assert list(reader.cells('Person\'s name')) == ['John', 'Mary', 'Julia']
+
     return AbstractTestReader
 
 

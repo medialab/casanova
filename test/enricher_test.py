@@ -149,7 +149,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 return i, row
 
             output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
-            with open('./test/resources/people-unordered.csv', flag) as f, \
+            with open('./test/resources/people_unordered.csv', flag) as f, \
                  open(output_path, 'w') as of:
 
                 enricher = threadsafe_enricher_fn(
@@ -177,7 +177,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 return i, row
 
             output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
-            with open('./test/resources/people-unordered.csv', flag) as f, \
+            with open('./test/resources/people_unordered.csv', flag) as f, \
                  open(output_path, 'a+') as of:
 
                 enricher = threadsafe_enricher_fn(
@@ -190,7 +190,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
 
             assert names == [(0, 'John'), (1, 'Mary'), (2, 'Julia')]
 
-            with open('./test/resources/people-unordered.csv', flag) as f, \
+            with open('./test/resources/people_unordered.csv', flag) as f, \
                  open(output_path, 'a+') as of:
 
                 enricher = threadsafe_enricher_fn(
@@ -212,7 +212,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 return i, row
 
             output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
-            with open('./test/resources/people-unordered.csv', flag) as f, \
+            with open('./test/resources/people_unordered.csv', flag) as f, \
                  open(output_path, 'w') as of:
 
                 enricher = threadsafe_enricher_fn(
@@ -225,7 +225,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
 
             assert records == [(0, ['John', '3']), (1, ['Mary', '1']), (2, ['Julia', '2'])]
 
-            with open('./test/resources/people-unordered.csv', flag) as f, \
+            with open('./test/resources/people_unordered.csv', flag) as f, \
                  open(output_path, 'w') as of:
 
                 enricher = threadsafe_enricher_fn(
@@ -252,7 +252,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 return i, row
 
             output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
-            with open('./test/resources/people-unordered.csv', flag) as f, \
+            with open('./test/resources/people_unordered.csv', flag) as f, \
                  open(output_path, 'a+') as of:
 
                 enricher = threadsafe_enricher_fn(
@@ -274,7 +274,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 ['2', 'Julia', '6'],
             ]
 
-            with open('./test/resources/people-unordered.csv', flag) as f, \
+            with open('./test/resources/people_unordered.csv', flag) as f, \
                  open(output_path, 'a+') as of:
 
                 enricher = threadsafe_enricher_fn(
