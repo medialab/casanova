@@ -35,17 +35,11 @@ def make_reader_test(name, reader_fn, binary=False):
                 assert reader.pos['name'] == 0
                 assert reader.pos['surname'] == 1
 
-                assert reader.pos[0] == 0
-                assert reader.pos[1] == 1
-
                 assert len(reader.pos) == 2
                 assert reader.fieldnames == ['name', 'surname']
 
                 with pytest.raises(KeyError):
                     reader.pos['whatever']
-
-                with pytest.raises(IndexError):
-                    reader.pos[3]
 
                 surnames = [row[reader.pos.surname] for row in reader]
                 assert surnames == ['Matthews', 'Sue', 'Stone']

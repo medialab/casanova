@@ -6,7 +6,7 @@
 #
 import csvmonkey
 
-from casanova.reader import CasanovaReader, make_headers_namedtuple
+from casanova.reader import CasanovaReader, HeadersPositions
 from casanova.utils import is_binary_buffer
 from casanova.exceptions import InvalidFileError, EmptyFileError
 
@@ -41,14 +41,14 @@ class CasanovaMonkeyReader(CasanovaReader):
             except StopIteration:
                 raise EmptyFileError
 
-            self.pos = make_headers_namedtuple(len(self.first_row))
+            self.pos = HeadersPositions(len(self.first_row))
         else:
             try:
                 self.fieldnames = next(self.reader).aslist()
             except StopIteration:
                 raise EmptyFileError
 
-            self.pos = make_headers_namedtuple(self.fieldnames)
+            self.pos = HeadersPositions(self.fieldnames)
 
     def iter(self):
         if self.first_row is not None:

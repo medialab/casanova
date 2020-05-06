@@ -13,44 +13,36 @@ from casanova.utils import is_contiguous
 from casanova.exceptions import EmptyFileError, MissingColumnError
 
 
-def make_headers_namedtuple(headers):
-    if isinstance(headers, int):
-        return list(range(headers))
+class HeadersPositions(object):
+    def __init__(self, headers):
+        if isinstance(headers, int):
+            self.__headers = list(range(headers))
+            self.__dict = {i: i for i in self.__headers}
+        else:
+            self.__headers = headers
+            self.__dict = {h: i for i, h in enumerate(self.__headers)}
 
-    class HeadersPositions(namedtuple('HeadersPositions', headers)):
-        __slots__ = ()
+            for name, value in self.__dict.items():
+                setattr(self, name, value)
 
-        def __getitem__(self, key):
-            if isinstance(key, int):
-                return super().__getitem__(key)
+    def __len__(self):
+        return len(self.__headers)
 
-            try:
-                return getattr(self, key)
-            except AttributeError:
-                raise KeyError
+    def __getitem__(self, key):
+        return self.__dict[key]
 
-        def __contains__(self, key):
-            try:
-                self[key]
-                return True
-            except (IndexError, KeyError):
-                return False
+    def __contains__(self, key):
+        return key in self.__dict
 
-    return HeadersPositions(*range(len(headers)))
-
-
-def get_column_index(pos, key, default=None):
-    try:
-        return pos[key]
-    except (IndexError, KeyError):
-        return default
+    def get(self, key, default=None):
+        return self.__dict.get(key, default)
 
 
 def collect_column_indices(pos, columns):
     indices = []
 
     for column in columns:
-        i = get_column_index(pos, column)
+        i = pos.get(column)
 
         if i is None:
             raise MissingColumnError
@@ -85,14 +77,14 @@ class CasanovaReader(object):
             except StopIteration:
                 raise EmptyFileError
 
-            self.pos = make_headers_namedtuple(len(self.first_row))
+            self.pos = HeadersPositions(len(self.first_row))
         else:
             try:
                 self.fieldnames = next(self.reader)
             except StopIteration:
                 raise EmptyFileError
 
-            self.pos = make_headers_namedtuple(self.fieldnames)
+            self.pos = HeadersPositions(self.fieldnames)
 
     def __repr__(self):
         columns_info = ' '.join('%s=%s' % t for t in zip(self.pos._fields, self.pos))
@@ -139,7 +131,7 @@ class CasanovaReader(object):
         return iterator()
 
     def __cells(self, column, with_rows=False):
-        i = get_column_index(self.pos, column)
+        i = self.pos.get(column)
 
         if i is None:
             raise MissingColumnError(column)
