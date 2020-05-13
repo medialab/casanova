@@ -54,6 +54,7 @@ def make_enricher(name, namespace, Reader):
             self.padding = None
 
             self.resumable = resumable
+            self.should_resume = False
             self.resume_offset = 0
 
             self.listener = listener
@@ -80,6 +81,7 @@ def make_enricher(name, namespace, Reader):
 
             # Resuming
             if resumable and not output_buffer_is_empty:
+                self.should_resume = True
                 self.resume()
 
         def __repr__(self):
@@ -93,6 +95,11 @@ def make_enricher(name, namespace, Reader):
             )
 
         def resume(self):
+
+            if not self.should_resume:
+                return
+
+            self.should_resume = False
 
             # Rolling back to beginning of file
             output_file = self.output_file
