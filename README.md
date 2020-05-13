@@ -108,6 +108,21 @@ with casanova.reader('./people.csv', encoding='latin1') as reader:
 reader.close()
 ```
 
+*Counting number of rows in a CSV file*
+
+To do so quickly you can use `casanova.reader` static `count` method.
+
+```python
+import casanova
+
+count = casanova.reader.count('./people.csv')
+
+# You can also stop reading the file if you go beyond a number of rows
+count = casanova.reader.count('./people.csv', max_rows=100)
+>>> None # if the file has more than 100 rows
+>>> 34   # else the actual count
+```
+
 *casanova_monkey*
 
 ```python

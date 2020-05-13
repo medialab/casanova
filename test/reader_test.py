@@ -128,6 +128,19 @@ def make_reader_test(name, reader_fn, binary=False):
             with reader_fn('./test/resources/invalid_headers.csv') as reader:
                 assert list(reader.cells('Person\'s name')) == ['John', 'Mary', 'Julia']
 
+        def test_static_count(self):
+            count = reader_fn.count('./test/resources/people.csv')
+
+            assert count == 3
+
+            count = reader_fn.count('./test/resources/people.csv', max_rows=10)
+
+            assert count == 3
+
+            count = reader_fn.count('./test/resources/people.csv', max_rows=1)
+
+            assert count is None
+
     return AbstractTestReader
 
 

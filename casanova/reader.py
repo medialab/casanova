@@ -165,3 +165,18 @@ class CasanovaReader(object):
 
     def __exit__(self, *args):
         self.close()
+
+    @classmethod
+    def count(cls, input_file, max_rows=None, **kwargs):
+        assert max_rows is None or max_rows > 0, '%s.count: expected max_rows to be `None` or > 0.' % cls.namespace
+
+        n = 0
+
+        with cls(input_file, **kwargs) as reader:
+            for _ in reader:
+                n += 1
+
+                if max_rows is not None and n > max_rows:
+                    return None
+
+        return n
