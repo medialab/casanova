@@ -55,7 +55,7 @@ def make_enricher(name, namespace, Reader):
 
             self.resumable = resumable
             self.should_resume = False
-            self.resume_offset = 0
+            self.already_done_count = 0
 
             self.listener = listener
 
@@ -119,7 +119,7 @@ def make_enricher(name, namespace, Reader):
                 self.listener('resume.start', None)
 
             for row in reader:
-                self.resume_offset += 1
+                self.already_done_count += 1
 
                 if should_emit:
                     self.listener('resume.output', row)
@@ -129,7 +129,7 @@ def make_enricher(name, namespace, Reader):
 
             i = 0
 
-            while i < self.resume_offset:
+            while i < self.already_done_count:
                 try:
                     row = next(self.reader)
 
