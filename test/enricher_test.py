@@ -92,6 +92,8 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
             log = defaultdict(list)
 
             def listener(name, row):
+                if name == 'resume.start':
+                    return
                 log[name].append(list(row))
 
             output_path = str(tmpdir.join('./enriched-resumable.csv'))
@@ -242,6 +244,8 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
             log = defaultdict(list)
 
             def listener(name, row):
+                if name == 'resume.start':
+                    return
                 log[name].append(list(row))
 
             def job(payload):

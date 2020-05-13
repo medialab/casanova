@@ -115,6 +115,9 @@ def make_enricher(name, namespace, Reader):
 
             should_emit = callable(self.listener)
 
+            if should_emit:
+                self.listener('resume.start', None)
+
             for row in reader:
                 self.resume_offset += 1
 
