@@ -33,8 +33,8 @@ def make_enricher(name, namespace, Reader):
         __name__ = name
 
         def __init__(self, input_file, output_file, no_headers=False,
-                     resumable=False, keep=None, add=None, listener=None,
-                     prepend=None):
+                     resumable=False, auto_resume=True, keep=None, add=None,
+                     listener=None, prepend=None):
 
             # Inheritance
             super().__init__(
@@ -82,7 +82,9 @@ def make_enricher(name, namespace, Reader):
             # Resuming
             if resumable and not output_buffer_is_empty:
                 self.should_resume = True
-                self.resume()
+
+                if auto_resume:
+                    self.resume()
 
         def __repr__(self):
             columns_info = ' '.join('%s=%s' % t for t in zip(self.pos._fields, self.pos))
@@ -173,8 +175,8 @@ def make_enricher(name, namespace, Reader):
         __name__ = 'Threadsafe' + name
 
         def __init__(self, input_file, output_file, no_headers=False,
-                     resumable=False, keep=None, add=None, listener=None,
-                     index_column='index'):
+                     resumable=False, auto_resume=True, keep=None, add=None,
+                     listener=None, index_column='index'):
 
             self.index_column = index_column
             self.event_lock = Lock()
