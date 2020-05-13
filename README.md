@@ -209,6 +209,19 @@ with open('./people.csv') as f, \
     print(event, row)
 
   enricher = casanova.enricher(f, of, resumable=True, listener=listener)
+
+  # Want more control over resuming?
+  enricher = casanova.enricher(f, of, resumable=True, auto_resume=False)
+
+  # You will then need to call #.resume yourself
+  enricher.should_resume
+  >>> True
+
+  enricher.resume()
+
+  # Knowing how many lines were already processed
+  enricher.already_done_count
+  >>> 45
 ```
 
 *Threadsafe version*
