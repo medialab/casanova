@@ -143,10 +143,19 @@ def make_reader_test(name, reader_fn, binary=False):
 
             assert count is None
 
+            count = reader_fn.count('./test/resources/people.csv.gz')
+
+            assert count == 3
+
         def test_gzip(self):
             with gzip.open('./test/resources/people.csv.gz', mode=gzip_flag) as f:
                 reader = reader_fn(f)
 
+                names = [name for name in reader.cells('name')]
+
+                assert names == ['John', 'Mary', 'Julia']
+
+            with reader_fn('./test/resources/people.csv.gz') as reader:
                 names = [name for name in reader.cells('name')]
 
                 assert names == ['John', 'Mary', 'Julia']

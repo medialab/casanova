@@ -11,7 +11,7 @@ from io import DEFAULT_BUFFER_SIZE
 from file_read_backwards.file_read_backwards import FileReadBackwardsIterator
 
 from casanova.reader import CasanovaReader
-from casanova.utils import lookahead
+from casanova.utils import lookahead, ensure_open
 from casanova.exceptions import EmptyFileError
 
 
@@ -21,7 +21,7 @@ class CasanovaReverseReader(CasanovaReader):
     def __init__(self, input_file, **kwargs):
         super().__init__(input_file, **kwargs)
 
-        self.backwards_file = open(self.input_file.name, 'rb')
+        self.backwards_file = ensure_open(self.input_file.name, mode='rb')
 
         backwards_iterator = FileReadBackwardsIterator(
             self.backwards_file,

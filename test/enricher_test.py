@@ -3,6 +3,7 @@
 # =============================================================================
 import os
 import csv
+import gzip
 import casanova
 import pytest
 import time
@@ -25,6 +26,7 @@ def collect_csv_file(path):
 
 def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
     flag = 'r' if not binary else 'rb'
+    gzip_flag = 'rt' if not binary else 'rb'
 
     def get_empty_io():
         return StringIO('') if not binary else BytesIO(b'')
@@ -43,6 +45,22 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
         def test_basics(self, tmpdir):
             output_path = str(tmpdir.join('./enriched.csv'))
             with open('./test/resources/people.csv', flag) as f, \
+                 open(output_path, 'w') as of:
+                enricher = enricher_fn(f, of, add=('line',))
+
+                for i, row in enumerate(enricher):
+                    enricher.writerow(row, [i])
+
+            assert collect_csv_file(output_path) == [
+                ['name', 'surname', 'line'],
+                ['John', 'Matthews', '0'],
+                ['Mary', 'Sue', '1'],
+                ['Julia', 'Stone', '2']
+            ]
+
+        def test_gzip(self, tmpdir):
+            output_path = str(tmpdir.join('./enriched.csv'))
+            with gzip.open('./test/resources/people.csv.gz', gzip_flag) as f, \
                  open(output_path, 'w') as of:
                 enricher = enricher_fn(f, of, add=('line',))
 

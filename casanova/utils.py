@@ -81,6 +81,10 @@ def ensure_open(p, encoding='utf-8', mode='r'):
         return p
 
     if p.endswith('.gz'):
+        if 'b' in mode:
+            return gzip.open(p, mode=mode)
+
+        mode += 't'
         return gzip.open(p, encoding=encoding, mode=mode)
 
     if encoding_fingerprint(encoding) != 'utf8':
