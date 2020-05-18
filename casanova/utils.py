@@ -4,6 +4,7 @@
 #
 # Miscellaneous utility functions.
 #
+import gzip
 import sys
 import codecs
 from io import BytesIO, BufferedReader, TextIOWrapper
@@ -42,6 +43,8 @@ def is_contiguous(l):
 
 
 def is_binary_buffer(buf):
+    if isinstance(buf, gzip.GzipFile) and not isinstance(buf, TextIOWrapper):
+        return True
     if isinstance(buf, BufferedReader):
         if 'b' not in buf.mode:
             return False
@@ -76,6 +79,9 @@ def encoding_fingerprint(encoding):
 def ensure_open(p, encoding='utf-8', mode='r'):
     if not isinstance(p, str):
         return p
+
+    if p.endswith('.gz'):
+        return gzip.open(p, encoding=encoding, mode=mode)
 
     if encoding_fingerprint(encoding) != 'utf8':
         return codecs.open(p, encoding=encoding, mode=mode)

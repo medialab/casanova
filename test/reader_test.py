@@ -2,6 +2,7 @@
 # Casanova Reader Unit Tests
 # =============================================================================
 import os
+import gzip
 import casanova
 import pytest
 from io import StringIO, BytesIO
@@ -14,6 +15,7 @@ from casanova.exceptions import (
 
 def make_reader_test(name, reader_fn, binary=False):
     flag = 'r' if not binary else 'rb'
+    gzip_flag = 'rt' if not binary else 'rb'
 
     class AbstractTestReader(object):
         __name__ = name
@@ -140,6 +142,14 @@ def make_reader_test(name, reader_fn, binary=False):
             count = reader_fn.count('./test/resources/people.csv', max_rows=1)
 
             assert count is None
+
+        def test_gzip(self):
+            with gzip.open('./test/resources/people.csv.gz', mode=gzip_flag) as f:
+                reader = reader_fn(f)
+
+                names = [name for name in reader.cells('name')]
+
+                assert names == ['John', 'Mary', 'Julia']
 
     return AbstractTestReader
 
