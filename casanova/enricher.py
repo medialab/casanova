@@ -23,7 +23,8 @@ from casanova.reader import (
 )
 from casanova.utils import (
     is_resumable_buffer,
-    is_empty_buffer
+    is_empty_buffer,
+    is_mute_buffer
 )
 
 
@@ -72,7 +73,7 @@ def make_enricher(name, namespace, Reader):
                 self.output_fieldnames = prepend + self.output_fieldnames
 
             # Need to write headers?
-            output_buffer_is_empty = is_empty_buffer(output_file)
+            output_buffer_is_empty = is_mute_buffer(output_file) or is_empty_buffer(output_file)
 
             if not no_headers:
 

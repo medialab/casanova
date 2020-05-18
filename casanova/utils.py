@@ -4,6 +4,7 @@
 #
 # Miscellaneous utility functions.
 #
+import sys
 from io import BytesIO, BufferedReader, TextIOWrapper
 
 
@@ -61,3 +62,7 @@ def is_resumable_buffer(buf):
 
 def is_empty_buffer(buf):
     return buf.tell() == 0
+
+
+def is_mute_buffer(buf):
+    return buf is sys.stdout or buf is sys.stderr or not hasattr(buf, 'tell')

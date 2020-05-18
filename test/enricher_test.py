@@ -6,6 +6,7 @@ import csv
 import casanova
 import pytest
 import time
+import sys
 from io import StringIO, BytesIO
 from collections import defaultdict
 from quenouille import imap_unordered
@@ -303,6 +304,24 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 'resume.output': [['1', 'Mary', '4'], ['2', 'Julia', '6']],
                 'resume.input': [['Mary', 'Sue', '1'], ['Julia', 'Stone', '2']]
             }
+
+        def test_stdout(self, capsys):
+            sys.stdout.write('this,should,happen\n')
+            with open('./test/resources/people.csv', flag) as f:
+                enricher = enricher_fn(f, sys.stdout, add=('line',))
+
+                for i, row in enumerate(enricher):
+                    enricher.writerow(row, [i])
+
+            result = list(csv.reader(StringIO(capsys.readouterr().out)))
+
+            assert result == [
+                ['this', 'should', 'happen'],
+                ['name', 'surname', 'line'],
+                ['John', 'Matthews', '0'],
+                ['Mary', 'Sue', '1'],
+                ['Julia', 'Stone', '2']
+            ]
 
     return AbstractTestEnricher
 
