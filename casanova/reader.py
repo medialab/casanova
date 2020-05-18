@@ -6,7 +6,6 @@
 # with csv.DictReader which is nice but very slow.
 #
 import csv
-import codecs
 
 from casanova.utils import is_contiguous, ensure_open
 from casanova.exceptions import EmptyFileError, MissingColumnError
