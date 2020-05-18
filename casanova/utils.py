@@ -5,6 +5,7 @@
 # Miscellaneous utility functions.
 #
 import sys
+import codecs
 from io import BytesIO, BufferedReader, TextIOWrapper
 
 
@@ -66,3 +67,17 @@ def is_empty_buffer(buf):
 
 def is_mute_buffer(buf):
     return buf is sys.stdout or buf is sys.stderr or not hasattr(buf, 'tell')
+
+
+def encoding_fingerprint(encoding):
+    return encoding.lower().replace('-', '')
+
+
+def ensure_open(p, encoding='utf-8', mode='r'):
+    if not isinstance(p, str):
+        return p
+
+    if encoding_fingerprint(encoding) != 'utf8':
+        return codecs.open(p, encoding=encoding, mode=mode)
+
+    return open(p, mode=mode)

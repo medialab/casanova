@@ -7,7 +7,7 @@
 import csvmonkey
 
 from casanova.reader import CasanovaReader, HeadersPositions
-from casanova.utils import is_binary_buffer
+from casanova.utils import is_binary_buffer, ensure_open
 from casanova.exceptions import InvalidFileError, EmptyFileError
 
 
@@ -17,11 +17,7 @@ class CasanovaMonkeyReader(CasanovaReader):
     def __init__(self, input_file, no_headers=False, encoding='utf-8', lazy=False):
 
         # Should we open a file for the user?
-        if isinstance(input_file, str):
-            if encoding.lower().replace('-', '') != 'utf8':
-                input_file = codecs.open(input_file, 'rb', encoding=encoding)
-            else:
-                input_file = open(input_file, 'rb')
+        input_file = ensure_open(input_file, encoding=encoding, mode='rb')
 
         # Ensuring we are reading a binary buffer
         if not is_binary_buffer(input_file):

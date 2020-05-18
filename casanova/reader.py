@@ -8,7 +8,7 @@
 import csv
 import codecs
 
-from casanova.utils import is_contiguous
+from casanova.utils import is_contiguous, ensure_open
 from casanova.exceptions import EmptyFileError, MissingColumnError
 
 
@@ -62,11 +62,7 @@ class CasanovaReader(object):
     def __init__(self, input_file, no_headers=False, encoding='utf-8'):
 
         # Should we open a file for the user?
-        if isinstance(input_file, str):
-            if encoding.lower().replace('-', '') != 'utf8':
-                input_file = codecs.open(input_file, encoding=encoding)
-            else:
-                input_file = open(input_file)
+        input_file = ensure_open(input_file, encoding=encoding)
 
         self.input_file = input_file
         self.reader = csv.reader(input_file)
