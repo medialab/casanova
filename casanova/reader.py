@@ -33,6 +33,9 @@ class HeadersPositions(object):
     def __contains__(self, key):
         return key in self._dict
 
+    def get(self, key, default=None):
+        return self._dict.get(key, default)
+
 
 def get_column_index(pos, key, default=None):
     try:

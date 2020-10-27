@@ -37,6 +37,10 @@ def make_reader_test(name, reader_fn, binary=False):
                 assert reader.pos['name'] == 0
                 assert reader.pos['surname'] == 1
 
+                assert reader.pos.get('name') == 0
+                assert reader.pos.get('whatever') is None
+                assert reader.pos.get('whatever', 1) == 1
+
                 assert len(reader.pos) == 2
                 assert reader.fieldnames == ['name', 'surname']
 
