@@ -243,6 +243,8 @@ def make_enricher(name, namespace, Reader):
                     with self.event_lock:
                         self.listener('resume.output', row)
 
+            self.already_done_count = len(self.already_done)
+
             if self.binary:
                 output_file.close()
 
