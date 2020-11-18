@@ -7,7 +7,7 @@
 import csvmonkey
 
 from casanova.reader import CasanovaReader, HeadersPositions
-from casanova.utils import is_binary_buffer, ensure_open
+from casanova.utils import is_binary_buffer, ensure_open, suppress_BOM
 from casanova.exceptions import InvalidFileError, EmptyFileError
 
 
@@ -41,6 +41,10 @@ class CasanovaMonkeyReader(CasanovaReader):
         else:
             try:
                 self.fieldnames = next(self.reader).aslist()
+
+                if self.fieldnames:
+                    self.fieldnames[0] = suppress_BOM(self.fieldnames[0])
+
             except StopIteration:
                 raise EmptyFileError
 

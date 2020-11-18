@@ -164,6 +164,13 @@ def make_reader_test(name, reader_fn, binary=False):
 
                 assert names == ['John', 'Mary', 'Julia']
 
+        def test_bom(self):
+            with open('./test/resources/bom.csv', flag) as f:
+                reader = reader_fn(f)
+
+                assert reader.fieldnames == ['name', 'color']
+                assert 'name' in reader.pos
+
     return AbstractTestReader
 
 

@@ -4,9 +4,9 @@
 #
 # Miscellaneous utility functions.
 #
+import re
 import gzip
 import sys
-import codecs
 from io import BytesIO, BufferedReader, TextIOWrapper
 
 
@@ -91,3 +91,10 @@ def ensure_open(p, encoding='utf-8', mode='r'):
         return codecs.open(p, encoding=encoding, mode=mode)
 
     return open(p, mode=mode)
+
+
+BOM_RE = re.compile(r'^\ufeff')
+
+
+def suppress_BOM(string):
+    return re.sub(BOM_RE, '', string)

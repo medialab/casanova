@@ -7,7 +7,7 @@
 #
 import csv
 
-from casanova.utils import is_contiguous, ensure_open
+from casanova.utils import is_contiguous, ensure_open, suppress_BOM
 from casanova.exceptions import EmptyFileError, MissingColumnError
 
 
@@ -83,6 +83,10 @@ class CasanovaReader(object):
         else:
             try:
                 self.fieldnames = next(self.reader)
+
+                if self.fieldnames:
+                    self.fieldnames[0] = suppress_BOM(self.fieldnames[0])
+
             except StopIteration:
                 raise EmptyFileError
 
