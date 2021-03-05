@@ -2,7 +2,8 @@
 # Casanova Reverse Reader Unit Tests
 # =============================================================================
 import casanova
-from casanova.exceptions import EmptyFileError
+from casanova import Batch
+from casanova.exceptions import EmptyFileError, MissingColumnError
 import pytest
 
 
@@ -44,3 +45,55 @@ class TestReverseReader(object):
 
         with pytest.raises(EmptyFileError):
             last_cell = casanova.reverse_reader.last_cell('./test/resources/empty-with-headers.csv', 'name')
+
+    def test_last_batch(self):
+        tests = [
+            ('batches', Batch('Jack', finished=True)),
+            ('batches-no-end', Batch('Edmund', cursor='cursor1', rows=[['14', 'Edmund', 'Peony', ''], ['13', 'Edmund', 'Carlotta', '']])),
+            ('batches-cursor-end', Batch('Edmund', cursor='cursor2')),
+            ('batches-broken-first', Batch('Edmund', rows=[['12', 'Edmund', 'Maria', ''], ['11', 'Edmund', 'Maxim', '']])),
+            ('batches-raw', Batch('John', rows=[['1', 'John', 'Elisa', ''], ['0', 'John', 'Mary', '']]))
+        ]
+
+        for name, expected in tests:
+            batch = casanova.reverse_reader.last_batch(
+                './test/resources/%s.csv' % name,
+                batch_value='name',
+                batch_cursor='cursor',
+                end_symbol='end'
+            )
+
+            assert batch == expected
+
+        with pytest.raises(EmptyFileError):
+            casanova.reverse_reader.last_batch(
+                './test/resources/empty.csv',
+                batch_value='name',
+                batch_cursor='cursor',
+                end_symbol='end'
+            )
+
+        with pytest.raises(EmptyFileError):
+            casanova.reverse_reader.last_batch(
+                './test/resources/empty.csv',
+                batch_value='name',
+                batch_cursor='cursor',
+                end_symbol='end'
+            )
+
+        with pytest.raises(EmptyFileError):
+            casanova.reverse_reader.last_batch(
+                './test/resources/empty.csv',
+                no_headers=True,
+                batch_value='name',
+                batch_cursor='cursor',
+                end_symbol='end'
+            )
+
+        with pytest.raises(EmptyFileError):
+            casanova.reverse_reader.last_batch(
+                './test/resources/empty-with-headers.csv',
+                batch_value='name',
+                batch_cursor='surname',
+                end_symbol='end'
+            )

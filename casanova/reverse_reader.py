@@ -18,6 +18,37 @@ from casanova.exceptions import EmptyFileError
 END_OF_FILE = object()
 
 
+class Batch(object):
+    __slots__ = ('value', 'finished', 'cursor', 'rows')
+
+    def __init__(self, value, finished=False, cursor=None, rows=None):
+        self.value = value
+        self.finished = finished
+        self.cursor = cursor
+        self.rows = rows or []
+
+    def __eq__(self, other):
+        return (
+            self.value == other.value and
+            self.finished == other.finished and
+            self.cursor == other.cursor and
+            self.rows == other.rows
+        )
+
+    def __repr__(self):
+        class_name = self.__class__.__name__
+
+        return (
+            '<%(class_name)s value=%(value)s finished=%(finished)s cursor=%(cursor)s rows=%(rows)i>'
+        ) % {
+            'class_name': class_name,
+            'value': self.value,
+            'finished': self.finished,
+            'cursor': self.cursor,
+            'rows': len(self.rows)
+        }
+
+
 class CasanovaReverseReader(CasanovaReader):
     namespace = 'casanova.reverse_reader'
 
@@ -62,6 +93,28 @@ class CasanovaReverseReader(CasanovaReader):
             return record
 
     @staticmethod
-    def last_batch(input_file, **kwargs):
+    def last_batch(input_file, batch_value, batch_cursor, end_symbol, **kwargs):
         with CasanovaReverseReader(input_file, **kwargs) as reader:
-            pass
+            batch = END_OF_FILE
+
+            for row, (value, cursor) in reader.cells((batch_value, batch_cursor), with_rows=True):
+                if batch is END_OF_FILE:
+                    batch = Batch(value)
+
+                if value != batch.value:
+                    return batch
+
+                if cursor == end_symbol:
+                    batch.finished = True
+                    return batch
+
+                if cursor:
+                    batch.cursor = cursor
+                    return batch
+
+                batch.rows.append(row)
+
+            if batch is END_OF_FILE:
+                raise EmptyFileError
+
+            return batch
