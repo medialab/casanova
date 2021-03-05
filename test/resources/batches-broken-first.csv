@@ -1,0 +1,14 @@
+index,name,friend,cursor
+0,John,Mary,
+1,John,Elisa,
+2,John,Carmen,cursor1
+3,John,Piotr,
+4,John,Guillaume,cursor2
+5,John,Anne,
+6,John,Claire,
+7,John,Isabelle,end
+8,Jack,Lucy,
+9,Jack,Mary,
+10,Jack,Prune,end
+11,Edmund,Maxim,
+12,Edmund,Maria,
