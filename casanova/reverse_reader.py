@@ -15,6 +15,8 @@ from casanova.reader import CasanovaReader
 from casanova.utils import ensure_open
 from casanova.exceptions import EmptyFileError
 
+END_OF_FILE = object()
+
 
 class CasanovaReverseReader(CasanovaReader):
     namespace = 'casanova.reverse_reader'
@@ -52,8 +54,14 @@ class CasanovaReverseReader(CasanovaReader):
     @staticmethod
     def last_cell(input_file, column, **kwargs):
         with CasanovaReverseReader(input_file, **kwargs) as reader:
-            try:
-                for record in reader.cells(column):
-                    return record
-            except StopIteration:
+            record = next(reader.cells(column), END_OF_FILE)
+
+            if record is END_OF_FILE:
                 raise EmptyFileError
+
+            return record
+
+    @staticmethod
+    def last_batch(input_file, **kwargs):
+        with CasanovaReverseReader(input_file, **kwargs) as reader:
+            pass

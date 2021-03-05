@@ -2,6 +2,7 @@
 # Casanova Reverse Reader Unit Tests
 # =============================================================================
 import casanova
+from casanova.exceptions import EmptyFileError
 import pytest
 
 
@@ -34,3 +35,12 @@ class TestReverseReader(object):
         last_cell = casanova.reverse_reader.last_cell('./test/resources/people.csv.gz', 'name')
 
         assert last_cell == 'Julia'
+
+        with pytest.raises(EmptyFileError):
+            last_cell = casanova.reverse_reader.last_cell('./test/resources/empty.csv', 'name')
+
+        with pytest.raises(EmptyFileError):
+            last_cell = casanova.reverse_reader.last_cell('./test/resources/empty.csv', 'name', no_headers=True)
+
+        with pytest.raises(EmptyFileError):
+            last_cell = casanova.reverse_reader.last_cell('./test/resources/empty-with-headers.csv', 'name')
