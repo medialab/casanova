@@ -50,6 +50,15 @@ def make_reader_test(name, reader_fn, binary=False):
                 surnames = [row[reader.pos.surname] for row in reader]
                 assert surnames == ['Matthews', 'Sue', 'Stone']
 
+        def test_dialect(self):
+            if binary:
+                return
+
+            with open('./test/resources/semicolons.csv', flag) as f:
+                reader = reader_fn(f, delimiter=';')
+
+                assert [row[0] for row in reader] == ['Rose', 'Luke']
+
         def test_cells(self):
             with open('./test/resources/people.csv', flag) as f:
                 reader = reader_fn(f)

@@ -61,13 +61,23 @@ def collect_column_indices(pos, columns):
 class CasanovaReader(object):
     namespace = 'casanova.reader'
 
-    def __init__(self, input_file, no_headers=False, encoding='utf-8'):
+    def __init__(self, input_file, no_headers=False, encoding='utf-8',
+                 dialect=None, quotechar=None, delimiter=None):
 
         # Should we open a file for the user?
         input_file = ensure_open(input_file, encoding=encoding)
 
+        reader_kwargs = {}
+
+        if dialect is not None:
+            reader_kwargs['dialect'] = dialect
+        if quotechar is not None:
+            reader_kwargs['quotechar'] = quotechar
+        if delimiter is not None:
+            reader_kwargs['delimiter'] = delimiter
+
         self.input_file = input_file
-        self.reader = csv.reader(input_file)
+        self.reader = csv.reader(input_file, **reader_kwargs)
         self.fieldnames = None
         self.first_row = None
         self.can_slice = True
