@@ -104,6 +104,9 @@ with casanova.reader('./people.csv') as reader:
 with casanova.reader('./people.csv', encoding='latin1') as reader:
   pass
 
+# And you can of course use the typical dialect-related kwargs
+reader = casanova.reader('./french-semicolons.csv', delimiter=';')
+
 # Readers can also be closed if you want to avoid context managers
 reader.close()
 ```
