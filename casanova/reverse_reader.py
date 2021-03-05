@@ -35,6 +35,12 @@ class Batch(object):
             self.rows == other.rows
         )
 
+    def __iter__(self):
+        return iter(self.rows)
+
+    def collect(self, pos):
+        return set(row[pos] for row in self)
+
     def __repr__(self):
         class_name = self.__class__.__name__
 

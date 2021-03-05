@@ -63,6 +63,9 @@ class TestReverseReader(object):
                 end_symbol='end'
             )
 
+            assert list(batch) == batch.rows
+            assert set(row[2] for row in batch.rows) == batch.collect(2)
+
             assert batch == expected
 
         with pytest.raises(EmptyFileError):
