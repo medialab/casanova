@@ -58,6 +58,24 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 ['Julia', 'Stone', '2']
             ]
 
+        def test_dialect(self, tmpdir):
+            if binary:
+                return
+
+            output_path = str(tmpdir.join('./enriched.csv'))
+            with open('./test/resources/semicolons.csv', flag) as f, \
+                 open(output_path, 'w') as of:
+                enricher = enricher_fn(f, of, add=('line',), delimiter=';')
+
+                for i, row in enumerate(enricher):
+                    enricher.writerow(row, [i])
+
+            assert collect_csv_file(output_path) == [
+                ['name', 'surname', 'line'],
+                ['Rose', 'Philips', '0'],
+                ['Luke', 'Atman', '1']
+            ]
+
         def test_gzip(self, tmpdir):
             output_path = str(tmpdir.join('./enriched.csv'))
             with gzip.open('./test/resources/people.csv.gz', gzip_flag) as f, \

@@ -35,13 +35,20 @@ def make_enricher(name, namespace, Reader):
 
         def __init__(self, input_file, output_file, no_headers=False,
                      resumable=False, auto_resume=True, keep=None, add=None,
-                     listener=None, prepend=None):
+                     listener=None, prepend=None, dialect=None, quotechar=None,
+                     delimiter=None):
 
             # Inheritance
-            super().__init__(
-                input_file,
-                no_headers=no_headers
-            )
+            reader_kwargs = {
+                'no_headers': no_headers
+            }
+
+            if 'monkey' not in namespace:
+                reader_kwargs['dialect'] = dialect
+                reader_kwargs['quotechar'] = quotechar
+                reader_kwargs['delimiter'] = delimiter
+
+            super().__init__(input_file, **reader_kwargs)
 
             # Sanity tests
             if resumable and not is_resumable_buffer(output_file):
