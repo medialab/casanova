@@ -8,34 +8,14 @@ import re
 import gzip
 import sys
 from io import BytesIO, BufferedReader, TextIOWrapper
-
-
-def iter_with_prev(iterator):
-    prev_item = None
-
-    for item in iterator:
-        if prev_item is not None:
-            yield prev_item, item
-
-        prev_item = item
-
-
-def lookahead(iterator):
-
-    try:
-        last = next(iterator)
-    except StopIteration:
-        return
-
-    for item in iterator:
-        yield last, True
-        last = item
-
-    yield last, False
+from ebbe import with_prev
 
 
 def is_contiguous(l):
-    for p, n in iter_with_prev(l):
+    for p, n in with_prev(l):
+        if p is None:
+            continue
+
         if p != n - 1:
             return False
 

@@ -9,9 +9,10 @@
 import csv
 from io import DEFAULT_BUFFER_SIZE
 from file_read_backwards.file_read_backwards import FileReadBackwardsIterator
+from ebbe import with_is_last
 
 from casanova.reader import CasanovaReader
-from casanova.utils import lookahead, ensure_open
+from casanova.utils import ensure_open
 from casanova.exceptions import EmptyFileError
 
 
@@ -33,8 +34,8 @@ class CasanovaReverseReader(CasanovaReader):
 
         def generator():
 
-            for row, has_more in lookahead(backwards_reader):
-                if has_more or self.fieldnames is None:
+            for is_last, row in with_is_last(backwards_reader):
+                if not is_last or self.fieldnames is None:
                     yield row
 
             self.close()

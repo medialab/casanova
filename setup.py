@@ -17,9 +17,10 @@ setup(name='casanova',
       packages=find_packages(exclude=['benchmark', 'test']),
       package_data={'docs': ['README.md']},
       install_requires=[
-          'file-read-backwards>=2.0.0'
+        'ebbe>=1.0.0'
+        'file-read-backwards>=2.0.0'
       ],
       extras_require={
-          'monkey': ['csvmonkey==0.0.5']
+        'monkey': ['csvmonkey==0.0.5']
       },
       zip_safe=True)
