@@ -4,7 +4,7 @@ with open('./README.md', 'r') as f:
     long_description = f.read()
 
 setup(name='casanova',
-      version='0.10.0',
+      version='0.10.1',
       description='Specialized & performant CSV readers, writers and enrichers for python.',
       long_description=long_description,
       long_description_content_type='text/markdown',
@@ -17,7 +17,7 @@ setup(name='casanova',
       packages=find_packages(exclude=['benchmark', 'test']),
       package_data={'docs': ['README.md']},
       install_requires=[
-        'ebbe>=1.0.0'
+        'ebbe>=1.0.0',
         'file-read-backwards>=2.0.0'
       ],
       extras_require={
