@@ -36,6 +36,21 @@ class HeadersPositions(object):
     def get(self, key, default=None):
         return self._dict.get(key, default)
 
+    def __repr__(self):
+        class_name = self.__class__.__name__
+
+        representation = '<' + class_name
+
+        for h, i in self._dict.items():
+            if h.isidentifier():
+                representation += ' %s=%s' % (h, i)
+            else:
+                representation += ' "%s"=%s' % (h, i)
+
+        representation += '>'
+
+        return representation
+
 
 def get_column_index(pos, key, default=None):
     try:

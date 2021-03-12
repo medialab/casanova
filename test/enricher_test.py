@@ -359,6 +359,16 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 ['Julia', 'Stone', '2']
             ]
 
+        def test_combined_pos(self, tmpdir):
+            output_path = str(tmpdir.join('./enriched.csv'))
+            with open('./test/resources/people.csv', flag) as f, \
+                 open(output_path, 'w') as of:
+                enricher = enricher_fn(f, of, add=('line',), keep=('surname',))
+
+                assert len(enricher.output_pos) == 2
+                assert enricher.output_pos.surname == 0
+                assert enricher.output_pos.line == 1
+
     return AbstractTestEnricher
 
 

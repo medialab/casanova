@@ -18,6 +18,7 @@ from casanova.exceptions import (
 )
 from casanova.reader import (
     CasanovaReader,
+    HeadersPositions,
     get_column_index,
     collect_column_indices
 )
@@ -78,6 +79,8 @@ def make_enricher(name, namespace, Reader):
 
             if prepend is not None:
                 self.output_fieldnames = prepend + self.output_fieldnames
+
+            self.output_pos = HeadersPositions(self.output_fieldnames if not no_headers else len(self.output_fieldnames))
 
             # Need to write headers?
             output_buffer_is_empty = is_mute_buffer(output_file) or is_empty_buffer(output_file)
