@@ -79,17 +79,17 @@ class CasanovaReader(object):
         self.input_file = input_file
         self.reader = csv.reader(input_file, **reader_kwargs)
         self.fieldnames = None
-        self.first_row = None
+        self.buffered_rows = []
         self.can_slice = True
         self.binary = False
 
         if no_headers:
             try:
-                self.first_row = next(self.reader)
+                self.buffered_rows.append(next(self.reader))
             except StopIteration:
                 raise EmptyFileError
 
-            self.pos = HeadersPositions(len(self.first_row))
+            self.pos = HeadersPositions(len(self.buffered_rows[0]))
         else:
             try:
                 self.fieldnames = next(self.reader)
@@ -108,10 +108,7 @@ class CasanovaReader(object):
         return '<%s %s>' % (self.namespace, columns_info)
 
     def iter(self):
-        if self.first_row is not None:
-            yield self.first_row
-            self.first_row = None
-
+        yield from self.buffered_rows
         yield from self.reader
 
     def __iter__(self):

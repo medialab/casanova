@@ -82,7 +82,7 @@ class CasanovaReverseReader(CasanovaReader):
         self.reader = generator()
 
         if self.fieldnames is None:
-            self.first_row = None
+            self.buffered_rows = []
 
     def close(self):
         super().close()
