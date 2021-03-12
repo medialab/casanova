@@ -78,3 +78,7 @@ BOM_RE = re.compile(r'^\ufeff')
 
 def suppress_BOM(string):
     return re.sub(BOM_RE, '', string)
+
+
+def count_bytes_in_row(row):
+    return sum(len(cell) for cell in row) * 2
