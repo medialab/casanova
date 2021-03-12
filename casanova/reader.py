@@ -7,7 +7,7 @@
 #
 import csv
 
-from casanova.utils import is_contiguous, ensure_open, suppress_BOM
+from casanova.utils import is_contiguous, ensure_open, suppress_BOM, count_bytes_in_row
 from casanova.exceptions import EmptyFileError, MissingColumnError
 
 
@@ -77,7 +77,7 @@ class CasanovaReader(object):
     namespace = 'casanova.reader'
 
     def __init__(self, input_file, no_headers=False, encoding='utf-8',
-                 dialect=None, quotechar=None, delimiter=None):
+                 dialect=None, quotechar=None, delimiter=None, buffer_up_to_bytes=None):
 
         # Should we open a file for the user?
         input_file = ensure_open(input_file, encoding=encoding)
@@ -95,6 +95,7 @@ class CasanovaReader(object):
         self.reader = csv.reader(input_file, **reader_kwargs)
         self.fieldnames = None
         self.buffered_rows = []
+        self.was_completely_buffered = False
         self.can_slice = True
         self.binary = False
 
@@ -116,6 +117,22 @@ class CasanovaReader(object):
                 raise EmptyFileError
 
             self.pos = HeadersPositions(self.fieldnames)
+
+        if buffer_up_to_bytes is not None:
+            if not isinstance(buffer_up_to_bytes, int) or buffer_up_to_bytes < 1:
+                raise TypeError('expecting a positive integer as "buffer_up_to_bytes" kwarg')
+
+            buffered_bytes = 0
+
+            while buffered_bytes < buffer_up_to_bytes:
+                row = next(self.reader, None)
+
+                if row is None:
+                    self.was_completely_buffered = True
+                    break
+
+                buffered_bytes = count_bytes_in_row(row)
+                self.buffered_rows.append(row)
 
     def __repr__(self):
         columns_info = ' '.join('%s=%s' % t for t in zip(self.pos._fields, self.pos))

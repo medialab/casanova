@@ -24,6 +24,15 @@ def make_reader_test(name, reader_fn, binary=False):
             with pytest.raises(EmptyFileError):
                 reader_fn(StringIO('') if not binary else BytesIO(b''))
 
+            if binary:
+                return
+
+            with pytest.raises(TypeError):
+                reader_fn(StringIO('name\nYomgui'), buffer=4.5)
+
+            with pytest.raises(TypeError):
+                reader_fn(StringIO('name\nYomgui'), buffer=-456)
+
         def test_basics(self):
             with open('./test/resources/people.csv', flag) as f:
                 reader = reader_fn(f)
