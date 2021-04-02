@@ -41,3 +41,16 @@ class TestNamedRecord(object):
             'has_captions': True,
             'tags': ['film', 'pop']
         }
+
+    def test_defaults(self):
+        Record = namedrecord(
+            'Record',
+            ['x', 'y', 'z'],
+            defaults=[20, 30]
+        )
+
+        r = Record(27)
+
+        assert r == Record(27, 20, 30)
+
+        assert list(Record(10, z=45)) == [10, 20, 45]
