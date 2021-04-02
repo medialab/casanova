@@ -20,15 +20,14 @@ class HeadersPositions(object):
             self.__headers = headers
             self._dict = {h: i for i, h in enumerate(self.__headers)}
 
-            for name, value in self._dict.items():
-                if name.isidentifier():
-                    setattr(self, name, value)
-
     def __len__(self):
         return len(self.__headers)
 
     def __getitem__(self, key):
         return self._dict[key]
+
+    def __getattr__(self, key):
+        return self.__getitem__(key)
 
     def __contains__(self, key):
         return key in self._dict
