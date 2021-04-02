@@ -7,6 +7,7 @@ from casanova.enricher import (
     CasanovaEnricher as enricher,
     ThreadsafeCasanovaEnricher as threadsafe_enricher
 )
+from casanova.namedrecord import namedrecord
 from casanova.reader import (
     CasanovaReader as reader
 )
