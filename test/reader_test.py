@@ -53,6 +53,9 @@ def make_reader_test(name, reader_fn, binary=False):
                 assert len(reader.pos) == 2
                 assert reader.fieldnames == ['name', 'surname']
 
+                assert list(reader.pos) == [('name', 0), ('surname', 1)]
+                assert dict(reader.pos) == {'name': 0, 'surname': 1}
+
                 with pytest.raises(KeyError):
                     reader.pos['whatever']
 
