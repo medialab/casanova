@@ -9,7 +9,9 @@ from casanova.enricher import (
 )
 from casanova.namedrecord import namedrecord
 from casanova.reader import (
-    CasanovaReader as reader
+    CasanovaReader as reader,
+    HeadersPositions,
+    DictLikeRow
 )
 from casanova.reverse_reader import (
     CasanovaReverseReader as reverse_reader,

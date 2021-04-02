@@ -11,6 +11,20 @@ from casanova.utils import is_contiguous, ensure_open, suppress_BOM, count_bytes
 from casanova.exceptions import EmptyFileError, MissingColumnError
 
 
+class DictLikeRow(object):
+    __slots__ = ('__mapping', '__row')
+
+    def __init__(self, mapping, row):
+        self.__mapping = mapping
+        self.__row = row
+
+    def __getitem__(self, key):
+        return self.__row[self.__mapping[key]]
+
+    def __getattr__(self, key):
+        return self.__getitem__(key)
+
+
 class HeadersPositions(object):
     def __init__(self, headers):
         if isinstance(headers, int):
@@ -40,6 +54,9 @@ class HeadersPositions(object):
 
     def get(self, key, default=None):
         return self.__mapping.get(key, default)
+
+    def wrap(self, row):
+        return DictLikeRow(self.__mapping, row)
 
     def __repr__(self):
         class_name = self.__class__.__name__
@@ -147,6 +164,9 @@ class CasanovaReader(object):
     def iter(self):
         yield from self.buffered_rows
         yield from self.reader
+
+    def wrap(self, row):
+        return self.pos.wrap(row)
 
     def __iter__(self):
         return self.iter()

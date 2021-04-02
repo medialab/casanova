@@ -301,7 +301,7 @@ last_surname = casanova.reverse_reader.last_cell('./people.csv', 'surname')
 
 ## namedrecord
 
-casanova's `namedrecord` is basically a enhanced & CSV-aware version of python [namedtuple](https://docs.python.org/fr/3.10/library/collections.html#collections.namedtuple).
+casanova's `namedrecord` is basically an enhanced & CSV-aware version of python [namedtuple](https://docs.python.org/fr/3.10/library/collections.html#collections.namedtuple).
 
 ```python
 from casanova import namedrecord
@@ -319,6 +319,14 @@ example = Record('Le Monde', ['https://lemonde.fr', 'https://www.lemonde.fr'])
 # It works exactly like a namedtuple would, but with perks:
 example
 >>> Record(title='Le Monde', urls=['https://lemonde.fr', 'https://www.lemonde.fr'], is_accessible=True)
+
+# You can read by index:
+example[0]
+>>> 'Le Monde'
+
+# You can read its attributes:
+example.title
+>>> 'Le Monde'
 
 # You can access it like a dict:
 example['title']

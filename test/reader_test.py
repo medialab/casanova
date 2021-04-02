@@ -7,6 +7,7 @@ import casanova
 import pytest
 from io import StringIO, BytesIO
 
+from casanova.reader import DictLikeRow
 from casanova.exceptions import (
     EmptyFileError,
     MissingColumnError
@@ -192,6 +193,17 @@ def make_reader_test(name, reader_fn, binary=False):
 
                 assert reader.fieldnames == ['name', 'color']
                 assert 'name' in reader.pos
+
+        def test_wrap(self):
+            with open('./test/resources/people.csv', flag) as f:
+                reader = reader_fn(f)
+
+                for row in reader:
+                    wrapped = reader.wrap(row)
+
+                    assert isinstance(wrapped, DictLikeRow)
+                    assert wrapped['name'] == row[0]
+                    assert wrapped.surname == row[1]
 
     return AbstractTestReader
 
