@@ -60,19 +60,4 @@ def namedrecord(name, fields, boolean=None, plural=None):
         def as_dict(self):
             return {fields[i]: v for i, v in enumerate(self)}
 
-        def __repr__(self):
-            representation = '<' + name
-
-            for key, i in mapping.items():
-                v = super().__getitem__(i)
-
-                if isinstance(v, str) and len(v) > 30:
-                    v = v[:29] + '…'
-
-                representation += ' {k}={v!r}'.format(k=key, v=v)
-
-            representation += '>'
-
-            return representation
-
     return Record
