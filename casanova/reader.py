@@ -15,35 +15,38 @@ class HeadersPositions(object):
     def __init__(self, headers):
         if isinstance(headers, int):
             self.__headers = list(range(headers))
-            self.__dict = {i: i for i in self.__headers}
+            self.__mapping = {i: i for i in self.__headers}
         else:
             self.__headers = headers
-            self.__dict = {h: i for i, h in enumerate(self.__headers)}
+            self.__mapping = {h: i for i, h in enumerate(self.__headers)}
 
     def __len__(self):
         return len(self.__headers)
 
     def __getitem__(self, key):
-        return self.__dict[key]
+        return self.__mapping[key]
 
     def __getattr__(self, key):
         return self.__getitem__(key)
 
     def __contains__(self, key):
-        return key in self.__dict
+        return key in self.__mapping
 
     def __iter__(self):
-        yield from self.__dict.items()
+        yield from self.__mapping.items()
+
+    def as_dict(self):
+        return self.__mapping.copy()
 
     def get(self, key, default=None):
-        return self.__dict.get(key, default)
+        return self.__mapping.get(key, default)
 
     def __repr__(self):
         class_name = self.__class__.__name__
 
         representation = '<' + class_name
 
-        for h, i in self.__dict.items():
+        for h, i in self.__mapping.items():
             if h.isidentifier():
                 representation += ' %s=%s' % (h, i)
             else:
