@@ -50,6 +50,7 @@ pip install casanova[monkey]
 * [reader](#reader)
 * [enricher](#enricher)
 * [reverse_reader](#reverse_reader)
+* [namedrecord](#namedrecord)
 
 ## reader
 
@@ -296,4 +297,45 @@ with open('./people.csv', 'rb') as f:
 # It also comes with a static helper if you only need to read last cell
 last_surname = casanova.reverse_reader.last_cell('./people.csv', 'surname')
 >>> 'Mr. Last'
+```
+
+## namedrecord
+
+casanova's `namedrecord` is basically a enhanced & CSV-aware version of python [namedtuple](https://docs.python.org/fr/3.10/library/collections.html#collections.namedtuple).
+
+```python
+from casanova import namedrecord
+
+Record = namedrecord(
+  'Record',
+  ['title', 'urls', 'is_accessible'],
+  defaults=[True],
+  boolean=['is_accessible'],
+  plural=['urls']
+)
+
+example = Record('Le Monde', ['https://lemonde.fr', 'https://www.lemonde.fr'])
+
+# It works exactly like a namedtuple would, but with perks:
+example
+>>> Record(title='Le Monde', urls=['https://lemonde.fr', 'https://www.lemonde.fr'], is_accessible=True)
+
+# You can access it like a dict:
+example['title']
+>>> 'Le Monde'
+
+# You can use #.get:
+example.get('what?')
+>>> None
+
+# You can return it as a plain dict:
+example.as_dict()
+>>> {
+  'title': 'Le Monde',
+  ...
+}
+
+# You can format it as a CSV row:
+example.as_csv_row():
+>>> ['Le Monde', 'https://lemonde.fr|https://www.lemonde.fr', 'true']
 ```
