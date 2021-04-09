@@ -62,4 +62,6 @@ def namedrecord(name, fields, boolean=None, plural=None, defaults=None):
         def as_dict(self):
             return {fields[i]: v for i, v in enumerate(self)}
 
+    Record.__name__ = name
+
     return Record
