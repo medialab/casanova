@@ -98,12 +98,11 @@ def make_enricher(name, namespace, Reader):
                     self.resume()
 
         def __repr__(self):
-            columns_info = ' '.join('%s=%s' % t for t in zip(self.pos._fields, self.pos))
+            columns_info = ' '.join('%s=%s' % t for t in self.pos)
 
-            return '<%s%s%s %s>' % (
+            return '<%s%s %s>' % (
                 namespace,
                 ' resumable' if self.resumable else '',
-                ' unordered' if getattr(self, 'unordered', False) else '',
                 columns_info
             )
 
