@@ -7,7 +7,7 @@
 import re
 import gzip
 import sys
-from io import BytesIO, BufferedReader, TextIOWrapper
+from io import BytesIO, BufferedReader, TextIOWrapper, UnsupportedOperation
 from ebbe import with_prev
 
 
@@ -45,11 +45,26 @@ def is_resumable_buffer(buf):
 
 
 def is_empty_buffer(buf):
-    return buf.tell() == 0
+    try:
+        if not buf.seekable():
+            return True
+
+        return buf.tell() == 0
+    except UnsupportedOperation:
+        return True
 
 
 def is_mute_buffer(buf):
-    return buf is sys.stdout or buf is sys.stderr or not hasattr(buf, 'tell')
+    try:
+        return (
+            buf is sys.stdout or
+            buf is sys.stderr or
+            buf is sys.stdin or
+            not hasattr(buf, 'tell') or
+            buf.fileno() <= 2
+        )
+    except UnsupportedOperation:
+        return True
 
 
 def encoding_fingerprint(encoding):
