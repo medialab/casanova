@@ -18,9 +18,7 @@ from casanova.exceptions import (
 )
 from casanova.reader import (
     CasanovaReader,
-    HeadersPositions,
-    get_column_index,
-    collect_column_indices
+    HeadersPositions
 )
 from casanova.utils import (
     is_resumable_buffer,
@@ -69,7 +67,11 @@ def make_enricher(name, namespace, Reader):
             self.listener = listener
 
             if keep is not None:
-                self.keep_indices = collect_column_indices(self.pos, keep)
+                try:
+                    self.keep_indices = self.pos.collect(keep)
+                except KeyError:
+                    raise MissingColumnError
+
                 self.output_fieldnames = self.filterrow(self.output_fieldnames)
 
             if add is not None:
@@ -235,7 +237,7 @@ def make_enricher(name, namespace, Reader):
 
             should_emit = callable(self.listener)
 
-            i = get_column_index(reader.pos, self.index_column)
+            i = reader.pos.get(self.index_column)
 
             if i is None:
                 raise MissingColumnError(self.index_column)

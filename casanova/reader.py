@@ -55,6 +55,9 @@ class HeadersPositions(object):
     def get(self, key, default=None):
         return self.__mapping.get(key, default)
 
+    def collect(self, keys):
+        return [self[k] for k in keys]
+
     def wrap(self, row):
         return DictLikeRow(self.__mapping, row)
 
@@ -72,27 +75,6 @@ class HeadersPositions(object):
         representation += '>'
 
         return representation
-
-
-def get_column_index(pos, key, default=None):
-    try:
-        return pos[key]
-    except KeyError:
-        return default
-
-
-def collect_column_indices(pos, columns):
-    indices = []
-
-    for column in columns:
-        i = get_column_index(pos, column)
-
-        if i is None:
-            raise MissingColumnError
-
-        indices.append(i)
-
-    return indices
 
 
 class CasanovaReader(object):
@@ -172,7 +154,10 @@ class CasanovaReader(object):
         return self.iter()
 
     def __records(self, columns, with_rows=False):
-        pos = collect_column_indices(self.pos, columns)
+        try:
+            pos = self.pos.collect(columns)
+        except KeyError:
+            raise MissingColumnError
 
         if self.can_slice and is_contiguous(pos):
             if len(pos) == 1:
@@ -201,7 +186,7 @@ class CasanovaReader(object):
         return iterator()
 
     def __cells(self, column, with_rows=False):
-        i = get_column_index(self.pos, column)
+        i = self.pos.get(column)
 
         if i is None:
             raise MissingColumnError(column)
