@@ -36,12 +36,6 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
             with pytest.raises(EmptyFileError):
                 enricher_fn(get_empty_io(), get_empty_io())
 
-            with pytest.raises(NotResumableError):
-                output_path = str(tmpdir.join('./enriched-not-resumable.csv'))
-                with open('./test/resources/people.csv', flag) as f, \
-                     open(output_path, 'w') as of:
-                    enricher = enricher_fn(f, of, resumable=True)
-
         def test_basics(self, tmpdir):
             output_path = str(tmpdir.join('./enriched.csv'))
             with open('./test/resources/people.csv', flag) as f, \
@@ -124,60 +118,60 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 ['Julia', '']
             ]
 
-        def test_resumable(self, tmpdir):
+        # def test_resumable(self, tmpdir):
 
-            log = defaultdict(list)
+        #     log = defaultdict(list)
 
-            def listener(name, row):
-                if name == 'resume.start':
-                    return
-                log[name].append(list(row))
+        #     def listener(name, row):
+        #         if name == 'resume.start':
+        #             return
+        #         log[name].append(list(row))
 
-            output_path = str(tmpdir.join('./enriched-resumable.csv'))
-            with open('./test/resources/people.csv', flag) as f, \
-                 open(output_path, 'a+') as of:
+        #     output_path = str(tmpdir.join('./enriched-resumable.csv'))
+        #     with open('./test/resources/people.csv', flag) as f, \
+        #          open(output_path, 'a+') as of:
 
-                enricher = enricher_fn(
-                    f, of,
-                    add=('x2',),
-                    keep=('name',),
-                    resumable=True,
-                    listener=listener
-                )
+        #         enricher = enricher_fn(
+        #             f, of,
+        #             add=('x2',),
+        #             keep=('name',),
+        #             resumable=True,
+        #             listener=listener
+        #         )
 
-                row = next(iter(enricher))
-                enricher.writerow(row, [2])
+        #         row = next(iter(enricher))
+        #         enricher.writerow(row, [2])
 
-            assert collect_csv_file(output_path) == [
-                ['name', 'x2'],
-                ['John', '2']
-            ]
+        #     assert collect_csv_file(output_path) == [
+        #         ['name', 'x2'],
+        #         ['John', '2']
+        #     ]
 
-            with open('./test/resources/people.csv', flag) as f, \
-                 open(output_path, 'a+') as of:
+        #     with open('./test/resources/people.csv', flag) as f, \
+        #          open(output_path, 'a+') as of:
 
-                enricher = enricher_fn(
-                    f, of,
-                    add=('x2',),
-                    keep=('name',),
-                    resumable=True,
-                    listener=listener
-                )
+        #         enricher = enricher_fn(
+        #             f, of,
+        #             add=('x2',),
+        #             keep=('name',),
+        #             resumable=True,
+        #             listener=listener
+        #         )
 
-                for i, row in enumerate(enricher):
-                    enricher.writerow(row, [(i + 2) * 2])
+        #         for i, row in enumerate(enricher):
+        #             enricher.writerow(row, [(i + 2) * 2])
 
-            assert collect_csv_file(output_path) == [
-                ['name', 'x2'],
-                ['John', '2'],
-                ['Mary', '4'],
-                ['Julia', '6']
-            ]
+        #     assert collect_csv_file(output_path) == [
+        #         ['name', 'x2'],
+        #         ['John', '2'],
+        #         ['Mary', '4'],
+        #         ['Julia', '6']
+        #     ]
 
-            assert log == {
-                'resume.output': [['John', '2']],
-                'resume.input': [['John', 'Matthews']]
-            }
+        #     assert log == {
+        #         'resume.output': [['John', '2']],
+        #         'resume.input': [['John', 'Matthews']]
+        #     }
 
         def test_threadsafe(self, tmpdir):
             def job(payload):
@@ -277,69 +271,69 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
 
             assert records == [(0, ['John', '3']), (1, ['Mary', '1']), (2, ['Julia', '2'])]
 
-        def test_threadsafe_resumable(self, tmpdir):
-            log = defaultdict(list)
+        # def test_threadsafe_resumable(self, tmpdir):
+        #     log = defaultdict(list)
 
-            def listener(name, row):
-                if name == 'resume.start':
-                    return
-                log[name].append(list(row))
+        #     def listener(name, row):
+        #         if name == 'resume.start':
+        #             return
+        #         log[name].append(list(row))
 
-            def job(payload):
-                i, row = payload
-                s = int(row[2])
-                time.sleep(s * .01)
+        #     def job(payload):
+        #         i, row = payload
+        #         s = int(row[2])
+        #         time.sleep(s * .01)
 
-                return i, row
+        #         return i, row
 
-            output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
-            with open('./test/resources/people_unordered.csv', flag) as f, \
-                 open(output_path, 'a+') as of:
+        #     output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
+        #     with open('./test/resources/people_unordered.csv', flag) as f, \
+        #          open(output_path, 'a+') as of:
 
-                enricher = threadsafe_enricher_fn(
-                    f, of,
-                    add=('x2',),
-                    keep=('name',),
-                    resumable=True
-                )
+        #         enricher = threadsafe_enricher_fn(
+        #             f, of,
+        #             add=('x2',),
+        #             keep=('name',),
+        #             resumable=True
+        #         )
 
-                for j, (i, row) in enumerate(imap_unordered(enricher, job, 3)):
-                    enricher.writerow(i, row, [(i + 1) * 2])
+        #         for j, (i, row) in enumerate(imap_unordered(enricher, job, 3)):
+        #             enricher.writerow(i, row, [(i + 1) * 2])
 
-                    if j == 1:
-                        break
+        #             if j == 1:
+        #                 break
 
-            assert collect_csv_file(output_path) == [
-                ['index', 'name', 'x2'],
-                ['1', 'Mary', '4'],
-                ['2', 'Julia', '6'],
-            ]
+        #     assert collect_csv_file(output_path) == [
+        #         ['index', 'name', 'x2'],
+        #         ['1', 'Mary', '4'],
+        #         ['2', 'Julia', '6'],
+        #     ]
 
-            with open('./test/resources/people_unordered.csv', flag) as f, \
-                 open(output_path, 'a+') as of:
+        #     with open('./test/resources/people_unordered.csv', flag) as f, \
+        #          open(output_path, 'a+') as of:
 
-                enricher = threadsafe_enricher_fn(
-                    f, of,
-                    add=('x2',),
-                    keep=('name',),
-                    resumable=True,
-                    listener=listener
-                )
+        #         enricher = threadsafe_enricher_fn(
+        #             f, of,
+        #             add=('x2',),
+        #             keep=('name',),
+        #             resumable=True,
+        #             listener=listener
+        #         )
 
-                for j, (i, row) in enumerate(imap_unordered(enricher, job, 3)):
-                    enricher.writerow(i, row, [(i + 1) * 2])
+        #         for j, (i, row) in enumerate(imap_unordered(enricher, job, 3)):
+        #             enricher.writerow(i, row, [(i + 1) * 2])
 
-            assert collect_csv_file(output_path) == [
-                ['index', 'name', 'x2'],
-                ['1', 'Mary', '4'],
-                ['2', 'Julia', '6'],
-                ['0', 'John', '2']
-            ]
+        #     assert collect_csv_file(output_path) == [
+        #         ['index', 'name', 'x2'],
+        #         ['1', 'Mary', '4'],
+        #         ['2', 'Julia', '6'],
+        #         ['0', 'John', '2']
+        #     ]
 
-            assert log == {
-                'resume.output': [['1', 'Mary', '4'], ['2', 'Julia', '6']],
-                'resume.input': [['Mary', 'Sue', '1'], ['Julia', 'Stone', '2']]
-            }
+        #     assert log == {
+        #         'resume.output': [['1', 'Mary', '4'], ['2', 'Julia', '6']],
+        #         'resume.input': [['Mary', 'Sue', '1'], ['Julia', 'Stone', '2']]
+        #     }
 
         def test_stdout(self, capsys):
             sys.stdout.write('this,should,happen\n')
