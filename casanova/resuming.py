@@ -9,20 +9,20 @@ from threading import Lock
 from os.path import isfile, getsize
 
 from casanova.reader import Reader as Reader
+from casanova.exceptions import ResumeError
 
 
 class Resumer(object):
     def __init__(self, path, listener=None):
         self.path = path
         self.listener = listener
-        self.can_resume = isfile(path) and getsize(path) > 0
         self.output_file = None
         self.lock = Lock()
 
-    def open(self, mode='a+', encoding='utf-8', newline='', binary=False):
-        if binary:
-            mode += 'b'
+    def can_resume(self):
+        return isfile(self.path) and getsize(self.path) > 0
 
+    def open(self, mode='a+', encoding='utf-8', newline=''):
         return open(
             self.path,
             mode=mode,
@@ -31,10 +31,13 @@ class Resumer(object):
         )
 
     def open_output_file(self, **kwargs):
-        mode = 'a+' if self.can_resume else 'w'
+        if self.output_file is not None:
+            raise ResumeError('output file was already opened')
+
+        mode = 'a+' if self.can_resume() else 'w'
 
         self.output_file = self.open(mode=mode, **kwargs)
-        return self.open_output_file
+        return self.output_file
 
     def emit(self, event, payload):
         if self.listener is None:
@@ -47,7 +50,7 @@ class Resumer(object):
         raise NotImplementedError
 
     def filter_already_done_row(self, i, row):
-        result = self.__filter_already_done_row(i, row)
+        result = self.filter(i, row)
 
         if not result:
             self.emit('filter.row', (i, row))
@@ -58,17 +61,21 @@ class Resumer(object):
         return self
 
     def __exit__(self, *args):
+        if self.output_file is None:
+            raise ResumeError('resumer attempted to close unopened file')
+
         self.output_file.close()
+        self.output_file = None
 
     def close(self):
         if self.output_file is not None:
             self.output_file.close()
 
     def __repr__(self):
-        return '<{name} path={!r} can_resume={!r}>'.format(
+        return '<{name} path={path!r} can_resume={can_resume!r}>'.format(
             name=self.__class__.__name__,
             path=self.path,
-            can_resume=self.can_resume
+            can_resume=self.can_resume()
         )
 
 
@@ -89,7 +96,7 @@ class LineCountResumer(Resumer):
 
         self.line_count = count
 
-    def __filter_already_done_row(self, i, row):
+    def filter(self, i, row):
         if i < self.line_count:
             return False
 

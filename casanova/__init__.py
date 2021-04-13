@@ -13,6 +13,10 @@ from casanova.reader import (
     HeadersPositions,
     DictLikeRow
 )
+from casanova.resuming import (
+    Resumer,
+    LineCountResumer
+)
 from casanova.reverse_reader import (
     ReverseReader,
     Batch

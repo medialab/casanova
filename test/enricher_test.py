@@ -12,6 +12,9 @@ from io import StringIO, BytesIO
 from collections import defaultdict
 from quenouille import imap_unordered
 
+from casanova.resuming import (
+    LineCountResumer
+)
 from casanova.exceptions import (
     EmptyFileError,
     MissingColumnError,
@@ -118,60 +121,55 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 ['Julia', '']
             ]
 
-        # def test_resumable(self, tmpdir):
+        def test_resumable(self, tmpdir):
 
-        #     log = defaultdict(list)
+            log = defaultdict(list)
 
-        #     def listener(name, row):
-        #         if name == 'resume.start':
-        #             return
-        #         log[name].append(list(row))
+            def listener(name, row):
+                log[name].append(list(row))
 
-        #     output_path = str(tmpdir.join('./enriched-resumable.csv'))
-        #     with open('./test/resources/people.csv', flag) as f, \
-        #          open(output_path, 'a+') as of:
+            output_path = str(tmpdir.join('./enriched-resumable.csv'))
 
-        #         enricher = enricher_fn(
-        #             f, of,
-        #             add=('x2',),
-        #             keep=('name',),
-        #             resumable=True,
-        #             listener=listener
-        #         )
+            resumer = LineCountResumer(output_path, listener=listener)
 
-        #         row = next(iter(enricher))
-        #         enricher.writerow(row, [2])
+            with open('./test/resources/people.csv', flag) as f, resumer:
 
-        #     assert collect_csv_file(output_path) == [
-        #         ['name', 'x2'],
-        #         ['John', '2']
-        #     ]
+                enricher = enricher_fn(
+                    f, resumer,
+                    add=('x2',),
+                    keep=('name',)
+                )
 
-        #     with open('./test/resources/people.csv', flag) as f, \
-        #          open(output_path, 'a+') as of:
+                row = next(iter(enricher))
+                enricher.writerow(row, [2])
 
-        #         enricher = enricher_fn(
-        #             f, of,
-        #             add=('x2',),
-        #             keep=('name',),
-        #             resumable=True,
-        #             listener=listener
-        #         )
+            assert collect_csv_file(output_path) == [
+                ['name', 'x2'],
+                ['John', '2']
+            ]
 
-        #         for i, row in enumerate(enricher):
-        #             enricher.writerow(row, [(i + 2) * 2])
+            with open('./test/resources/people.csv', flag) as f, resumer:
 
-        #     assert collect_csv_file(output_path) == [
-        #         ['name', 'x2'],
-        #         ['John', '2'],
-        #         ['Mary', '4'],
-        #         ['Julia', '6']
-        #     ]
+                enricher = enricher_fn(
+                    f, resumer,
+                    add=('x2',),
+                    keep=('name',)
+                )
 
-        #     assert log == {
-        #         'resume.output': [['John', '2']],
-        #         'resume.input': [['John', 'Matthews']]
-        #     }
+                for i, row in enumerate(enricher):
+                    enricher.writerow(row, [(i + 2) * 2])
+
+            assert collect_csv_file(output_path) == [
+                ['name', 'x2'],
+                ['John', '2'],
+                ['Mary', '4'],
+                ['Julia', '6']
+            ]
+
+            assert log == {
+                'output.row': [['John', '2']],
+                'filter.row': [[0, ['John', 'Matthews']]]
+            }
 
         def test_threadsafe(self, tmpdir):
             def job(payload):

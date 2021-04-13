@@ -68,18 +68,34 @@ def make_enricher(name, namespace, Reader):
 
             # Resuming?
             self.resumer = None
+            can_resume = False
 
             if isinstance(output_file, Resumer):
                 self.resumer = output_file
-                self.resumer.get_insights_from_output()
+
+                can_resume = self.resumer.can_resume()
+
+                if can_resume:
+                    self.resumer.get_insights_from_output()
+
                 output_file = self.resumer.open_output_file()
 
             # Instantiating writer
             self.writer = csv.writer(output_file)
 
             # Need to write headers?
-            if not no_headers:
+            if not no_headers and not can_resume:
                 self.writeheader()
+
+        def __iter__(self):
+            if self.resumer is None:
+                yield from super().__iter__()
+
+            iterator = enumerate(super().__iter__())
+
+            for i, row in iterator:
+                if self.resumer.filter_already_done_row(i, row):
+                    yield row
 
         def __repr__(self):
             columns_info = ' '.join('%s=%s' % t for t in self.pos)
@@ -89,50 +105,6 @@ def make_enricher(name, namespace, Reader):
                 ' resumable' if self.resumable else '',
                 columns_info
             )
-
-        # def resume(self):
-
-        #     if not self.should_resume:
-        #         return
-
-        #     self.should_resume = False
-
-        #     # Rolling back to beginning of file
-        #     output_file = self.output_file
-
-        #     if self.binary:
-        #         output_file = open(output_file.name, 'rb')
-        #     else:
-        #         output_file.seek(0, os.SEEK_SET)
-
-        #     reader = Reader(output_file, no_headers=self.fieldnames is None)
-
-        #     should_emit = callable(self.listener)
-
-        #     if should_emit:
-        #         self.listener('resume.start', None)
-
-        #     for row in reader:
-        #         self.already_done_count += 1
-
-        #         if should_emit:
-        #             self.listener('resume.output', row)
-
-        #     if self.binary:
-        #         output_file.close()
-
-        #     i = 0
-
-        #     while i < self.already_done_count:
-        #         try:
-        #             row = next(self.reader)
-
-        #             if should_emit:
-        #                 self.listener('resume.input', row)
-
-        #             i += 1
-        #         except StopIteration:
-        #             raise ResumeError('%s.resume: output has more lines than input.' % namespace)
 
         def filterrow(self, row):
             if self.keep_indices is not None:
