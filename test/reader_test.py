@@ -205,6 +205,22 @@ def make_reader_test(name, reader_fn, binary=False):
                     assert wrapped['name'] == row[0]
                     assert wrapped.surname == row[1]
 
+        def test_prebuffer(self):
+            if binary:
+                return
+
+            with open('./test/resources/people.csv', flag) as f:
+                reader = reader_fn(f, prebuffer_bytes=1024)
+
+                assert list(reader.cells('surname')) == ['Matthews', 'Sue', 'Stone']
+                assert reader.total == 3
+
+            with open('./test/resources/people.csv', flag) as f:
+                reader = reader_fn(f, prebuffer_bytes=2)
+
+                assert list(reader.cells('surname')) == ['Matthews', 'Sue', 'Stone']
+                assert reader.total is None
+
     return AbstractTestReader
 
 
