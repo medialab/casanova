@@ -34,39 +34,6 @@ def is_binary_buffer(buf):
     return True
 
 
-def is_resumable_buffer(buf):
-    if not isinstance(buf, (BufferedReader, TextIOWrapper)):
-        return False
-
-    if 'a' not in buf.mode and '+' not in buf.mode:
-        return False
-
-    return True
-
-
-def is_empty_buffer(buf):
-    try:
-        if not buf.seekable():
-            return True
-
-        return buf.tell() == 0
-    except UnsupportedOperation:
-        return True
-
-
-def is_mute_buffer(buf):
-    try:
-        return (
-            buf is sys.stdout or
-            buf is sys.stderr or
-            buf is sys.stdin or
-            not hasattr(buf, 'tell') or
-            buf.fileno() <= 2
-        )
-    except UnsupportedOperation:
-        return True
-
-
 def encoding_fingerprint(encoding):
     return encoding.lower().replace('-', '')
 

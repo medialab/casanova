@@ -7,8 +7,8 @@
 #
 import os
 import csv
-from threading import Lock
 
+from casanova.resuming import Resumer
 from casanova.contiguous_range_set import ContiguousRangeSet
 from casanova.exceptions import (
     NotResumableError,
@@ -20,11 +20,6 @@ from casanova.reader import (
     CasanovaReader,
     HeadersPositions
 )
-from casanova.utils import (
-    is_resumable_buffer,
-    is_empty_buffer,
-    is_mute_buffer
-)
 
 
 def make_enricher(name, namespace, Reader):
@@ -33,9 +28,8 @@ def make_enricher(name, namespace, Reader):
         __name__ = name
 
         def __init__(self, input_file, output_file, no_headers=False,
-                     resumable=False, auto_resume=True, keep=None, add=None,
-                     listener=None, prepend=None, dialect=None, quotechar=None,
-                     delimiter=None):
+                     keep=None, add=None, prepend=None, dialect=None,
+                     quotechar=None, delimiter=None):
 
             # Inheritance
             reader_kwargs = {
@@ -49,22 +43,10 @@ def make_enricher(name, namespace, Reader):
 
             super().__init__(input_file, **reader_kwargs)
 
-            # Sanity tests
-            if resumable and not is_resumable_buffer(output_file):
-                raise NotResumableError('%s: expecting an "a+" or "a+b" buffer.' % namespace)
-
-            self.output_file = output_file
-            self.writer = csv.writer(output_file)
             self.keep_indices = None
             self.output_fieldnames = self.fieldnames
             self.added_count = 0
             self.padding = None
-
-            self.resumable = resumable
-            self.should_resume = False
-            self.already_done_count = 0
-
-            self.listener = listener
 
             if keep is not None:
                 try:
@@ -84,20 +66,12 @@ def make_enricher(name, namespace, Reader):
 
             self.output_pos = HeadersPositions(self.output_fieldnames if not no_headers else len(self.output_fieldnames))
 
+            # Instantiating writer
+            self.writer = csv.writer(output_file)
+
             # Need to write headers?
-            output_buffer_is_empty = is_mute_buffer(output_file) or is_empty_buffer(output_file)
-
             if not no_headers:
-
-                if not resumable or output_buffer_is_empty:
-                    self.writeheader()
-
-            # Resuming
-            if resumable and not output_buffer_is_empty:
-                self.should_resume = True
-
-                if auto_resume:
-                    self.resume()
+                self.writeheader()
 
         def __repr__(self):
             columns_info = ' '.join('%s=%s' % t for t in self.pos)
@@ -108,49 +82,49 @@ def make_enricher(name, namespace, Reader):
                 columns_info
             )
 
-        def resume(self):
+        # def resume(self):
 
-            if not self.should_resume:
-                return
+        #     if not self.should_resume:
+        #         return
 
-            self.should_resume = False
+        #     self.should_resume = False
 
-            # Rolling back to beginning of file
-            output_file = self.output_file
+        #     # Rolling back to beginning of file
+        #     output_file = self.output_file
 
-            if self.binary:
-                output_file = open(output_file.name, 'rb')
-            else:
-                output_file.seek(0, os.SEEK_SET)
+        #     if self.binary:
+        #         output_file = open(output_file.name, 'rb')
+        #     else:
+        #         output_file.seek(0, os.SEEK_SET)
 
-            reader = Reader(output_file, no_headers=self.fieldnames is None)
+        #     reader = Reader(output_file, no_headers=self.fieldnames is None)
 
-            should_emit = callable(self.listener)
+        #     should_emit = callable(self.listener)
 
-            if should_emit:
-                self.listener('resume.start', None)
+        #     if should_emit:
+        #         self.listener('resume.start', None)
 
-            for row in reader:
-                self.already_done_count += 1
+        #     for row in reader:
+        #         self.already_done_count += 1
 
-                if should_emit:
-                    self.listener('resume.output', row)
+        #         if should_emit:
+        #             self.listener('resume.output', row)
 
-            if self.binary:
-                output_file.close()
+        #     if self.binary:
+        #         output_file.close()
 
-            i = 0
+        #     i = 0
 
-            while i < self.already_done_count:
-                try:
-                    row = next(self.reader)
+        #     while i < self.already_done_count:
+        #         try:
+        #             row = next(self.reader)
 
-                    if should_emit:
-                        self.listener('resume.input', row)
+        #             if should_emit:
+        #                 self.listener('resume.input', row)
 
-                    i += 1
-                except StopIteration:
-                    raise ResumeError('%s.resume: output has more lines than input.' % namespace)
+        #             i += 1
+        #         except StopIteration:
+        #             raise ResumeError('%s.resume: output has more lines than input.' % namespace)
 
         def filterrow(self, row):
             if self.keep_indices is not None:
@@ -190,11 +164,9 @@ def make_enricher(name, namespace, Reader):
         __name__ = 'Threadsafe' + name
 
         def __init__(self, input_file, output_file, no_headers=False,
-                     resumable=False, auto_resume=True, keep=None, add=None,
-                     listener=None, index_column='index'):
+                     keep=None, add=None, index_column='index'):
 
             self.index_column = index_column
-            self.event_lock = Lock()
             self.already_done = ContiguousRangeSet()
 
             # Inheritance
@@ -202,62 +174,55 @@ def make_enricher(name, namespace, Reader):
                 input_file,
                 output_file,
                 no_headers=no_headers,
-                resumable=resumable,
                 keep=keep,
                 add=add,
-                listener=listener,
                 prepend=[index_column]
             )
 
         def __iter__(self):
             iterator = enumerate(super().__iter__())
-            should_emit = callable(self.listener)
 
             for index, row in iterator:
                 if self.already_done.stateful_contains(index):
-                    if should_emit:
-                        with self.event_lock:
-                            self.listener('resume.input', row)
-
                     continue
 
                 yield index, row
 
-        def resume(self):
+        # def resume(self):
 
-            # Rolling back to beginning of file
-            output_file = self.output_file
+        #     # Rolling back to beginning of file
+        #     output_file = self.output_file
 
-            if self.binary:
-                output_file = open(output_file.name, 'rb')
-            else:
-                output_file.seek(0, os.SEEK_SET)
+        #     if self.binary:
+        #         output_file = open(output_file.name, 'rb')
+        #     else:
+        #         output_file.seek(0, os.SEEK_SET)
 
-            reader = Reader(output_file, no_headers=self.fieldnames is None)
+        #     reader = Reader(output_file, no_headers=self.fieldnames is None)
 
-            should_emit = callable(self.listener)
+        #     should_emit = callable(self.listener)
 
-            i = reader.pos.get(self.index_column)
+        #     i = reader.pos.get(self.index_column)
 
-            if i is None:
-                raise MissingColumnError(self.index_column)
+        #     if i is None:
+        #         raise MissingColumnError(self.index_column)
 
-            for row in reader:
-                try:
-                    current_index = int(row[i])
-                except ValueError:
-                    raise CorruptedIndexColumn
+        #     for row in reader:
+        #         try:
+        #             current_index = int(row[i])
+        #         except ValueError:
+        #             raise CorruptedIndexColumn
 
-                self.already_done.add(current_index)
+        #         self.already_done.add(current_index)
 
-                if should_emit:
-                    with self.event_lock:
-                        self.listener('resume.output', row)
+        #         if should_emit:
+        #             with self.event_lock:
+        #                 self.listener('resume.output', row)
 
-            self.already_done_count = len(self.already_done)
+        #     self.already_done_count = len(self.already_done)
 
-            if self.binary:
-                output_file.close()
+        #     if self.binary:
+        #         output_file.close()
 
         def cells(self, column, with_rows=False):
             if with_rows:
