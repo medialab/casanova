@@ -13,5 +13,5 @@ from casanova_monkey.reader import (
 
 enricher = MonkeyEnricher
 threadsafe_enricher = ThreadsafeMonkeyEnricher
-batch_enricher = ThreadsafeMonkeyEnricher
+batch_enricher = BatchMonkeyEnricher
 reader = MonkeyReader

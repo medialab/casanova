@@ -185,8 +185,8 @@ def make_enricher(name, namespace, Reader):
             if cursor is None:
                 cursor = self.end_symbol
 
-            for addendum in batch:
-                self.writerow(row, [cursor] + addendum)
+            for is_last, addendum in with_is_last(batch):
+                self.writerow(row, [cursor if is_last else None] + addendum)
 
     return (
         AbstractEnricher,

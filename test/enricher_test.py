@@ -28,7 +28,8 @@ def collect_csv_file(path):
         return list(csv.reader(f))
 
 
-def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
+def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher_fn,
+                       binary=False):
     flag = 'r' if not binary else 'rb'
     gzip_flag = 'rt' if not binary else 'rb'
 
@@ -358,13 +359,40 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                 assert enricher.output_pos.surname == 0
                 assert enricher.output_pos.line == 1
 
+        def test_batch_enricher(self, tmpdir):
+            output_path = str(tmpdir.join('./enriched.csv'))
+            with open('./test/resources/people.csv', flag) as f, \
+                 open(output_path, 'w') as of:
+                enricher = batch_enricher_fn(f, of, add=('color',), keep=('surname',))
+
+                for row in enricher:
+                    enricher.writebatch(row, [['blue'], ['red']], cursor='next')
+                    enricher.writebatch(row, [['purple'], ['cyan']])
+
+            assert collect_csv_file(output_path) == [
+                ['surname', 'cursor', 'color'],
+                ['Matthews', '', 'blue'],
+                ['Matthews', 'next', 'red'],
+                ['Matthews', '', 'purple'],
+                ['Matthews', 'end', 'cyan'],
+                ['Sue', '', 'blue'],
+                ['Sue', 'next', 'red'],
+                ['Sue', '', 'purple'],
+                ['Sue', 'end', 'cyan'],
+                ['Stone', '', 'blue'],
+                ['Stone', 'next', 'red'],
+                ['Stone', '', 'purple'],
+                ['Stone', 'end', 'cyan']
+            ]
+
     return AbstractTestEnricher
 
 
 TestEnricher = make_enricher_test(
     'TestEnricher',
     casanova.enricher,
-    casanova.threadsafe_enricher
+    casanova.threadsafe_enricher,
+    casanova.batch_enricher
 )
 
 if not os.environ.get('CASANOVA_TEST_SKIP_CSVMONKEY'):
@@ -373,5 +401,6 @@ if not os.environ.get('CASANOVA_TEST_SKIP_CSVMONKEY'):
         'TestMonkeyEnricher',
         casanova_monkey.enricher,
         casanova_monkey.threadsafe_enricher,
+        casanova_monkey.batch_enricher,
         binary=True
     )
