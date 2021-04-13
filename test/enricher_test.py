@@ -13,7 +13,8 @@ from collections import defaultdict
 from quenouille import imap_unordered
 
 from casanova.resuming import (
-    LineCountResumer
+    LineCountResumer,
+    ThreadSafeResumer
 )
 from casanova.exceptions import (
     EmptyFileError,
@@ -269,69 +270,65 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
 
             assert records == [(0, ['John', '3']), (1, ['Mary', '1']), (2, ['Julia', '2'])]
 
-        # def test_threadsafe_resumable(self, tmpdir):
-        #     log = defaultdict(list)
+        def test_threadsafe_resumable(self, tmpdir):
+            log = defaultdict(list)
 
-        #     def listener(name, row):
-        #         if name == 'resume.start':
-        #             return
-        #         log[name].append(list(row))
+            def listener(name, row):
+                log[name].append(list(row))
 
-        #     def job(payload):
-        #         i, row = payload
-        #         s = int(row[2])
-        #         time.sleep(s * .01)
+            def job(payload):
+                i, row = payload
+                s = int(row[2])
+                time.sleep(s * .01)
 
-        #         return i, row
+                return i, row
 
-        #     output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
-        #     with open('./test/resources/people_unordered.csv', flag) as f, \
-        #          open(output_path, 'a+') as of:
+            output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
 
-        #         enricher = threadsafe_enricher_fn(
-        #             f, of,
-        #             add=('x2',),
-        #             keep=('name',),
-        #             resumable=True
-        #         )
+            resumer = ThreadSafeResumer(output_path, listener=listener)
 
-        #         for j, (i, row) in enumerate(imap_unordered(enricher, job, 3)):
-        #             enricher.writerow(i, row, [(i + 1) * 2])
+            with open('./test/resources/people_unordered.csv', flag) as f, resumer:
 
-        #             if j == 1:
-        #                 break
+                enricher = threadsafe_enricher_fn(
+                    f, resumer,
+                    add=('x2',),
+                    keep=('name',)
+                )
 
-        #     assert collect_csv_file(output_path) == [
-        #         ['index', 'name', 'x2'],
-        #         ['1', 'Mary', '4'],
-        #         ['2', 'Julia', '6'],
-        #     ]
+                for j, (i, row) in enumerate(imap_unordered(enricher, job, 3)):
+                    enricher.writerow(i, row, [(i + 1) * 2])
 
-        #     with open('./test/resources/people_unordered.csv', flag) as f, \
-        #          open(output_path, 'a+') as of:
+                    if j == 1:
+                        break
 
-        #         enricher = threadsafe_enricher_fn(
-        #             f, of,
-        #             add=('x2',),
-        #             keep=('name',),
-        #             resumable=True,
-        #             listener=listener
-        #         )
+            assert collect_csv_file(output_path) == [
+                ['index', 'name', 'x2'],
+                ['1', 'Mary', '4'],
+                ['2', 'Julia', '6'],
+            ]
 
-        #         for j, (i, row) in enumerate(imap_unordered(enricher, job, 3)):
-        #             enricher.writerow(i, row, [(i + 1) * 2])
+            with open('./test/resources/people_unordered.csv', flag) as f, resumer:
 
-        #     assert collect_csv_file(output_path) == [
-        #         ['index', 'name', 'x2'],
-        #         ['1', 'Mary', '4'],
-        #         ['2', 'Julia', '6'],
-        #         ['0', 'John', '2']
-        #     ]
+                enricher = threadsafe_enricher_fn(
+                    f, resumer,
+                    add=('x2',),
+                    keep=('name',)
+                )
 
-        #     assert log == {
-        #         'resume.output': [['1', 'Mary', '4'], ['2', 'Julia', '6']],
-        #         'resume.input': [['Mary', 'Sue', '1'], ['Julia', 'Stone', '2']]
-        #     }
+                for j, (i, row) in enumerate(imap_unordered(enricher, job, 3)):
+                    enricher.writerow(i, row, [(i + 1) * 2])
+
+            assert collect_csv_file(output_path) == [
+                ['index', 'name', 'x2'],
+                ['1', 'Mary', '4'],
+                ['2', 'Julia', '6'],
+                ['0', 'John', '2']
+            ]
+
+            assert log == {
+                'output.row': [['1', 'Mary', '4'], ['2', 'Julia', '6']],
+                'filter.row': [[1, ['Mary', 'Sue', '1']], [2, ['Julia', 'Stone', '2']]]
+            }
 
         def test_stdout(self, capsys):
             sys.stdout.write('this,should,happen\n')

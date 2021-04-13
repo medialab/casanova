@@ -5,17 +5,10 @@
 # A CSV reader/writer combo that can be used to read an input CSV file and
 # easily ouput a similar CSV file while editing, adding and filtering cell_count.
 #
-import os
 import csv
 
 from casanova.resuming import Resumer
-from casanova.contiguous_range_set import ContiguousRangeSet
-from casanova.exceptions import (
-    NotResumableError,
-    ResumeError,
-    MissingColumnError,
-    CorruptedIndexColumn
-)
+from casanova.exceptions import MissingColumnError
 from casanova.reader import (
     Reader,
     HeadersPositions
@@ -76,7 +69,7 @@ def make_enricher(name, namespace, Reader):
                 can_resume = self.resumer.can_resume()
 
                 if can_resume:
-                    self.resumer.get_insights_from_output()
+                    self.resumer.get_insights_from_output(self)
 
                 output_file = self.resumer.open_output_file()
 
@@ -147,7 +140,6 @@ def make_enricher(name, namespace, Reader):
                      keep=None, add=None, index_column='index'):
 
             self.index_column = index_column
-            self.already_done = ContiguousRangeSet()
 
             # Inheritance
             super().__init__(
@@ -160,56 +152,12 @@ def make_enricher(name, namespace, Reader):
             )
 
         def __iter__(self):
-            iterator = enumerate(super().__iter__())
-
-            for index, row in iterator:
-                if self.already_done.stateful_contains(index):
-                    continue
-
-                yield index, row
-
-        # def resume(self):
-
-        #     # Rolling back to beginning of file
-        #     output_file = self.output_file
-
-        #     if self.binary:
-        #         output_file = open(output_file.name, 'rb')
-        #     else:
-        #         output_file.seek(0, os.SEEK_SET)
-
-        #     reader = Reader(output_file, no_headers=self.fieldnames is None)
-
-        #     should_emit = callable(self.listener)
-
-        #     i = reader.pos.get(self.index_column)
-
-        #     if i is None:
-        #         raise MissingColumnError(self.index_column)
-
-        #     for row in reader:
-        #         try:
-        #             current_index = int(row[i])
-        #         except ValueError:
-        #             raise CorruptedIndexColumn
-
-        #         self.already_done.add(current_index)
-
-        #         if should_emit:
-        #             with self.event_lock:
-        #                 self.listener('resume.output', row)
-
-        #     self.already_done_count = len(self.already_done)
-
-        #     if self.binary:
-        #         output_file.close()
+            yield from enumerate(super().__iter__())
 
         def cells(self, column, with_rows=False):
             if with_rows:
-                index = 0
-                for row, value in super().cells(column, with_rows=True):
+                for index, (row, value) in enumerate(super().cells(column, with_rows=True)):
                     yield index, row, value
-                    index += 1
             else:
                 yield from enumerate(super().cells(column))
 

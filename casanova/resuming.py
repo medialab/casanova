@@ -9,7 +9,12 @@ from threading import Lock
 from os.path import isfile, getsize
 
 from casanova.reader import Reader as Reader
-from casanova.exceptions import ResumeError
+from casanova.exceptions import (
+    ResumeError,
+    MissingColumnError,
+    CorruptedIndexColumn
+)
+from casanova.contiguous_range_set import ContiguousRangeSet
 
 
 class Resumer(object):
@@ -32,7 +37,7 @@ class Resumer(object):
 
     def open_output_file(self, **kwargs):
         if self.output_file is not None:
-            raise ResumeError('output file was already opened')
+            raise ResumeError('output file is already opened')
 
         mode = 'a+' if self.can_resume() else 'w'
 
@@ -46,7 +51,7 @@ class Resumer(object):
         with self.lock:
             self.listener(event, payload)
 
-    def get_insights_from_output(self, output_reader_kwargs):
+    def get_insights_from_output(self, enricher):
         raise NotImplementedError
 
     def filter_already_done_row(self, i, row):
@@ -84,9 +89,9 @@ class LineCountResumer(Resumer):
         super().__init__(*args, **kwargs)
         self.line_count = 0
 
-    def get_insights_from_output(self, output_reader_kwargs={}):
+    def get_insights_from_output(self, enricher):
         with self.open(mode='r') as f:
-            reader = Reader(f, **output_reader_kwargs)
+            reader = Reader(f)
 
             count = 0
 
@@ -101,3 +106,31 @@ class LineCountResumer(Resumer):
             return False
 
         return True
+
+
+class ThreadSafeResumer(Resumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.already_done = ContiguousRangeSet()
+
+    def get_insights_from_output(self, enricher):
+        with self.open(mode='r') as f:
+            reader = Reader(f)
+
+            pos = reader.pos.get(enricher.index_column)
+
+            if pos is None:
+                raise MissingColumnError(enricher.index_column)
+
+            for row in reader:
+                self.emit('output.row', row)
+
+                try:
+                    current_index = int(row[pos])
+                except ValueError:
+                    raise CorruptedIndexColumn
+
+                self.already_done.add(current_index)
+
+    def filter(self, i, row):
+        return not self.already_done.stateful_contains(i)

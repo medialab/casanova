@@ -15,7 +15,8 @@ from casanova.reader import (
 )
 from casanova.resuming import (
     Resumer,
-    LineCountResumer
+    LineCountResumer,
+    ThreadSafeResumer
 )
 from casanova.reverse_reader import (
     ReverseReader,
