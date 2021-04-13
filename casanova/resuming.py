@@ -28,7 +28,7 @@ class Resumer(object):
     def can_resume(self):
         return isfile(self.path) and getsize(self.path) > 0
 
-    def open(self, mode='a+', encoding='utf-8', newline=''):
+    def open(self, mode='a', encoding='utf-8', newline=''):
         return open(
             self.path,
             mode=mode,
