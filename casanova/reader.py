@@ -77,7 +77,7 @@ class HeadersPositions(object):
         return representation
 
 
-class CasanovaReader(object):
+class Reader(object):
     namespace = 'casanova.reader'
 
     def __init__(self, input_file, no_headers=False, encoding='utf-8',

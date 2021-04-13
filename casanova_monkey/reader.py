@@ -6,12 +6,12 @@
 #
 import csvmonkey
 
-from casanova.reader import CasanovaReader, HeadersPositions
+from casanova.reader import Reader, HeadersPositions
 from casanova.utils import is_binary_buffer, ensure_open, suppress_BOM
 from casanova.exceptions import InvalidFileError, EmptyFileError
 
 
-class CasanovaMonkeyReader(CasanovaReader):
+class MonkeyReader(Reader):
     namespace = 'casanova_monkey.reader'
 
     def __init__(self, input_file, no_headers=False, encoding='utf-8', lazy=False):

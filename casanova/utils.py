@@ -6,8 +6,7 @@
 #
 import re
 import gzip
-import sys
-from io import BytesIO, BufferedReader, TextIOWrapper, UnsupportedOperation
+from io import BytesIO, BufferedReader, TextIOWrapper
 from ebbe import with_prev
 
 

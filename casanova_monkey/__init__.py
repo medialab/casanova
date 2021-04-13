@@ -1,11 +1,15 @@
 # =============================================================================
-# Casanova Monkey Library Endpoint
+#  Monkey Library Endpoint
 # =============================================================================
 #
 from casanova_monkey.enricher import (
-    CasanovaMonkeyEnricher as enricher,
-    ThreadsafeCasanovaMonkeyEnricher as threadsafe_enricher
+    MonkeyEnricher,
+    ThreadsafeMonkeyEnricher
 )
 from casanova_monkey.reader import (
-    CasanovaMonkeyReader as reader
+    MonkeyReader
 )
+
+enricher = MonkeyEnricher
+threadsafe_enricher = ThreadsafeMonkeyEnricher
+reader = MonkeyReader

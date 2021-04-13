@@ -17,14 +17,14 @@ from casanova.exceptions import (
     CorruptedIndexColumn
 )
 from casanova.reader import (
-    CasanovaReader,
+    Reader,
     HeadersPositions
 )
 
 
 def make_enricher(name, namespace, Reader):
 
-    class AbstractCasanovaEnricher(Reader):
+    class AbstractEnricher(Reader):
         __name__ = name
 
         def __init__(self, input_file, output_file, no_headers=False,
@@ -65,6 +65,14 @@ def make_enricher(name, namespace, Reader):
                 self.output_fieldnames = prepend + self.output_fieldnames
 
             self.output_pos = HeadersPositions(self.output_fieldnames if not no_headers else len(self.output_fieldnames))
+
+            # Resuming?
+            self.resumer = None
+
+            if isinstance(output_file, Resumer):
+                self.resumer = output_file
+                self.resumer.get_insights_from_output()
+                output_file = self.resumer.open_output_file()
 
             # Instantiating writer
             self.writer = csv.writer(output_file)
@@ -160,7 +168,7 @@ def make_enricher(name, namespace, Reader):
         def writerow(self, row, add=None):
             self.writer.writerow(self.formatrow(row, add))
 
-    class AbstractThreadsafeCasanovaEnricher(AbstractCasanovaEnricher):
+    class AbstractThreadsafeEnricher(AbstractEnricher):
         __name__ = 'Threadsafe' + name
 
         def __init__(self, input_file, output_file, no_headers=False,
@@ -236,11 +244,11 @@ def make_enricher(name, namespace, Reader):
         def writerow(self, index, row, add=None):
             self.writer.writerow(self.formatrow(row, add, index=index))
 
-    return AbstractThreadsafeCasanovaEnricher, AbstractCasanovaEnricher
+    return AbstractThreadsafeEnricher, AbstractEnricher
 
 
-ThreadsafeCasanovaEnricher, CasanovaEnricher = make_enricher(
-    'CasanovaEnricher',
+ThreadsafeEnricher, Enricher = make_enricher(
+    'Enricher',
     'casanova.enricher',
-    CasanovaReader
+    Reader
 )

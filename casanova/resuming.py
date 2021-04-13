@@ -8,7 +8,7 @@
 from threading import Lock
 from os.path import isfile, getsize
 
-from casanova.reader import CasanovaReader as Reader
+from casanova.reader import Reader as Reader
 
 
 class Resumer(object):
@@ -31,7 +31,9 @@ class Resumer(object):
         )
 
     def open_output_file(self, **kwargs):
-        self.output_file = self.open(**kwargs)
+        mode = 'a+' if self.can_resume else 'w'
+
+        self.output_file = self.open(mode=mode, **kwargs)
         return self.open_output_file
 
     def emit(self, event, payload):
@@ -53,7 +55,7 @@ class Resumer(object):
         return result
 
     def __enter__(self):
-        return self.open_output_file()
+        return self
 
     def __exit__(self, *args):
         self.output_file.close()
@@ -61,6 +63,13 @@ class Resumer(object):
     def close(self):
         if self.output_file is not None:
             self.output_file.close()
+
+    def __repr__(self):
+        return '<{name} path={!r} can_resume={!r}>'.format(
+            name=self.__class__.__name__,
+            path=self.path,
+            can_resume=self.can_resume
+        )
 
 
 class LineCountResumer(Resumer):

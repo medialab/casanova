@@ -11,7 +11,7 @@ from io import DEFAULT_BUFFER_SIZE
 from file_read_backwards.file_read_backwards import FileReadBackwardsIterator
 from ebbe import with_is_last
 
-from casanova.reader import CasanovaReader
+from casanova.reader import Reader
 from casanova.utils import ensure_open
 from casanova.exceptions import EmptyFileError
 
@@ -55,7 +55,7 @@ class Batch(object):
         }
 
 
-class CasanovaReverseReader(CasanovaReader):
+class ReverseReader(Reader):
     namespace = 'casanova.reverse_reader'
 
     def __init__(self, input_file, **kwargs):
@@ -90,7 +90,7 @@ class CasanovaReverseReader(CasanovaReader):
 
     @staticmethod
     def last_cell(input_file, column, **kwargs):
-        with CasanovaReverseReader(input_file, **kwargs) as reader:
+        with ReverseReader(input_file, **kwargs) as reader:
             record = next(reader.cells(column), END_OF_FILE)
 
             if record is END_OF_FILE:
@@ -100,7 +100,7 @@ class CasanovaReverseReader(CasanovaReader):
 
     @staticmethod
     def last_batch(input_file, batch_value, batch_cursor, end_symbol, **kwargs):
-        with CasanovaReverseReader(input_file, **kwargs) as reader:
+        with ReverseReader(input_file, **kwargs) as reader:
             batch = END_OF_FILE
 
             for row, (value, cursor) in reader.cells((batch_value, batch_cursor), with_rows=True):
