@@ -83,6 +83,9 @@ class Resumer(object):
             can_resume=self.can_resume()
         )
 
+    def already_done_count(self):
+        raise NotImplementedError
+
 
 class LineCountResumer(Resumer):
     def __init__(self, *args, **kwargs):
@@ -90,6 +93,8 @@ class LineCountResumer(Resumer):
         self.line_count = 0
 
     def get_insights_from_output(self, enricher):
+        self.line_count = 0
+
         with self.open(mode='r') as f:
             reader = Reader(f)
 
@@ -107,6 +112,9 @@ class LineCountResumer(Resumer):
 
         return True
 
+    def already_done_count(self):
+        return self.line_count
+
 
 class ThreadSafeResumer(Resumer):
     def __init__(self, *args, **kwargs):
@@ -114,6 +122,8 @@ class ThreadSafeResumer(Resumer):
         self.already_done = ContiguousRangeSet()
 
     def get_insights_from_output(self, enricher):
+        self.already_done = ContiguousRangeSet()
+
         with self.open(mode='r') as f:
             reader = Reader(f)
 
@@ -134,3 +144,6 @@ class ThreadSafeResumer(Resumer):
 
     def filter(self, i, row):
         return not self.already_done.stateful_contains(i)
+
+    def already_done_count(self):
+        return len(self.already_done)

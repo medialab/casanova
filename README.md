@@ -159,7 +159,7 @@ What's more, casanova's enrichers are automatically resumable, meaning that if y
 
 Also, if you need to output lines in an arbitrary order, typically when performing tasks in a multithreaded fashion (e.g. when fetching a large numbers of web pages), casanova exports a threadsafe version of its enricher. This enricher is also resumable thanks to a data structure you can read about in this blog [post](https://yomguithereal.github.io/posts/contiguous-range-set).
 
-Resuming typically requires `O(n)` time, `n` being the number of lines already done but only consumes amortized `O(1)` memory.
+Resuming typically requires `O(n)` time (sometime constant time when able to use a reverse reader), `n` being the number of lines already done but only consumes amortized `O(1)` memory.
 
 ```python
 import casanova
@@ -204,48 +204,39 @@ with open('./people.csv') as f, \
 * **no_headers** *?bool* [`False`]: whether your CSV file is headless.
 * **add** *?iterable<str|int>*: names of columns to add to output.
 * **keep** *?iterable<str|int>*: names of colums to keep from input.
-* **resumable** *?bool* [`False`]: whether the enricher should be able to resume.
-* **listener** *?callable*: a function listening to the enricher's events.
 
 *Resuming an enricher*
 
 ```python
 import casanova
+from casanova import LineCountResumer
 
-# NOTE: to be able to resume you will need to open the output file with "a+"
 with open('./people.csv') as f, \
-     open('./enriched-people.csv', 'a+') as of:
+     LineCountResumer('./enriched-people.csv') as resumer:
 
   # This will automatically start where it stopped last time
-  enricher = casanova.enricher(f, of, resumable=True)
+  enricher = casanova.enricher(f, resumer)
 
   for row in enricher:
     row[1] = 'John'
     enricher.writerow(row)
 
-  # You can also listen to events if you need to advance loading bars etc.
-  def listener(event, row):
-    print(event, row)
+# You can also listen to events if you need to advance loading bars etc.
+def listener(event, row):
+  print(event, row)
 
-  enricher = casanova.enricher(f, of, resumable=True, listener=listener)
+resumer = LineCountResumer('./enriched-people.csv', listener=listener)
 
-  # Want more control over resuming?
-  enricher = casanova.enricher(f, of, resumable=True, auto_resume=False)
+# You can check is the the process was already started and can resume:
+resumer.can_resume()
 
-  # You will then need to call #.resume yourself
-  enricher.should_resume
-  >>> True
-
-  enricher.resume()
-
-  # Knowing how many lines were already processed
-  enricher.already_done_count
-  >>> 45
+# You can check how many lines were already processed:
+resumer.already_done_count()
 ```
 
 *Threadsafe version*
 
-To be safely resumable, the threadsafe version needs you to add an index column to the output so we can make sense of what was already done. Therefore, its `writerow` method is a bit different because it takes an additional argument being the original index of the row you need to enrich.
+To safely resume, the threadsafe version needs you to add an index column to the output so we can make sense of what was already done. Therefore, its `writerow` method is a bit different because it takes an additional argument being the original index of the row you need to enrich.
 
 To help you doing so, all the enricher's iteration methods therefore yield the index alongside the row.
 
@@ -261,6 +252,14 @@ with open('./people.csv') as f, \
 
   for index, row in enricher:
     enricher.writerow(index, row, ['67', 'blond'])
+
+# With resuming:
+from casanova import ThreadSafeResumer
+
+with open('./people.csv') as f, \
+     ThreadSafeResumer('./enriched-people.csv') as resumer:
+
+  enricher = casanova.threadsafe_enricher(f, resumer, add=['age', 'hair'])
 ```
 
 *Threadsafe arguments*
