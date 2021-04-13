@@ -6,6 +6,7 @@
 # easily ouput a similar CSV file while editing, adding and filtering cell_count.
 #
 import csv
+from ebbe import with_is_last
 
 from casanova.resuming import Resumer
 from casanova.exceptions import MissingColumnError
@@ -180,13 +181,21 @@ def make_enricher(name, namespace, Reader):
                 add=[cursor_column] + list(add)
             )
 
+        def writebatch(self, row, batch, cursor=None):
+            if cursor is None:
+                cursor = self.end_symbol
+
+            for addendum in batch:
+                self.writerow(row, [cursor] + addendum)
+
     return (
+        AbstractEnricher,
         AbstractThreadsafeEnricher,
-        AbstractEnricher
+        AbstractBatchEnricher
     )
 
 
-ThreadsafeEnricher, Enricher = make_enricher(
+Enricher, ThreadsafeEnricher, BatchEnricher = make_enricher(
     'Enricher',
     'casanova.enricher',
     Reader

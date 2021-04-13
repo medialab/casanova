@@ -4,7 +4,8 @@
 #
 from casanova_monkey.enricher import (
     MonkeyEnricher,
-    ThreadsafeMonkeyEnricher
+    ThreadsafeMonkeyEnricher,
+    BatchMonkeyEnricher
 )
 from casanova_monkey.reader import (
     MonkeyReader
@@ -12,4 +13,5 @@ from casanova_monkey.reader import (
 
 enricher = MonkeyEnricher
 threadsafe_enricher = ThreadsafeMonkeyEnricher
+batch_enricher = ThreadsafeMonkeyEnricher
 reader = MonkeyReader

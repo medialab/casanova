@@ -5,7 +5,8 @@
 from casanova.contiguous_range_set import ContiguousRangeSet
 from casanova.enricher import (
     Enricher,
-    ThreadsafeEnricher
+    ThreadsafeEnricher,
+    BatchEnricher
 )
 from casanova.namedrecord import namedrecord
 from casanova.reader import (
@@ -26,4 +27,5 @@ from casanova.reverse_reader import (
 reader = Reader
 enricher = Enricher
 threadsafe_enricher = ThreadsafeEnricher
+batch_enricher = BatchEnricher
 reverse_reader = ReverseReader
