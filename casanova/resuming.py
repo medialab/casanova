@@ -8,7 +8,8 @@
 from threading import Lock
 from os.path import isfile, getsize
 
-from casanova.reader import Reader as Reader
+from casanova.reader import Reader
+from casanova.reverse_reader import ReverseReader
 from casanova.exceptions import (
     ResumeError,
     MissingColumnError,
@@ -66,15 +67,12 @@ class Resumer(object):
         return self
 
     def __exit__(self, *args):
-        if self.output_file is None:
-            raise ResumeError('resumer attempted to close unopened file')
-
-        self.output_file.close()
-        self.output_file = None
+        self.close()
 
     def close(self):
         if self.output_file is not None:
             self.output_file.close()
+            self.output_file = None
 
     def __repr__(self):
         return '<{name} path={path!r} can_resume={can_resume!r}>'.format(
@@ -147,3 +145,18 @@ class ThreadSafeResumer(Resumer):
 
     def already_done_count(self):
         return len(self.already_done)
+
+
+class BatchResumer(Resumer):
+    def __init__(self, path, value_column, **kwargs):
+        super().__init__(path, **kwargs)
+        self.last_batch = None
+        self.value_column = value_column
+
+    def get_insights_from_output(self, enricher):
+        self.last_batch = ReverseReader.last_batch(
+            self.path,
+            batch_value=self.value_column,
+            batch_cursor=enricher.cursor_column,
+            end_symbol=enricher.end_symbol
+        )

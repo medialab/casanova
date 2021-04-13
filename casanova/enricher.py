@@ -8,7 +8,12 @@
 import csv
 from ebbe import with_is_last
 
-from casanova.resuming import Resumer
+from casanova.resuming import (
+    Resumer,
+    LineCountResumer,
+    ThreadSafeResumer,
+    BatchResumer
+)
 from casanova.exceptions import MissingColumnError
 from casanova.reader import (
     Reader,
@@ -19,7 +24,7 @@ from casanova.reader import (
 def make_enricher(name, namespace, Reader):
 
     class AbstractEnricher(Reader):
-        __name__ = name
+        __supported_resumers__ = (LineCountResumer,)
 
         def __init__(self, input_file, output_file, no_headers=False,
                      keep=None, add=None, dialect=None, quotechar=None,
@@ -62,6 +67,9 @@ def make_enricher(name, namespace, Reader):
             can_resume = False
 
             if isinstance(output_file, Resumer):
+                if not isinstance(output_file, self.__class__.__supported_resumers__):
+                    raise TypeError('%s: does not support %s!' % (self.__class__.__name__, output_file.__class__.__name__))
+
                 self.resumer = output_file
 
                 can_resume = self.resumer.can_resume()
@@ -128,8 +136,8 @@ def make_enricher(name, namespace, Reader):
         def writerow(self, row, add=None):
             self.writer.writerow(self.formatrow(row, add))
 
-    class AbstractThreadsafeEnricher(AbstractEnricher):
-        __name__ = 'Threadsafe' + name
+    class AbstractThreadSafeEnricher(AbstractEnricher):
+        __supported_resumers__ = (ThreadSafeResumer,)
 
         def __init__(self, input_file, output_file, no_headers=False,
                      keep=None, add=None, index_column='index'):
@@ -164,7 +172,7 @@ def make_enricher(name, namespace, Reader):
             self.writer.writerow(self.formatrow(row, index + add))
 
     class AbstractBatchEnricher(AbstractEnricher):
-        __name__ = 'Batch' + name
+        __supported_resumers__ = (BatchResumer,)
 
         def __init__(self, input_file, output_file, no_headers=False,
                      keep=None, add=None, cursor_column='cursor', end_symbol='end'):
@@ -188,14 +196,18 @@ def make_enricher(name, namespace, Reader):
             for is_last, addendum in with_is_last(batch):
                 self.writerow(row, [cursor if is_last else None] + addendum)
 
+    AbstractEnricher.__name__ = name
+    AbstractThreadSafeEnricher.__name__ = 'ThreadSafe' + name
+    AbstractBatchEnricher.__name__ = 'Batch' + name
+
     return (
         AbstractEnricher,
-        AbstractThreadsafeEnricher,
+        AbstractThreadSafeEnricher,
         AbstractBatchEnricher
     )
 
 
-Enricher, ThreadsafeEnricher, BatchEnricher = make_enricher(
+Enricher, ThreadSafeEnricher, BatchEnricher = make_enricher(
     'Enricher',
     'casanova.enricher',
     Reader
