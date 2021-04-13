@@ -14,7 +14,8 @@ from quenouille import imap_unordered
 
 from casanova.resuming import (
     LineCountResumer,
-    ThreadSafeResumer
+    ThreadSafeResumer,
+    BatchResumer
 )
 from casanova.exceptions import (
     EmptyFileError,

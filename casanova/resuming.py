@@ -152,6 +152,9 @@ class BatchResumer(Resumer):
         super().__init__(path, **kwargs)
         self.last_batch = None
         self.value_column = value_column
+        self.value_pos = None
+        self.next_cursor = None
+        self.values_to_skip = None
 
     def get_insights_from_output(self, enricher):
         self.last_batch = ReverseReader.last_batch(
@@ -160,3 +163,29 @@ class BatchResumer(Resumer):
             batch_cursor=enricher.cursor_column,
             end_symbol=enricher.end_symbol
         )
+        self.value_pos = enricher.output_pos[self.value_column]
+
+    def filter(self, i, row):
+        last_batch = self.last_batch
+
+        if last_batch is None:
+            return True
+
+        value = row[self.value_pos]
+
+        # We haven't reached our batch yet
+        if value != last_batch.value:
+            return False
+
+        # Last batch was completely finished
+        elif last_batch.finished:
+            self.last_batch = None
+            return False
+
+        # Here we need to record additional information
+        self.next_cursor = last_batch.cursor
+        self.values_to_skip = set(row[self.value_pos] for row in last_batch.rows)
+
+        self.last_batch = None
+
+        return True
