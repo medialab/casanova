@@ -194,10 +194,10 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                     enricher.writerow(i, row, [(i + 1) * 2])
 
             assert collect_csv_file(output_path) == [
-                ['index', 'name', 'x2'],
-                ['1', 'Mary', '4'],
-                ['2', 'Julia', '6'],
-                ['0', 'John', '2']
+                ['name', 'index', 'x2'],
+                ['Mary', '1', '4'],
+                ['Julia', '2', '6'],
+                ['John', '0', '2']
             ]
 
         def test_threadsafe_cells(self, tmpdir):
@@ -302,9 +302,9 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                         break
 
             assert collect_csv_file(output_path) == [
-                ['index', 'name', 'x2'],
-                ['1', 'Mary', '4'],
-                ['2', 'Julia', '6'],
+                ['name', 'index', 'x2'],
+                ['Mary', '1', '4'],
+                ['Julia', '2', '6']
             ]
 
             with open('./test/resources/people_unordered.csv', flag) as f, resumer:
@@ -319,14 +319,14 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, binary=False):
                     enricher.writerow(i, row, [(i + 1) * 2])
 
             assert collect_csv_file(output_path) == [
-                ['index', 'name', 'x2'],
-                ['1', 'Mary', '4'],
-                ['2', 'Julia', '6'],
-                ['0', 'John', '2']
+                ['name', 'index', 'x2'],
+                ['Mary', '1', '4'],
+                ['Julia', '2', '6'],
+                ['John', '0', '2']
             ]
 
             assert log == {
-                'output.row': [['1', 'Mary', '4'], ['2', 'Julia', '6']],
+                'output.row': [['Mary', '1', '4'], ['Julia', '2', '6']],
                 'filter.row': [[1, ['Mary', 'Sue', '1']], [2, ['Julia', 'Stone', '2']]]
             }
 

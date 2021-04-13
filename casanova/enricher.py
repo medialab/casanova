@@ -21,8 +21,8 @@ def make_enricher(name, namespace, Reader):
         __name__ = name
 
         def __init__(self, input_file, output_file, no_headers=False,
-                     keep=None, add=None, prepend=None, dialect=None,
-                     quotechar=None, delimiter=None):
+                     keep=None, add=None, dialect=None, quotechar=None,
+                     delimiter=None):
 
             # Inheritance
             reader_kwargs = {
@@ -53,9 +53,6 @@ def make_enricher(name, namespace, Reader):
                 self.output_fieldnames += add
                 self.added_count = len(add)
                 self.padding = [''] * self.added_count
-
-            if prepend is not None:
-                self.output_fieldnames = prepend + self.output_fieldnames
 
             self.output_pos = HeadersPositions(self.output_fieldnames if not no_headers else len(self.output_fieldnames))
 
@@ -105,7 +102,7 @@ def make_enricher(name, namespace, Reader):
 
             return row
 
-        def formatrow(self, row, add=None, index=None):
+        def formatrow(self, row, add=None):
 
             # Additions
             if self.added_count > 0:
@@ -121,9 +118,6 @@ def make_enricher(name, namespace, Reader):
                 assert add is None, '%s.writerow: expected no additions.' % namespace
 
                 row = self.filterrow(row)
-
-            if index is not None:
-                row = [index] + row
 
             return row
 
@@ -147,8 +141,7 @@ def make_enricher(name, namespace, Reader):
                 output_file,
                 no_headers=no_headers,
                 keep=keep,
-                add=add,
-                prepend=[index_column]
+                add=[index_column] + list(add)
             )
 
         def __iter__(self):
@@ -162,9 +155,35 @@ def make_enricher(name, namespace, Reader):
                 yield from enumerate(super().cells(column))
 
         def writerow(self, index, row, add=None):
-            self.writer.writerow(self.formatrow(row, add, index=index))
+            index = [index]
 
-    return AbstractThreadsafeEnricher, AbstractEnricher
+            if add is None:
+                add = self.padding
+
+            self.writer.writerow(self.formatrow(row, index + add))
+
+    class AbstractBatchEnricher(AbstractEnricher):
+        __name__ = 'Batch' + name
+
+        def __init__(self, input_file, output_file, no_headers=False,
+                     keep=None, add=None, cursor_column='cursor', end_symbol='end'):
+
+            self.cursor_column = cursor_column
+            self.end_symbol = end_symbol
+
+            # Inheritance
+            super().__init__(
+                input_file,
+                output_file,
+                no_headers=no_headers,
+                keep=keep,
+                add=[cursor_column] + list(add)
+            )
+
+    return (
+        AbstractThreadsafeEnricher,
+        AbstractEnricher
+    )
 
 
 ThreadsafeEnricher, Enricher = make_enricher(
