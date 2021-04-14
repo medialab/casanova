@@ -96,7 +96,7 @@ def make_enricher(name, namespace, Reader):
             iterator = enumerate(super().__iter__())
 
             for i, row in iterator:
-                if self.resumer.filter_already_done_row(i, row):
+                if self.resumer.filter_row(i, row):
                     yield row
 
         def __repr__(self):

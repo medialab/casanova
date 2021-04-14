@@ -8,10 +8,12 @@
 from threading import Lock
 from os.path import isfile, getsize
 
+from casanova._namedtuple import future_namedtuple
 from casanova.reader import Reader
 from casanova.reverse_reader import ReverseReader
 from casanova.exceptions import (
     ResumeError,
+    NotResumableError,
     MissingColumnError,
     CorruptedIndexColumn
 )
@@ -24,6 +26,7 @@ class Resumer(object):
         self.listener = listener
         self.output_file = None
         self.lock = Lock()
+        self.popped = False
 
     def can_resume(self):
         return isfile(self.path) and getsize(self.path) > 0
@@ -55,13 +58,23 @@ class Resumer(object):
     def get_insights_from_output(self, enricher):
         raise NotImplementedError
 
-    def filter_already_done_row(self, i, row):
+    def filter_row(self, i, row):
         result = self.filter(i, row)
 
         if not result:
             self.emit('filter.row', (i, row))
 
         return result
+
+    def get_state(self):
+        raise NotImplementedError
+
+    def pop_state(self):
+        if not self.popped:
+            self.popped = True
+            return self.get_state()
+
+        return None
 
     def __enter__(self):
         return self
@@ -80,9 +93,6 @@ class Resumer(object):
             path=self.path,
             can_resume=self.can_resume()
         )
-
-    def resume(self, enricher):
-        pass
 
     def already_done_count(self):
         raise NotImplementedError
@@ -153,13 +163,16 @@ class ThreadSafeResumer(Resumer):
         return len(self.already_done)
 
 
+BatchResumerContext = future_namedtuple('BatchResumerContext', ['last_cursor', 'values_to_skip'])
+
+
 class BatchResumer(Resumer):
     def __init__(self, path, value_column, **kwargs):
         super().__init__(path, **kwargs)
         self.last_batch = None
         self.value_column = value_column
         self.value_pos = None
-        self.next_cursor = None
+        self.last_cursor = None
         self.values_to_skip = None
 
     def get_insights_from_output(self, enricher):
@@ -170,28 +183,43 @@ class BatchResumer(Resumer):
             end_symbol=enricher.end_symbol
         )
         self.value_pos = enricher.output_pos[self.value_column]
+        self.last_cursor = None
+        self.values_to_skip = None
 
-    def filter(self, i, row):
+    def get_state(self):
+        return BatchResumerContext(
+            self.last_cursor,
+            self.values_to_skip
+        )
+
+    def resume(self, enricher):
         last_batch = self.last_batch
 
         if last_batch is None:
-            return True
+            return
 
-        value = row[self.value_pos]
+        iterator = iter(enricher)
 
-        # We haven't reached our batch yet
-        if value != last_batch.value:
-            return False
+        while True:
+            row = next(iterator, None)
 
-        # Last batch was completely finished
-        elif last_batch.finished:
-            self.last_batch = None
-            return False
+            if row is None:
+                raise NotResumableError
 
-        # Here we need to record additional information
-        self.next_cursor = last_batch.cursor
-        self.values_to_skip = set(row[self.value_pos] for row in last_batch.rows)
+            self.emit('input.row', row)
 
-        self.last_batch = None
+            value = row[self.value_pos]
 
-        return True
+            # We haven't reached our batch yet
+            if value != last_batch.value:
+                continue
+
+            # Last batch was completely finished
+            elif last_batch.finished:
+                break
+
+            # Here we need to record additional information
+            self.last_cursor = last_batch.cursor
+            self.values_to_skip = set(row[self.value_pos] for row in last_batch.rows)
+
+            break
