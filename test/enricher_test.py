@@ -13,7 +13,7 @@ from collections import defaultdict
 from quenouille import imap_unordered
 
 from casanova.resuming import (
-    LineCountResumer,
+    RowCountResumer,
     ThreadSafeResumer,
     BatchResumer
 )
@@ -140,7 +140,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher
 
             output_path = str(tmpdir.join('./enriched-resumable.csv'))
 
-            resumer = LineCountResumer(output_path, listener=listener)
+            resumer = RowCountResumer(output_path, listener=listener)
 
             with open('./test/resources/people.csv', flag) as f, resumer:
 

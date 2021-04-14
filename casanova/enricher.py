@@ -10,7 +10,7 @@ from ebbe import with_is_last
 
 from casanova.resuming import (
     Resumer,
-    LineCountResumer,
+    RowCountResumer,
     ThreadSafeResumer,
     BatchResumer
 )
@@ -24,7 +24,7 @@ from casanova.reader import (
 def make_enricher(name, namespace, Reader):
 
     class AbstractEnricher(Reader):
-        __supported_resumers__ = (LineCountResumer,)
+        __supported_resumers__ = (RowCountResumer,)
 
         def __init__(self, input_file, output_file, no_headers=False,
                      keep=None, add=None, dialect=None, quotechar=None,

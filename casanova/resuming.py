@@ -85,13 +85,13 @@ class Resumer(object):
         raise NotImplementedError
 
 
-class LineCountResumer(Resumer):
+class RowCountResumer(Resumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.line_count = 0
+        self.row_count = 0
 
     def get_insights_from_output(self, enricher):
-        self.line_count = 0
+        self.row_count = 0
 
         with self.open(mode='r') as f:
             reader = Reader(f)
@@ -102,16 +102,16 @@ class LineCountResumer(Resumer):
                 self.emit('output.row', row)
                 count += 1
 
-        self.line_count = count
+        self.row_count = count
 
     def filter(self, i, row):
-        if i < self.line_count:
+        if i < self.row_count:
             return False
 
         return True
 
     def already_done_count(self):
-        return self.line_count
+        return self.row_count
 
 
 class ThreadSafeResumer(Resumer):

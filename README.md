@@ -209,10 +209,10 @@ with open('./people.csv') as f, \
 
 ```python
 import casanova
-from casanova import LineCountResumer
+from casanova import RowCountResumer
 
 with open('./people.csv') as f, \
-     LineCountResumer('./enriched-people.csv') as resumer:
+     RowCountResumer('./enriched-people.csv') as resumer:
 
   # This will automatically start where it stopped last time
   enricher = casanova.enricher(f, resumer)
@@ -225,7 +225,7 @@ with open('./people.csv') as f, \
 def listener(event, row):
   print(event, row)
 
-resumer = LineCountResumer('./enriched-people.csv', listener=listener)
+resumer = RowCountResumer('./enriched-people.csv', listener=listener)
 
 # You can check is the the process was already started and can resume:
 resumer.can_resume()
