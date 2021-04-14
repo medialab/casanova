@@ -178,7 +178,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher
 
             assert log == {
                 'output.row': [['John', '2']],
-                'filter.row': [[0, ['John', 'Matthews']]]
+                'input.row': [['John', 'Matthews']]
             }
 
         def test_threadsafe(self, tmpdir):

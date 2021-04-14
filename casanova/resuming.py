@@ -81,6 +81,9 @@ class Resumer(object):
             can_resume=self.can_resume()
         )
 
+    def resume(self, enricher):
+        pass
+
     def already_done_count(self):
         raise NotImplementedError
 
@@ -104,11 +107,14 @@ class RowCountResumer(Resumer):
 
         self.row_count = count
 
-    def filter(self, i, row):
-        if i < self.row_count:
-            return False
+    def resume(self, enricher):
+        i = 0
+        iterator = iter(enricher)
 
-        return True
+        while i < self.row_count:
+            row = next(iterator)
+            self.emit('input.row', row)
+            i += 1
 
     def already_done_count(self):
         return self.row_count

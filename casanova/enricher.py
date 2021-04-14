@@ -77,6 +77,9 @@ def make_enricher(name, namespace, Reader):
                 if can_resume:
                     self.resumer.get_insights_from_output(self)
 
+                    if hasattr(self.resumer, 'resume'):
+                        self.resumer.resume(self)
+
                 output_file = self.resumer.open_output_file()
 
             # Instantiating writer
@@ -87,7 +90,7 @@ def make_enricher(name, namespace, Reader):
                 self.writeheader()
 
         def __iter__(self):
-            if self.resumer is None:
+            if self.resumer is None or not hasattr(self.resumer, 'filter'):
                 yield from super().__iter__()
 
             iterator = enumerate(super().__iter__())
