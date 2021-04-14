@@ -45,8 +45,8 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher
             output_path = str(tmpdir.join('./wrong-resumer.csv'))
 
             with pytest.raises(TypeError):
-                with open('./test/resources/people.csv', flag) as f, \
-                     ThreadSafeResumer(output_path) as resumer:
+                resumer = ThreadSafeResumer(output_path)
+                with open('./test/resources/people.csv', flag) as f, resumer:
                     enricher_fn(f, resumer)
 
         def test_basics(self, tmpdir):
