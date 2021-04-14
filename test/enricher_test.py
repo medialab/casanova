@@ -12,6 +12,8 @@ from io import StringIO, BytesIO
 from collections import defaultdict
 from quenouille import imap_unordered
 
+from test.utils import collect_csv
+
 from casanova.resuming import (
     RowCountResumer,
     ThreadSafeResumer,
@@ -22,11 +24,6 @@ from casanova.exceptions import (
     MissingColumnError,
     NotResumableError
 )
-
-
-def collect_csv_file(path):
-    with open(path) as f:
-        return list(csv.reader(f))
 
 
 def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher_fn,
@@ -58,7 +55,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher
                 for i, row in enumerate(enricher):
                     enricher.writerow(row, [i])
 
-            assert collect_csv_file(output_path) == [
+            assert collect_csv(output_path) == [
                 ['name', 'surname', 'line'],
                 ['John', 'Matthews', '0'],
                 ['Mary', 'Sue', '1'],
@@ -77,7 +74,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher
                 for i, row in enumerate(enricher):
                     enricher.writerow(row, [i])
 
-            assert collect_csv_file(output_path) == [
+            assert collect_csv(output_path) == [
                 ['name', 'surname', 'line'],
                 ['Rose', 'Philips', '0'],
                 ['Luke', 'Atman', '1']
@@ -92,7 +89,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher
                 for i, row in enumerate(enricher):
                     enricher.writerow(row, [i])
 
-            assert collect_csv_file(output_path) == [
+            assert collect_csv(output_path) == [
                 ['name', 'surname', 'line'],
                 ['John', 'Matthews', '0'],
                 ['Mary', 'Sue', '1'],
@@ -108,7 +105,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher
                 for i, row in enumerate(enricher):
                     enricher.writerow(row, [i])
 
-            assert collect_csv_file(output_path) == [
+            assert collect_csv(output_path) == [
                 ['name', 'line'],
                 ['John', '0'],
                 ['Mary', '1'],
@@ -124,7 +121,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher
                 for i, row in enumerate(enricher):
                     enricher.writerow(row)
 
-            assert collect_csv_file(output_path) == [
+            assert collect_csv(output_path) == [
                 ['name', 'line'],
                 ['John', ''],
                 ['Mary', ''],
@@ -153,7 +150,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher
                 row = next(iter(enricher))
                 enricher.writerow(row, [2])
 
-            assert collect_csv_file(output_path) == [
+            assert collect_csv(output_path) == [
                 ['name', 'x2'],
                 ['John', '2']
             ]
@@ -169,7 +166,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher
                 for i, row in enumerate(enricher):
                     enricher.writerow(row, [(i + 2) * 2])
 
-            assert collect_csv_file(output_path) == [
+            assert collect_csv(output_path) == [
                 ['name', 'x2'],
                 ['John', '2'],
                 ['Mary', '4'],
@@ -202,7 +199,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher
                 for i, row in imap_unordered(enricher, job, 3):
                     enricher.writerow(i, row, [(i + 1) * 2])
 
-            assert collect_csv_file(output_path) == [
+            assert collect_csv(output_path) == [
                 ['name', 'index', 'x2'],
                 ['Mary', '1', '4'],
                 ['Julia', '2', '6'],
@@ -310,7 +307,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher
                     if j == 1:
                         break
 
-            assert collect_csv_file(output_path) == [
+            assert collect_csv(output_path) == [
                 ['name', 'index', 'x2'],
                 ['Mary', '1', '4'],
                 ['Julia', '2', '6']
@@ -327,7 +324,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher
                 for j, (i, row) in enumerate(imap_unordered(enricher, job, 3)):
                     enricher.writerow(i, row, [(i + 1) * 2])
 
-            assert collect_csv_file(output_path) == [
+            assert collect_csv(output_path) == [
                 ['name', 'index', 'x2'],
                 ['Mary', '1', '4'],
                 ['Julia', '2', '6'],
@@ -377,7 +374,7 @@ def make_enricher_test(name, enricher_fn, threadsafe_enricher_fn, batch_enricher
                     enricher.writebatch(row, [['blue'], ['red']], cursor='next')
                     enricher.writebatch(row, [['purple'], ['cyan']])
 
-            assert collect_csv_file(output_path) == [
+            assert collect_csv(output_path) == [
                 ['surname', 'cursor', 'color'],
                 ['Matthews', '', 'blue'],
                 ['Matthews', 'next', 'red'],

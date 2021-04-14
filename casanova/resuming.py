@@ -223,3 +223,19 @@ class BatchResumer(Resumer):
             self.values_to_skip = set(row[self.value_pos] for row in last_batch.rows)
 
             break
+
+
+class LastCellResumer(Resumer):
+    def __init__(self, path, value_column, **kwargs):
+        super().__init__(path, **kwargs)
+        self.last_cell = None
+        self.value_column = value_column
+
+    def get_insights_from_output(self, enricher):
+        self.last_cell = ReverseReader.last_cell(
+            self.path,
+            column=self.value_column
+        )
+
+    def get_state(self):
+        return self.last_cell

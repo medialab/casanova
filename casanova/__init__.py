@@ -17,15 +17,19 @@ from casanova.reader import (
 from casanova.resuming import (
     Resumer,
     RowCountResumer,
-    ThreadSafeResumer
+    ThreadSafeResumer,
+    BatchResumer,
+    LastCellResumer
 )
 from casanova.reverse_reader import (
     ReverseReader,
     Batch
 )
+from casanova.writer import Writer
 
 reader = Reader
 enricher = Enricher
 threadsafe_enricher = ThreadSafeEnricher
 batch_enricher = BatchEnricher
 reverse_reader = ReverseReader
+writer = Writer
