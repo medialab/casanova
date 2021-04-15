@@ -91,17 +91,18 @@ def make_enricher(name, namespace, Reader):
             if not no_headers and not can_resume:
                 self.writeheader()
 
-        def __iter__(self):
+        # NOTE: overriding #.iter and not #.__iter__ else other reader iterators won't work
+        def iter(self):
             if self.resumer is None:
-                yield from super().__iter__()
+                yield from super().iter()
                 return
 
             if not hasattr(self.resumer, 'filter'):
                 yield from self.resumer
-                yield from super().__iter__()
+                yield from super().iter()
                 return
 
-            iterator = enumerate(super().__iter__())
+            iterator = enumerate(super().iter())
 
             for i, row in iterator:
                 if self.resumer.filter_row(i, row):
