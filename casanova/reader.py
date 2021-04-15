@@ -81,7 +81,8 @@ class Reader(object):
     namespace = 'casanova.reader'
 
     def __init__(self, input_file, no_headers=False, encoding='utf-8',
-                 dialect=None, quotechar=None, delimiter=None, prebuffer_bytes=None):
+                 dialect=None, quotechar=None, delimiter=None, prebuffer_bytes=None,
+                 total=None):
 
         # Should we open a file for the user?
         input_file = ensure_open(input_file, encoding=encoding)
@@ -100,7 +101,7 @@ class Reader(object):
         self.fieldnames = None
         self.buffered_rows = []
         self.was_completely_buffered = False
-        self.total = None
+        self.total = total
         self.can_slice = True
         self.binary = False
 
@@ -123,7 +124,7 @@ class Reader(object):
 
             self.pos = HeadersPositions(self.fieldnames)
 
-        if prebuffer_bytes is not None:
+        if prebuffer_bytes is not None and self.total is None:
             if not isinstance(prebuffer_bytes, int) or prebuffer_bytes < 1:
                 raise TypeError('expecting a positive integer as "prebuffer_bytes" kwarg')
 
