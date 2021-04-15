@@ -27,6 +27,7 @@ class Resumer(object):
         self.output_file = None
         self.lock = Lock()
         self.popped = False
+        self.buffer = []
 
     def can_resume(self):
         return isfile(self.path) and getsize(self.path) > 0
@@ -96,6 +97,13 @@ class Resumer(object):
 
     def already_done_count(self):
         raise NotImplementedError
+
+    def __iter__(self):
+        if hasattr(self, 'filter'):
+            raise NotImplementedError
+
+        yield from self.buffer
+        self.buffer = []
 
 
 class RowCountResumer(Resumer):
@@ -221,6 +229,7 @@ class BatchResumer(Resumer):
             # Here we need to record additional information
             self.last_cursor = last_batch.cursor
             self.values_to_skip = set(row[self.value_pos] for row in last_batch.rows)
+            self.buffer.append(row)
 
             break
 

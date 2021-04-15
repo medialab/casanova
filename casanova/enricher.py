@@ -92,8 +92,14 @@ def make_enricher(name, namespace, Reader):
                 self.writeheader()
 
         def __iter__(self):
-            if self.resumer is None or not hasattr(self.resumer, 'filter'):
+            if self.resumer is None:
                 yield from super().__iter__()
+                return
+
+            if not hasattr(self.resumer, 'filter'):
+                yield from self.resumer
+                yield from super().__iter__()
+                return
 
             iterator = enumerate(super().__iter__())
 
