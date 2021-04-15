@@ -182,7 +182,7 @@ class BatchResumer(Resumer):
             batch_cursor=enricher.cursor_column,
             end_symbol=enricher.end_symbol
         )
-        self.value_pos = enricher.output_pos[self.value_column]
+        self.value_pos = enricher.output_pos[self.value_column] - len(enricher.pos)
         self.last_cursor = None
         self.values_to_skip = None
 
