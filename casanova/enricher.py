@@ -28,7 +28,7 @@ def make_enricher(name, namespace, Reader):
 
         def __init__(self, input_file, output_file, no_headers=False,
                      keep=None, add=None, dialect=None, quotechar=None,
-                     delimiter=None):
+                     delimiter=None, prebuffer_bytes=None):
 
             # Inheritance
             reader_kwargs = {
@@ -39,6 +39,7 @@ def make_enricher(name, namespace, Reader):
                 reader_kwargs['dialect'] = dialect
                 reader_kwargs['quotechar'] = quotechar
                 reader_kwargs['delimiter'] = delimiter
+                reader_kwargs['prebuffer_bytes'] = prebuffer_bytes
 
             super().__init__(input_file, **reader_kwargs)
 
