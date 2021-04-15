@@ -144,8 +144,8 @@ def make_enricher(name, namespace, Reader):
     class AbstractThreadSafeEnricher(AbstractEnricher):
         __supported_resumers__ = (ThreadSafeResumer,)
 
-        def __init__(self, input_file, output_file, no_headers=False,
-                     keep=None, add=None, index_column='index'):
+        def __init__(self, input_file, output_file, add=None,
+                     index_column='index', **kwargs):
 
             self.index_column = index_column
 
@@ -153,9 +153,8 @@ def make_enricher(name, namespace, Reader):
             super().__init__(
                 input_file,
                 output_file,
-                no_headers=no_headers,
-                keep=keep,
-                add=[index_column] + list(add)
+                add=[index_column] + list(add),
+                **kwargs
             )
 
         def __iter__(self):
@@ -179,8 +178,8 @@ def make_enricher(name, namespace, Reader):
     class AbstractBatchEnricher(AbstractEnricher):
         __supported_resumers__ = (BatchResumer,)
 
-        def __init__(self, input_file, output_file, no_headers=False,
-                     keep=None, add=None, cursor_column='cursor', end_symbol='end'):
+        def __init__(self, input_file, output_file, add=None, cursor_column='cursor',
+                     end_symbol='end', **kwargs):
 
             self.cursor_column = cursor_column
             self.end_symbol = end_symbol
@@ -189,9 +188,8 @@ def make_enricher(name, namespace, Reader):
             super().__init__(
                 input_file,
                 output_file,
-                no_headers=no_headers,
-                keep=keep,
-                add=[cursor_column] + list(add)
+                add=[cursor_column] + list(add),
+                **kwargs
             )
 
         def writebatch(self, row, batch, cursor=None):
