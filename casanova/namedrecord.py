@@ -37,6 +37,8 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
             return plural_separator.join(v)
 
         if m == 3:
+            if v is None:
+                return None
             return dumps(v, ensure_ascii=False)
 
         raise TypeError

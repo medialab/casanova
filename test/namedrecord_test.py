@@ -73,3 +73,7 @@ class TestNamedRecord(object):
 
         assert r.as_csv_row() == ['Hello', '{"one": [0, 1]}']
         assert r.as_csv_dict_row() == OrderedDict(title='Hello', data='{"one": [0, 1]}')
+
+        r = Record('Test', None)
+
+        assert r.as_csv_row() == ['Test', None]
