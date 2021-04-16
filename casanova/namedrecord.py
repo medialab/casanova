@@ -4,23 +4,31 @@
 #
 # CSV-aware improvement over python's namedtuple.
 #
+from json import dumps
+from collections import OrderedDict
+
 from casanova._namedtuple import future_namedtuple
 
 
-def namedrecord(name, fields, boolean=None, plural=None, defaults=None):
+def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=None):
     mapping = {k: i for i, k in enumerate(fields)}
     mask = []
 
-    for k in mapping.keys():
+    for k in fields:
         if boolean and k in boolean:
             mask.append(1)
         elif plural and k in plural:
             mask.append(2)
+        elif json and k in json:
+            mask.append(3)
         else:
             mask.append(0)
 
     def cast_for_csv(i, v, plural_separator='|'):
         m = mask[i]
+
+        if m == 0:
+            return v
 
         if m == 1:
             return 'true' if v else 'false'
@@ -28,7 +36,10 @@ def namedrecord(name, fields, boolean=None, plural=None, defaults=None):
         if m == 2:
             return plural_separator.join(v)
 
-        return v
+        if m == 3:
+            return dumps(v, ensure_ascii=False)
+
+        raise TypeError
 
     class Record(future_namedtuple(name, fields, defaults=defaults)):
         def __getitem__(self, key):
@@ -51,6 +62,14 @@ def namedrecord(name, fields, boolean=None, plural=None, defaults=None):
         def as_csv_row(self, plural_separator='|'):
             row = list(
                 cast_for_csv(i, v, plural_separator=plural_separator)
+                for i, v in enumerate(self)
+            )
+
+            return row
+
+        def as_csv_dict_row(self, plural_separator='|'):
+            row = OrderedDict(
+                (fields[i], cast_for_csv(i, v, plural_separator=plural_separator))
                 for i, v in enumerate(self)
             )
 

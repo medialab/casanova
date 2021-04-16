@@ -2,6 +2,7 @@
 # Casanova Named Record Unit Tests
 # =============================================================================
 import pytest
+from collections import OrderedDict
 
 from casanova import namedrecord
 
@@ -60,3 +61,15 @@ class TestNamedRecord(object):
         assert r == Record(27, 20, 30)
 
         assert list(Record(10, z=45)) == [10, 20, 45]
+
+    def test_json_serialization(self):
+        Record = namedrecord(
+            'Record',
+            ['title', 'data'],
+            json=['data']
+        )
+
+        r = Record('Hello', {'one': [0, 1]})
+
+        assert r.as_csv_row() == ['Hello', '{"one": [0, 1]}']
+        assert r.as_csv_dict_row() == OrderedDict(title='Hello', data='{"one": [0, 1]}')
