@@ -25,6 +25,9 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
             mask.append(0)
 
     def cast_for_csv(i, v, plural_separator='|'):
+        if v is None:
+            return None
+
         m = mask[i]
 
         if m == 0:
@@ -34,11 +37,10 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
             return 'true' if v else 'false'
 
         if m == 2:
+            assert isinstance(v, list)
             return plural_separator.join(str(i) for i in v)
 
         if m == 3:
-            if v is None:
-                return None
             return dumps(v, ensure_ascii=False)
 
         raise TypeError
