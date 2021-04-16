@@ -42,6 +42,12 @@ class TestNamedRecord(object):
             'tags': ['film', 'pop']
         }
 
+        assert Video.fieldnames == ['title', 'has_captions', 'tags']
+
+        v = Video(*['Title', False, []])
+
+        assert v.as_dict() == {'title': 'Title', 'has_captions': False, 'tags': []}
+
     def test_defaults(self):
         Record = namedrecord(
             'Record',

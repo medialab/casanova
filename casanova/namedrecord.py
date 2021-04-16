@@ -4,14 +4,11 @@
 #
 # CSV-aware improvement over python's namedtuple.
 #
-from collections import OrderedDict
-
 from casanova._namedtuple import future_namedtuple
 
 
 def namedrecord(name, fields, boolean=None, plural=None, defaults=None):
-    mapping = OrderedDict((k, i) for i, k in enumerate(fields))
-
+    mapping = {k: i for i, k in enumerate(fields)}
     mask = []
 
     for k in mapping.keys():
@@ -63,5 +60,6 @@ def namedrecord(name, fields, boolean=None, plural=None, defaults=None):
             return {fields[i]: v for i, v in enumerate(self)}
 
     Record.__name__ = name
+    Record.fieldnames = list(fields)
 
     return Record
