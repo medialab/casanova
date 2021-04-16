@@ -62,6 +62,13 @@ class TestNamedRecord(object):
 
         assert list(Record(10, z=45)) == [10, 20, 45]
 
+    def test_non_str_plurals(self):
+        Record = namedrecord('Record', ['title', 'positions'], plural=['positions'])
+
+        r = Record('Hello', positions=list(range(3)))
+
+        assert r.as_csv_row() == ['Hello', '0|1|2']
+
     def test_json_serialization(self):
         Record = namedrecord(
             'Record',

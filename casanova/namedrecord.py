@@ -34,7 +34,7 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
             return 'true' if v else 'false'
 
         if m == 2:
-            return plural_separator.join(v)
+            return plural_separator.join(str(i) for i in v)
 
         if m == 3:
             if v is None:
