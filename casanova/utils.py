@@ -5,8 +5,9 @@
 # Miscellaneous utility functions.
 #
 import re
+import csv
 import gzip
-from io import BytesIO, BufferedReader, TextIOWrapper
+from io import BytesIO, StringIO, BufferedReader, TextIOWrapper
 from ebbe import with_prev
 
 
@@ -63,3 +64,14 @@ def suppress_BOM(string):
 
 def count_bytes_in_row(row):
     return sum(len(cell) for cell in row) * 2
+
+
+def CsvCellIO(column, value):
+    buf = StringIO()
+    writer = csv.writer(buf, dialect=csv.unix_dialect, quoting=csv.QUOTE_MINIMAL)
+    writer.writerow([column])
+    writer.writerow([value])
+
+    buf.seek(0)
+
+    return buf

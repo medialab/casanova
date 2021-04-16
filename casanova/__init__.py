@@ -26,6 +26,7 @@ from casanova.reverse_reader import (
     Batch
 )
 from casanova.writer import Writer
+from casanova.utils import CsvCellIO
 
 reader = Reader
 enricher = Enricher
