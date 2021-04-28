@@ -7,6 +7,8 @@
 #
 import csv
 from collections import deque
+from collections.abc import Iterable
+from io import IOBase
 
 from casanova.utils import is_contiguous, ensure_open, suppress_BOM, count_bytes_in_row
 from casanova.exceptions import EmptyFileError, MissingColumnError
@@ -85,11 +87,19 @@ class Reader(object):
                  dialect=None, quotechar=None, delimiter=None, prebuffer_bytes=None,
                  total=None):
 
-        input_type = 'file'
+        if isinstance(input_file, IOBase):
+            input_type = 'file'
 
-        if isinstance(input_type, str):
+        elif isinstance(input_file, str):
             input_type = 'path'
             input_file = ensure_open(input_file, encoding=encoding)
+
+        elif isinstance(input_file, Iterable):
+            input_type = 'iterable'
+            input_file = iter(input_file)
+
+        else:
+            raise TypeError('expecting a file, a path or an iterable of rows')
 
         reader_kwargs = {}
 
@@ -102,7 +112,12 @@ class Reader(object):
 
         self.input_type = input_type
         self.input_file = input_file
-        self.reader = csv.reader(input_file, **reader_kwargs)
+
+        if self.input_type == 'iterable':
+            self.reader = self.input_file
+        else:
+            self.reader = csv.reader(input_file, **reader_kwargs)
+
         self.fieldnames = None
         self.buffered_rows = deque()
         self.was_completely_buffered = False

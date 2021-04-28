@@ -213,3 +213,14 @@ class TestReader(object):
                 break
 
             assert list(reader.cells('surname')) == ['Sue', 'Stone']
+
+    def test_iterable_input(self):
+
+        def generator():
+            yield ['name', 'surname']
+            yield ['Victor', 'Carouso']
+            yield ['Emily', 'Harknett']
+
+        reader = casanova.reader(generator())
+
+        assert list(reader.cells('name')) == ['Victor', 'Emily']
