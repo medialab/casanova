@@ -6,6 +6,7 @@
 # with csv.DictReader which is nice but very slow.
 #
 import csv
+from collections import deque
 
 from casanova.utils import is_contiguous, ensure_open, suppress_BOM, count_bytes_in_row
 from casanova.exceptions import EmptyFileError, MissingColumnError
@@ -99,7 +100,7 @@ class Reader(object):
         self.input_file = input_file
         self.reader = csv.reader(input_file, **reader_kwargs)
         self.fieldnames = None
-        self.buffered_rows = []
+        self.buffered_rows = deque()
         self.was_completely_buffered = False
         self.total = total
         self.can_slice = True
@@ -147,7 +148,9 @@ class Reader(object):
         return '<%s %s>' % (self.namespace, columns_info)
 
     def iter(self):
-        yield from self.buffered_rows
+        while self.buffered_rows:
+            yield self.buffered_rows.popleft()
+
         yield from self.reader
 
     def wrap(self, row):

@@ -204,3 +204,12 @@ class TestReader(object):
 
             assert list(reader.cells('surname')) == ['Matthews', 'Sue', 'Stone']
             assert reader.total is None
+
+        with open('./test/resources/people.csv') as f:
+            reader = casanova.reader(f, prebuffer_bytes=2)
+
+            for surname in reader.cells('surname'):
+                assert surname == 'Matthews'
+                break
+
+            assert list(reader.cells('surname')) == ['Sue', 'Stone']
