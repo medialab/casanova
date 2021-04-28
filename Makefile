@@ -1,5 +1,5 @@
 # Variables
-SOURCE = casanova casanova_monkey
+SOURCE = casanova
 
 # Functions
 define clean
@@ -24,6 +24,7 @@ lint:
 	@echo
 	@echo Searching for unused imports...
 	importchecker $(SOURCE) | grep -v __init__ || true
+	importchecker test | grep -v __init__ || true
 	@echo
 
 unit:

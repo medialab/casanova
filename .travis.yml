@@ -4,10 +4,6 @@ python:
   - "3.7"
   - "3.8"
   - "3.9"
-before_install:
-  - sudo apt-get update -qq
 install:
-  - sudo apt-get install -qq clang
-  - pip install -r requirements-travis.txt
-  - CC=clang pip install csvmonkey==0.0.5
+  - pip install -r requirements.txt
 script: make

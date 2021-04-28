@@ -1,10 +1,11 @@
 # =============================================================================
 # Casanova Reverse Reader Unit Tests
 # =============================================================================
+import pytest
+
 import casanova
 from casanova import Batch
-from casanova.exceptions import EmptyFileError, MissingColumnError
-import pytest
+from casanova.exceptions import EmptyFileError
 
 
 class TestReverseReader(object):

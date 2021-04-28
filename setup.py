@@ -19,8 +19,5 @@ setup(name='casanova',
       install_requires=[
         'ebbe>=1.0.0,<2',
         'file-read-backwards>=2.0.0,<3'
-      ],
-      extras_require={
-        'monkey': ['csvmonkey==0.0.5']
-      },
+      ]
       zip_safe=True)

@@ -3,8 +3,6 @@ import click
 import sys
 import csv
 import casanova
-import casanova_monkey
-import csvmonkey
 
 
 @click.command()
@@ -13,27 +11,27 @@ import csvmonkey
 @click.option('--headers/--no-headers', default=True)
 @click.option('--skip-std/--no-skip-std', default=True)
 def bench(path, column, headers=True, skip_std=True):
-    if not skip_std:
-        with Timer('csvmonkey'):
-            with open(path, 'rb') as f:
-                for row in csvmonkey.from_file(f, header=headers):
-                    a = row[column]
+    # if not skip_std:
+    #     with Timer('csvmonkey'):
+    #         with open(path, 'rb') as f:
+    #             for row in csvmonkey.from_file(f, header=headers):
+    #                 a = row[column]
 
-    with Timer('casanova_monkey: basic'):
-        with open(path, 'rb') as f:
-            reader = casanova_monkey.reader(f, no_headers=not headers)
-            pos = reader.pos[column]
+    # with Timer('casanova_monkey: basic'):
+    #     with open(path, 'rb') as f:
+    #         reader = casanova_monkey.reader(f, no_headers=not headers)
+    #         pos = reader.pos[column]
 
-            for row in reader:
-                a = row[pos]
+    #         for row in reader:
+    #             a = row[pos]
 
-    with Timer('casanova_monkey: lazy'):
-        with open(path, 'rb') as f:
-            reader = casanova_monkey.reader(f, no_headers=not headers, lazy=True)
-            pos = reader.pos[column]
+    # with Timer('casanova_monkey: lazy'):
+    #     with open(path, 'rb') as f:
+    #         reader = casanova_monkey.reader(f, no_headers=not headers, lazy=True)
+    #         pos = reader.pos[column]
 
-            for row in reader:
-                a = row[pos]
+    #         for row in reader:
+    #             a = row[pos]
 
     if not skip_std:
         with Timer('csv.reader'):

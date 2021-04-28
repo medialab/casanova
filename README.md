@@ -9,8 +9,6 @@ If you often find yourself reading CSV files using python, you will quickly noti
 csv.reader: 24s
 csv.DictReader: 84s
 casanova.reader: 25s
-csvmonkey: 3s
-casanova_monkey.reader: 4s
 ```
 
 Casanova is therefore an attempt to stick to `csv.reader` performance while still keeping a comfortable interface, still able to consider headers etc.
@@ -28,21 +26,6 @@ You can install `casanova` with pip with the following command:
 
 ```
 pip install casanova
-```
-
-If you want to be able to use the faster `casanova_monkey` namespace relying on the fantastic [csvmonkey](https://github.com/dw/csvmonkey) library, you will also need to install it alongside:
-
-```
-pip install csvmonkey
-# If this fails, typically on ubuntu, run the following:
-sudo apt-get install clang
-CC=clang pip install csvmonkey
-```
-
-or you can also install `casanova` likewise:
-
-```
-pip install casanova[monkey]
 ```
 
 ## Usage
@@ -126,30 +109,6 @@ count = casanova.reader.count('./people.csv', max_rows=100)
 >>> None # if the file has more than 100 rows
 >>> 34   # else the actual count
 ```
-
-*casanova_monkey*
-
-```python
-import casanova_monkey
-
-# NOTE: to rely on csvmonkey you will need to open the file in binary mode (e.g. "rb")!
-with open('./people.csv', 'rb') as f:
-  reader = casanova_monkey.reader(f)
-
-  # For the lazy, slightly faster version
-  reader = casanova_monkey.reader(f, lazy=True)
-```
-
-*Arguments*
-
-* **file** *file|path*: file object to read or path to open.
-* **no_headers** *?bool* [`False`]: whether your CSV file is headless.
-* **lazy** *?bool* [`False`]: only for `casanova_monkey`, whether to yield `csvmonkey` raw lazy-decoding items or cast them as `list` for better compatibility.
-
-*Attributes*
-
-* **fieldnames** *list<str>*: field names in order.
-* **pos** *int|namedtuple<int>*: header positions object.
 
 ## enricher
 
@@ -265,18 +224,6 @@ with open('./people.csv') as f, \
 *Threadsafe arguments*
 
 * **index_column** *?str* [`index`]: name of the index column.
-
-*casanova_monkey*
-
-```python
-import casanova_monkey
-
-with open('./people.csv') as f, \
-     open('./enriched-people.csv', 'w') as of:
-
-  enricher = casanova_monkey.enricher(f, of)
-  enricher = casanova_monkey.threadsafe_enricher(f, of)
-```
 
 ## reverse_reader
 
