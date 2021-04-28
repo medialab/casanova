@@ -85,6 +85,11 @@ class Reader(object):
                  dialect=None, quotechar=None, delimiter=None, prebuffer_bytes=None,
                  total=None):
 
+        input_type = 'file'
+
+        if isinstance(input_type, str):
+            input_type = 'path'
+
         # Should we open a file for the user?
         input_file = ensure_open(input_file, encoding=encoding)
 
@@ -97,6 +102,7 @@ class Reader(object):
         if delimiter is not None:
             reader_kwargs['delimiter'] = delimiter
 
+        self.input_type = input_type
         self.input_file = input_file
         self.reader = csv.reader(input_file, **reader_kwargs)
         self.fieldnames = None
@@ -215,7 +221,8 @@ class Reader(object):
         return self.__cells(column, with_rows=with_rows)
 
     def close(self):
-        self.input_file.close()
+        if self.input_type == 'file':
+            self.input_file.close()
 
     def __enter__(self):
         return self
