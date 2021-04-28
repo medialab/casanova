@@ -65,7 +65,7 @@ with open('./people.csv') as f:
     name = row[name_pos] # it's better to cache your pos outside the loop
     name = row[reader.pos.name] # this works, but is slower
 
-  # Intersted in a single column?
+  # Interested in a single column?
   for name in reader.cells('name'):
     print(name)
 
@@ -74,7 +74,7 @@ with open('./people.csv') as f:
     print(name, surname)
 
   # Need also the current row when iterating on cells?
-  for row, (name, surname) in reader.cells(['name', 'surname']):
+  for row, (name, surname) in reader.cells(['name', 'surname'], with_rows=True):
     print(row, name, surname)
 
   # No headers? No problem.
