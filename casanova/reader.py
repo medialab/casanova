@@ -89,9 +89,7 @@ class Reader(object):
 
         if isinstance(input_type, str):
             input_type = 'path'
-
-        # Should we open a file for the user?
-        input_file = ensure_open(input_file, encoding=encoding)
+            input_file = ensure_open(input_file, encoding=encoding)
 
         reader_kwargs = {}
 

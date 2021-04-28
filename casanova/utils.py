@@ -7,7 +7,7 @@
 import re
 import csv
 import gzip
-from io import BytesIO, StringIO, BufferedReader, TextIOWrapper
+from io import StringIO
 from ebbe import with_prev
 
 
@@ -18,18 +18,6 @@ def is_contiguous(l):
 
         if p != n - 1:
             return False
-
-    return True
-
-
-def is_binary_buffer(buf):
-    if isinstance(buf, gzip.GzipFile) and not isinstance(buf, TextIOWrapper):
-        return True
-    if isinstance(buf, BufferedReader):
-        if 'b' not in buf.mode:
-            return False
-    elif not isinstance(buf, BytesIO):
-        return False
 
     return True
 
