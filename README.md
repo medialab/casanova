@@ -186,7 +186,7 @@ def listener(event, row):
 
 resumer = RowCountResumer('./enriched-people.csv', listener=listener)
 
-# You can check is the the process was already started and can resume:
+# You can check if the process was already started and can resume:
 resumer.can_resume()
 
 # You can check how many lines were already processed:
