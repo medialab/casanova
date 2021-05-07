@@ -52,7 +52,7 @@ with open('./people.csv') as f:
   >>> ['name', 'surname']
 
   reader.headers
-  >>> HeadersPositions(name=0, surname=1)
+  >>> Headers(name=0, surname=1)
 
   name_pos = reader.headers.name
   name_pos = reader.headers['name']
@@ -125,7 +125,7 @@ with open('./people.csv') as f, \
 
   # The enricher inherits from casanova.reader
   enricher.headers
-  >>> HeadersPositions(name=0, surname=1)
+  >>> Headers(name=0, surname=1)
 
   # You can iterate over its rows
   name_pos = enricher.headers.name

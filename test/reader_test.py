@@ -211,3 +211,31 @@ class TestReader(object):
         reader = casanova.reader(generator())
 
         assert list(reader.cells('name')) == ['Victor', 'Emily']
+
+    def test_multiplexing(self):
+        with open('./test/resources/multiplex.csv') as f:
+            reader = casanova.reader(f, multiplex=('colors', '|'))
+
+            rows = list(reader)
+
+            assert rows == [
+                ['John', 'blue'],
+                ['John', 'yellow'],
+                ['John', 'orange'],
+                ['Mary', 'purple'],
+                ['Mary', 'blue'],
+                ['Eustache', ''],
+                ['Lizbeth', 'cyan']
+            ]
+
+        with open('./test/resources/multiplex.csv') as f:
+            reader = casanova.reader(f, multiplex=('colors', '|', 'color?'))
+
+            cells = list(reader.cells('color?'))
+
+            assert cells == ['blue', 'yellow', 'orange', 'purple', 'blue', '', 'cyan']
+
+        with open('./test/resources/multiplex.csv') as f:
+            reader = casanova.reader(f, multiplex=('colors', '|'), prebuffer_bytes=1024)
+
+            assert reader.total == 7

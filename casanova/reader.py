@@ -160,19 +160,34 @@ class Reader(object):
 
         # Multiplexing
         if multiplex is not None:
-            multiplexed_column = multiplex[0]
+            multiplex_column = multiplex[0]
             split_char = multiplex[1]
 
-            if multiplexed_column not in self.headers:
-                raise MissingColumnError(multiplexed_column)
+            if multiplex_column not in self.headers:
+                raise MissingColumnError(multiplex_column)
+
+            multiplex_pos = self.headers[multiplex_column]
 
             # New col
             if len(multiplex) == 3:
-                self.headers.rename(multiplexed_column, multiplex[2])
+                self.headers.rename(multiplex_column, multiplex[2])
 
-            # TODO: generator
-            # TODO: change reader
-            # TODO: change fieldnames
+            original_reader = self.reader
+
+            def reader_wrapper():
+                for row in original_reader:
+                    cell = row[multiplex_pos]
+
+                    if not cell or split_char not in cell:
+                        yield row
+
+                    else:
+                        for value in cell.split(split_char):
+                            copy = list(row)
+                            copy[multiplex_pos] = value
+                            yield copy
+
+            self.reader = reader_wrapper()
 
         # Prebuffering
         if prebuffer_bytes is not None and self.total is None:
