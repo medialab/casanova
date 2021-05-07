@@ -25,20 +25,10 @@ class Enricher(Reader):
     __supported_resumers__ = (RowCountResumer,)
 
     def __init__(self, input_file, output_file, no_headers=False,
-                 keep=None, add=None, dialect=None, quotechar=None,
-                 delimiter=None, prebuffer_bytes=None, total=None):
+                 keep=None, add=None, **kwargs):
 
         # Inheritance
-        reader_kwargs = {
-            'no_headers': no_headers,
-            'dialect': dialect,
-            'quotechar': quotechar,
-            'delimiter': delimiter,
-            'prebuffer_bytes': prebuffer_bytes,
-            'total': total
-        }
-
-        super().__init__(input_file, **reader_kwargs)
+        super().__init__(input_file, no_headers=no_headers, **kwargs)
 
         self.keep_indices = None
         self.output_fieldnames = self.fieldnames
