@@ -13,7 +13,7 @@ from ebbe import with_is_last
 
 from casanova.reader import Reader
 from casanova.utils import ensure_open
-from casanova.exceptions import EmptyFileError
+from casanova.exceptions import EmptyFileError, MissingColumnError
 
 END_OF_FILE = object()
 
@@ -103,7 +103,19 @@ class ReverseReader(Reader):
         with ReverseReader(input_file, **kwargs) as reader:
             batch = END_OF_FILE
 
-            for row, (value, cursor) in reader.cells((batch_value, batch_cursor), with_rows=True):
+            if batch_value not in reader.headers:
+                raise MissingColumnError(batch_value)
+
+            if batch_cursor not in reader.headers:
+                raise MissingColumnError(batch_cursor)
+
+            batch_value_pos = reader.headers[batch_value]
+            batch_cursor_pos = reader.headers[batch_cursor]
+
+            for row in reader:
+                value = row[batch_value_pos]
+                cursor = row[batch_cursor_pos]
+
                 if batch is END_OF_FILE:
                     batch = Batch(value)
 

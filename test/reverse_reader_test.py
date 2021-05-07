@@ -30,10 +30,6 @@ class TestReverseReader(object):
 
         assert last_cell == 'Julia'
 
-        last_record = casanova.reverse_reader.last_cell('./test/resources/people.csv', ('surname', 'name'))
-
-        assert last_record == ['Stone', 'Julia']
-
         last_cell = casanova.reverse_reader.last_cell('./test/resources/people.csv.gz', 'name')
 
         assert last_cell == 'Julia'

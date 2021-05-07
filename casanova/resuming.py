@@ -150,7 +150,7 @@ class ThreadSafeResumer(Resumer):
         with self.open(mode='r') as f:
             reader = Reader(f)
 
-            pos = reader.pos.get(enricher.index_column)
+            pos = reader.headers.get(enricher.index_column)
 
             if pos is None:
                 raise MissingColumnError(enricher.index_column)

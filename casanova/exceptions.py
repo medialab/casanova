@@ -16,6 +16,10 @@ class EmptyFileError(CasanovaError):
     pass
 
 
+class NoHeadersError(CasanovaError):
+    pass
+
+
 class MissingColumnError(CasanovaError):
     pass
 

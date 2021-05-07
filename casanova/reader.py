@@ -9,9 +9,10 @@ import csv
 from collections import deque
 from collections.abc import Iterable
 from io import IOBase
+from operator import itemgetter
 
-from casanova.utils import is_contiguous, ensure_open, suppress_BOM, count_bytes_in_row
-from casanova.exceptions import EmptyFileError, MissingColumnError
+from casanova.utils import ensure_open, suppress_BOM, count_bytes_in_row
+from casanova.exceptions import EmptyFileError, MissingColumnError, NoHeadersError
 
 
 def validate_multiplex_tuple(multiplex):
@@ -36,24 +37,19 @@ class DictLikeRow(object):
         return self.__getitem__(key)
 
 
-class HeadersPositions(object):
-    def __init__(self, headers):
-        if isinstance(headers, int):
-            self.__headers = list(range(headers))
-            self.__mapping = {i: i for i in self.__headers}
-        else:
-            self.__headers = headers
-            self.__mapping = {h: i for i, h in enumerate(self.__headers)}
+class Headers(object):
+    def __init__(self, fieldnames):
+        self.__mapping = {h: i for i, h in enumerate(fieldnames)}
 
     def rename(self, old_name, new_name):
-        i = self[old_name]
+        if old_name == new_name:
+            raise TypeError
 
-        self.__headers[i] = new_name
-        self.__mapping[new_name] = i
+        self.__mapping[new_name] = self[old_name]
         del self.__mapping[old_name]
 
     def __len__(self):
-        return len(self.__headers)
+        return len(self.__mapping)
 
     def __getitem__(self, key):
         return self.__mapping[key]
@@ -65,7 +61,7 @@ class HeadersPositions(object):
         return key in self.__mapping
 
     def __iter__(self):
-        yield from self.__mapping.items()
+        yield from sorted(self.__mapping.items(), key=itemgetter(1))
 
     def as_dict(self):
         return self.__mapping.copy()
@@ -84,7 +80,7 @@ class HeadersPositions(object):
 
         representation = '<' + class_name
 
-        for h, i in self.__mapping.items():
+        for h, i in self:
             if h.isidentifier():
                 representation += ' %s=%s' % (h, i)
             else:
@@ -136,12 +132,11 @@ class Reader(object):
         else:
             self.reader = csv.reader(input_file, **reader_kwargs)
 
-        self.fieldnames = None
         self.buffered_rows = deque()
         self.was_completely_buffered = False
         self.total = total
-        self.can_slice = True
-        self.binary = False
+        self.headers = None
+        self.expected_row_length = None
 
         # Reading headers
         if no_headers:
@@ -150,30 +145,30 @@ class Reader(object):
             except StopIteration:
                 raise EmptyFileError
 
-            self.pos = HeadersPositions(len(self.buffered_rows[0]))
+            self.expected_row_length = len(self.buffered_rows[0])
         else:
             try:
-                self.fieldnames = next(self.reader)
+                fieldnames = next(self.reader)
 
-                if self.fieldnames:
-                    self.fieldnames[0] = suppress_BOM(self.fieldnames[0])
+                if fieldnames:
+                    fieldnames[0] = suppress_BOM(fieldnames[0])
 
             except StopIteration:
                 raise EmptyFileError
 
-            self.pos = HeadersPositions(self.fieldnames)
+            self.headers = Headers(fieldnames)
 
         # Multiplexing
         if multiplex is not None:
             multiplexed_column = multiplex[0]
             split_char = multiplex[1]
 
-            if multiplexed_column not in self.pos:
+            if multiplexed_column not in self.headers:
                 raise MissingColumnError(multiplexed_column)
 
             # New col
             if len(multiplex) == 3:
-                self.pos.rename(multiplexed_column, multiplex[2])
+                self.headers.rename(multiplexed_column, multiplex[2])
 
             # TODO: generator
             # TODO: change reader
@@ -198,9 +193,23 @@ class Reader(object):
                 self.buffered_rows.append(row)
 
     def __repr__(self):
-        columns_info = ' '.join('%s=%s' % t for t in zip(self.pos._fields, self.pos))
+        columns_info = ' '.join('%s=%s' % t for t in zip(self.headers._fields, self.headers))
 
         return '<%s %s>' % (self.namespace, columns_info)
+
+    @property
+    def fieldnames(self):
+        if self.headers is None:
+            return None
+
+        return [k for k, v in self.headers]
+
+    @property
+    def row_len(self):
+        if self.expected_row_length is not None:
+            return self.expected_row_length
+
+        return len(self.headers)
 
     def iter(self):
         while self.buffered_rows:
@@ -209,63 +218,40 @@ class Reader(object):
         yield from self.reader
 
     def wrap(self, row):
-        return self.pos.wrap(row)
+        return self.headers.wrap(row)
 
     def __iter__(self):
         return self.iter()
 
-    def __records(self, columns, with_rows=False):
-        try:
-            pos = self.pos.collect(columns)
-        except KeyError:
-            raise MissingColumnError
-
-        if self.can_slice and is_contiguous(pos):
-            if len(pos) == 1:
-                s = slice(pos[0], pos[0] + 1)
-            else:
-                s = slice(pos[0], pos[1] + 1)
-
-            if with_rows:
-                def iterator():
-                    for row in self.iter():
-                        yield row, row[s]
-            else:
-                def iterator():
-                    for row in self.iter():
-                        yield row[s]
-        else:
-            if with_rows:
-                def iterator():
-                    for row in self.iter():
-                        yield row, [row[i] for i in pos]
-            else:
-                def iterator():
-                    for row in self.iter():
-                        yield [row[i] for i in pos]
-
-        return iterator()
-
     def __cells(self, column, with_rows=False):
-        i = self.pos.get(column)
+        if not isinstance(column, int):
+            if self.headers is None:
+                raise NoHeadersError
 
-        if i is None:
-            raise MissingColumnError(column)
+            pos = self.headers.get(column)
+
+            if pos is None:
+                raise MissingColumnError(column)
+        else:
+            if column >= self.row_len:
+                raise MissingColumnError
+
+            pos = column
 
         if with_rows:
             def iterator():
                 for row in self.iter():
-                    yield row, row[i]
+                    yield row, row[pos]
         else:
             def iterator():
                 for row in self.iter():
-                    yield row[i]
+                    yield row[pos]
 
         return iterator()
 
     def cells(self, column, with_rows=False):
         if not isinstance(column, (str, int)):
-            return self.__records(column, with_rows=with_rows)
+            raise TypeError
 
         return self.__cells(column, with_rows=with_rows)
 

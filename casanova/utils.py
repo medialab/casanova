@@ -8,18 +8,6 @@ import re
 import csv
 import gzip
 from io import StringIO
-from ebbe import with_prev
-
-
-def is_contiguous(l):
-    for p, n in with_prev(l):
-        if p is None:
-            continue
-
-        if p != n - 1:
-            return False
-
-    return True
 
 
 def encoding_fingerprint(encoding):

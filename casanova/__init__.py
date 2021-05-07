@@ -11,7 +11,7 @@ from casanova.enricher import (
 from casanova.namedrecord import namedrecord
 from casanova.reader import (
     Reader,
-    HeadersPositions,
+    Headers,
     DictLikeRow
 )
 from casanova.resuming import (

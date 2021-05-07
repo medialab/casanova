@@ -6,7 +6,7 @@ import casanova
 import pytest
 from io import StringIO
 
-from casanova.reader import DictLikeRow, HeadersPositions
+from casanova.reader import DictLikeRow, Headers
 from casanova.exceptions import (
     EmptyFileError,
     MissingColumnError
@@ -31,36 +31,45 @@ class TestReader(object):
             casanova.reader(StringIO('name\nYomgui'), multiplex=('surname', 'test'))
 
     def test_headers_positions(self):
-        pass
+        headers = Headers(['name', 'surname'])
+
+        assert len(headers) == 2
+        assert list(headers) == [('name', 0), ('surname', 1)]
+
+        headers.rename('name', 'first_name')
+
+        assert list(headers) == [('first_name', 0), ('surname', 1)]
 
     def test_basics(self):
         with open('./test/resources/people.csv') as f:
             reader = casanova.reader(f)
 
-            assert reader.pos.name == 0
-            assert reader.pos.surname == 1
+            assert reader.row_len == 2
 
-            assert 'name' in reader.pos
-            assert 'whatever' not in reader.pos
+            assert reader.headers.name == 0
+            assert reader.headers.surname == 1
 
-            assert reader.pos['name'] == 0
-            assert reader.pos['surname'] == 1
+            assert 'name' in reader.headers
+            assert 'whatever' not in reader.headers
 
-            assert reader.pos.get('name') == 0
-            assert reader.pos.get('whatever') is None
-            assert reader.pos.get('whatever', 1) == 1
+            assert reader.headers['name'] == 0
+            assert reader.headers['surname'] == 1
 
-            assert len(reader.pos) == 2
+            assert reader.headers.get('name') == 0
+            assert reader.headers.get('whatever') is None
+            assert reader.headers.get('whatever', 1) == 1
+
+            assert len(reader.headers) == 2
             assert reader.fieldnames == ['name', 'surname']
 
-            assert list(reader.pos) == [('name', 0), ('surname', 1)]
-            assert dict(list(reader.pos)) == {'name': 0, 'surname': 1}
-            assert reader.pos.as_dict() == {'name': 0, 'surname': 1}
+            assert list(reader.headers) == [('name', 0), ('surname', 1)]
+            assert dict(list(reader.headers)) == {'name': 0, 'surname': 1}
+            assert reader.headers.as_dict() == {'name': 0, 'surname': 1}
 
             with pytest.raises(KeyError):
-                reader.pos['whatever']
+                reader.headers['whatever']
 
-            surnames = [row[reader.pos.surname] for row in reader]
+            surnames = [row[reader.headers.surname] for row in reader]
             assert surnames == ['Matthews', 'Sue', 'Stone']
 
     def test_dialect(self):
@@ -86,37 +95,6 @@ class TestReader(object):
             names = [(row[1], name) for row, name in reader.cells('name', with_rows=True)]
 
             assert names == [('Matthews', 'John'), ('Sue', 'Mary'), ('Stone', 'Julia')]
-
-    def test_records(self):
-        with open('./test/resources/people.csv') as f:
-            reader = casanova.reader(f)
-
-            with pytest.raises(MissingColumnError):
-                reader.cells(['whatever'])
-
-            names = []
-            surnames = []
-
-            for name, surname in reader.cells(['name', 'surname']):
-                names.append(name)
-                surnames.append(surname)
-
-            assert names == ['John', 'Mary', 'Julia']
-            assert surnames == ['Matthews', 'Sue', 'Stone']
-
-        with open('./test/resources/people.csv') as f:
-            reader = casanova.reader(f)
-
-            names = []
-            surnames = []
-
-            for row, (name, surname) in reader.cells(['name', 'surname'], with_rows=True):
-                assert len(row) == 2
-                names.append(name)
-                surnames.append(surname)
-
-            assert names == ['John', 'Mary', 'Julia']
-            assert surnames == ['Matthews', 'Sue', 'Stone']
 
     def test_no_headers(self):
         with open('./test/resources/no_headers.csv') as f:
@@ -188,7 +166,7 @@ class TestReader(object):
             reader = casanova.reader(f)
 
             assert reader.fieldnames == ['name', 'color']
-            assert 'name' in reader.pos
+            assert 'name' in reader.headers
 
     def test_wrap(self):
         with open('./test/resources/people.csv') as f:

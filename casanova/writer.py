@@ -8,7 +8,7 @@
 import csv
 
 from casanova.resuming import Resumer, LastCellResumer
-from casanova.reader import HeadersPositions
+from casanova.reader import Headers
 
 
 class Writer(object):
@@ -16,7 +16,7 @@ class Writer(object):
 
     def __init__(self, output_file, fieldnames):
         self.fieldnames = fieldnames
-        self.pos = HeadersPositions(fieldnames)
+        self.headers = Headers(fieldnames)
 
         can_resume = False
 

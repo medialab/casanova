@@ -51,30 +51,26 @@ with open('./people.csv') as f:
   reader.fieldnames
   >>> ['name', 'surname']
 
-  reader.pos
+  reader.headers
   >>> HeadersPositions(name=0, surname=1)
 
-  name_pos = reader.pos.name
-  name_pos = reader.pos['name']
+  name_pos = reader.headers.name
+  name_pos = reader.headers['name']
 
-  'name' in reader.pos
+  'name' in reader.headers
   >>> True
 
   # Iterating over the rows
   for row in reader:
     name = row[name_pos] # it's better to cache your pos outside the loop
-    name = row[reader.pos.name] # this works, but is slower
+    name = row[reader.headers.name] # this works, but is slower
 
   # Interested in a single column?
   for name in reader.cells('name'):
     print(name)
 
-  # Interested in several columns (handy but has a slight perf cost!)
-  for name, surname in reader.cells(['name', 'surname']):
-    print(name, surname)
-
   # Need also the current row when iterating on cells?
-  for row, (name, surname) in reader.cells(['name', 'surname'], with_rows=True):
+  for row, name in reader.cells('name', with_rows=True):
     print(row, name, surname)
 
   # No headers? No problem.
@@ -128,11 +124,11 @@ with open('./people.csv') as f, \
   enricher = casanova.enricher(f, of)
 
   # The enricher inherits from casanova.reader
-  enricher.pos
+  enricher.headers
   >>> HeadersPositions(name=0, surname=1)
 
   # You can iterate over its rows
-  name_pos = enricher.pos.name
+  name_pos = enricher.headers.name
   for row in enricher:
 
     # Editing a cell, so that everyone is called John
@@ -159,7 +155,7 @@ with open('./people.csv') as f, \
 *Arguments*
 
 * **input_file** *file|str*: file object to read or path to open.
-* **output_file** *file*: file object to write.
+* **output_file** *file|Resumer*: file object to write.
 * **no_headers** *?bool* [`False`]: whether your CSV file is headless.
 * **add** *?iterable<str|int>*: names of columns to add to output.
 * **keep** *?iterable<str|int>*: names of colums to keep from input.

@@ -17,7 +17,7 @@ from casanova.resuming import (
 from casanova.exceptions import MissingColumnError
 from casanova.reader import (
     Reader,
-    HeadersPositions
+    Headers
 )
 
 
@@ -47,7 +47,7 @@ class Enricher(Reader):
 
         if keep is not None:
             try:
-                self.keep_indices = self.pos.collect(keep)
+                self.keep_indices = self.headers.collect(keep)
             except KeyError:
                 raise MissingColumnError
 
@@ -58,7 +58,10 @@ class Enricher(Reader):
             self.added_count = len(add)
             self.padding = [''] * self.added_count
 
-        self.output_pos = HeadersPositions(self.output_fieldnames if not no_headers else len(self.output_fieldnames))
+        self.output_headers = None
+
+        if self.headers is not None:
+            self.output_headers = Headers(self.output_fieldnames if not no_headers else len(self.output_fieldnames))
 
         # Resuming?
         self.resumer = None
@@ -105,7 +108,7 @@ class Enricher(Reader):
                 yield row
 
     def __repr__(self):
-        columns_info = ' '.join('%s=%s' % t for t in self.pos)
+        columns_info = ' '.join('%s=%s' % t for t in self.headers)
 
         return '<%s%s %s>' % (
             self.__class__.__name__,

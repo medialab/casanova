@@ -226,41 +226,6 @@ class TestEnricher(object):
 
         assert names == [(0, 'John'), (1, 'Mary'), (2, 'Julia')]
 
-    def test_threadsafe_records(self, tmpdir):
-        def job(payload):
-            i, row = payload
-            s = int(row[2])
-            time.sleep(s * .01)
-
-            return i, row
-
-        output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
-        with open('./test/resources/people_unordered.csv') as f, \
-                open(output_path, 'w') as of:
-
-            enricher = casanova.threadsafe_enricher(
-                f, of,
-                add=('x2',),
-                keep=('name',)
-            )
-
-            records = [t for t in enricher.cells(['name', 'time'])]
-
-        assert records == [(0, ['John', '3']), (1, ['Mary', '1']), (2, ['Julia', '2'])]
-
-        with open('./test/resources/people_unordered.csv') as f, \
-                open(output_path, 'w') as of:
-
-            enricher = casanova.threadsafe_enricher(
-                f, of,
-                add=('x2',),
-                keep=('name',)
-            )
-
-            records = [(i, r) for i, row, r in enricher.cells(['name', 'time'], with_rows=True)]
-
-        assert records == [(0, ['John', '3']), (1, ['Mary', '1']), (2, ['Julia', '2'])]
-
     def test_threadsafe_resumable(self, tmpdir):
         log = defaultdict(list)
 
@@ -345,9 +310,9 @@ class TestEnricher(object):
              open(output_path, 'w') as of:
             enricher = casanova.enricher(f, of, add=('line',), keep=('surname',))
 
-            assert len(enricher.output_pos) == 2
-            assert enricher.output_pos.surname == 0
-            assert enricher.output_pos.line == 1
+            assert len(enricher.output_headers) == 2
+            assert enricher.output_headers.surname == 0
+            assert enricher.output_headers.line == 1
 
     def test_batch_enricher(self, tmpdir):
         output_path = str(tmpdir.join('./enriched.csv'))
