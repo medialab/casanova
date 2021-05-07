@@ -11,7 +11,7 @@ from collections.abc import Iterable
 from io import IOBase
 from operator import itemgetter
 
-from casanova.utils import ensure_open, suppress_BOM, count_bytes_in_row
+from casanova.utils import ensure_open, suppress_BOM, size_of_row_in_file
 from casanova.exceptions import EmptyFileError, MissingColumnError, NoHeadersError
 
 
@@ -204,7 +204,7 @@ class Reader(object):
                     self.total = len(self.buffered_rows)
                     break
 
-                buffered_bytes += count_bytes_in_row(row)
+                buffered_bytes += size_of_row_in_file(row)
                 self.buffered_rows.append(row)
 
     def __repr__(self):

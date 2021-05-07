@@ -38,8 +38,33 @@ def suppress_BOM(string):
     return re.sub(BOM_RE, '', string)
 
 
-def count_bytes_in_row(row):
-    return sum(len(cell) for cell in row) * 2
+def size_of_row_in_memory(row):
+    """
+    Returns the approximate amount of bytes needed to represent the given row into
+    the python's program memory.
+
+    The magic numbers are based on `sys.getsizeof`.
+    """
+    a = 64 + 8 * len(row)  # Size of the array
+    a += sum(49 + len(cell) for cell in row)  # Size of the contained strings
+
+    return a
+
+
+def size_of_row_in_file(row):
+    """
+    Returns the approximate amount of bytes originally used to represent the
+    given row in its CSV file. It assumes the delimiter uses only one byte.
+
+    I also ignores quotes (-2 bytes) around escaped cells if they were
+    originally present.
+
+    I also don't think that it counts 16 bit chars correctly.
+    """
+    a = max(0, len(row) - 1)
+    a += sum(8 * len(cell) for cell in row)
+
+    return a
 
 
 def CsvCellIO(column, value):

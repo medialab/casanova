@@ -1,14 +1,23 @@
 # =============================================================================
 # Casanova Utils Unit Tests
 # =============================================================================
-from casanova.utils import count_bytes_in_row, CsvCellIO
+from casanova.utils import (
+    size_of_row_in_memory,
+    size_of_row_in_file,
+    CsvCellIO
+)
 
 
 class TestUtils(object):
-    def test_count_bytes_in_row(self):
-        assert count_bytes_in_row([]) == 0
-        assert count_bytes_in_row(['test']) == 8
-        assert count_bytes_in_row(['hello', 'world']) == 20
+    def test_size_of_row_in_memory(self):
+        assert size_of_row_in_memory([]) == 64
+        assert size_of_row_in_memory(['test']) == 125
+        assert size_of_row_in_memory(['hello', 'world']) == 188
+
+    def test_size_of_row_in_file(self):
+        assert size_of_row_in_file([]) == 0
+        assert size_of_row_in_file(['test']) == 32
+        assert size_of_row_in_file(['hello', 'world']) == 81
 
     def test_csv_cell_io(self):
         assert CsvCellIO('name', 'Yomgui').getvalue().strip() == 'name\nYomgui'
