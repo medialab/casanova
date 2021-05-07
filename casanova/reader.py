@@ -14,6 +14,14 @@ from casanova.utils import is_contiguous, ensure_open, suppress_BOM, count_bytes
 from casanova.exceptions import EmptyFileError, MissingColumnError
 
 
+def validate_multiplex_tuple(multiplex):
+    return (
+        isinstance(multiplex, tuple) and
+        len(multiplex) in [2, 3] and
+        all(isinstance(t, str) for t in multiplex)
+    )
+
+
 class DictLikeRow(object):
     __slots__ = ('__mapping', '__row')
 
@@ -36,6 +44,13 @@ class HeadersPositions(object):
         else:
             self.__headers = headers
             self.__mapping = {h: i for i, h in enumerate(self.__headers)}
+
+    def rename(self, old_name, new_name):
+        i = self[old_name]
+
+        self.__headers[i] = new_name
+        self.__mapping[new_name] = i
+        del self.__mapping[old_name]
 
     def __len__(self):
         return len(self.__headers)
@@ -85,7 +100,7 @@ class Reader(object):
 
     def __init__(self, input_file, no_headers=False, encoding='utf-8',
                  dialect=None, quotechar=None, delimiter=None, prebuffer_bytes=None,
-                 total=None):
+                 total=None, multiplex=None):
 
         if isinstance(input_file, IOBase):
             input_type = 'file'
@@ -100,6 +115,9 @@ class Reader(object):
 
         else:
             raise TypeError('expecting a file, a path or an iterable of rows')
+
+        if multiplex is not None and not validate_multiplex_tuple(multiplex):
+            raise TypeError('`multiplex` should be a 2-tuple or 3-tuple containing the column to split, the split character and optionally a new name for the column')
 
         reader_kwargs = {}
 
@@ -125,6 +143,7 @@ class Reader(object):
         self.can_slice = True
         self.binary = False
 
+        # Reading headers
         if no_headers:
             try:
                 self.buffered_rows.append(next(self.reader))
@@ -144,6 +163,23 @@ class Reader(object):
 
             self.pos = HeadersPositions(self.fieldnames)
 
+        # Multiplexing
+        if multiplex is not None:
+            multiplexed_column = multiplex[0]
+            split_char = multiplex[1]
+
+            if multiplexed_column not in self.pos:
+                raise MissingColumnError(multiplexed_column)
+
+            # New col
+            if len(multiplex) == 3:
+                self.pos.rename(multiplexed_column, multiplex[2])
+
+            # TODO: generator
+            # TODO: change reader
+            # TODO: change fieldnames
+
+        # Prebuffering
         if prebuffer_bytes is not None and self.total is None:
             if not isinstance(prebuffer_bytes, int) or prebuffer_bytes < 1:
                 raise TypeError('expecting a positive integer as "prebuffer_bytes" kwarg')

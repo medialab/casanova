@@ -7,6 +7,7 @@
 #
 from threading import Lock
 from os.path import isfile, getsize
+from collections import deque
 
 from casanova._namedtuple import future_namedtuple
 from casanova.reader import Reader
@@ -27,7 +28,7 @@ class Resumer(object):
         self.output_file = None
         self.lock = Lock()
         self.popped = False
-        self.buffer = []
+        self.buffer = deque()
 
     def can_resume(self):
         return isfile(self.path) and getsize(self.path) > 0
@@ -102,8 +103,8 @@ class Resumer(object):
         if hasattr(self, 'filter'):
             raise NotImplementedError
 
-        yield from self.buffer
-        self.buffer = []
+        while self.buffer:
+            yield self.buffer.popleft()
 
 
 class RowCountResumer(Resumer):

@@ -6,7 +6,7 @@ import casanova
 import pytest
 from io import StringIO
 
-from casanova.reader import DictLikeRow
+from casanova.reader import DictLikeRow, HeadersPositions
 from casanova.exceptions import (
     EmptyFileError,
     MissingColumnError
@@ -23,6 +23,15 @@ class TestReader(object):
 
         with pytest.raises(TypeError):
             casanova.reader(StringIO('name\nYomgui'), buffer=-456)
+
+        with pytest.raises(TypeError, match='multiplex'):
+            casanova.reader(StringIO('name\nYomgui'), multiplex=(45, 'test'))
+
+        with pytest.raises(MissingColumnError):
+            casanova.reader(StringIO('name\nYomgui'), multiplex=('surname', 'test'))
+
+    def test_headers_positions(self):
+        pass
 
     def test_basics(self):
         with open('./test/resources/people.csv') as f:
