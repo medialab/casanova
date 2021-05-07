@@ -204,7 +204,7 @@ class Reader(object):
                     self.total = len(self.buffered_rows)
                     break
 
-                buffered_bytes = count_bytes_in_row(row)
+                buffered_bytes += count_bytes_in_row(row)
                 self.buffered_rows.append(row)
 
     def __repr__(self):
