@@ -62,7 +62,7 @@ def size_of_row_in_file(row):
     I also don't think that it counts 16 bit chars correctly.
     """
     a = max(0, len(row) - 1)
-    a += sum(8 * len(cell) for cell in row)
+    a += sum(len(cell) for cell in row)
 
     return a
 

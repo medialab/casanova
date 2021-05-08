@@ -16,8 +16,8 @@ class TestUtils(object):
 
     def test_size_of_row_in_file(self):
         assert size_of_row_in_file([]) == 0
-        assert size_of_row_in_file(['test']) == 32
-        assert size_of_row_in_file(['hello', 'world']) == 81
+        assert size_of_row_in_file(['test']) == 4
+        assert size_of_row_in_file(['hello', 'world']) == 11
 
     def test_csv_cell_io(self):
         assert CsvCellIO('name', 'Yomgui').getvalue().strip() == 'name\nYomgui'
