@@ -1,6 +1,5 @@
 from benchmark.utils import Timer
 import click
-import sys
 import csv
 import casanova
 
@@ -47,12 +46,6 @@ def bench(path, column, headers=True, skip_std=True):
         with open(path) as f:
             reader = casanova.reader(f, no_headers=not headers)
             for row, value in reader.cells(column, with_rows=True):
-                a = value
-
-    with Timer('casanova.reader: records'):
-        with open(path) as f:
-            reader = casanova.reader(f, no_headers=not headers)
-            for value, in reader.cells([column]):
                 a = value
 
 if __name__ == '__main__':
