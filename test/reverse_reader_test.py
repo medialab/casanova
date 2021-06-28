@@ -32,8 +32,9 @@ class TestReverseReader(object):
 
         with open('./test/resources/tricky-reverse.csv') as f:
             reverse_reader = casanova.reverse_reader(f)
+            rows_read_in_reverse = list(reversed(list(reverse_reader)))
 
-            assert list(reversed(list(reverse_reader))) == rows
+            assert rows_read_in_reverse == rows
 
     def test_last_cell(self):
         last_cell = casanova.reverse_reader.last_cell('./test/resources/people.csv', 'name')
