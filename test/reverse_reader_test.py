@@ -25,20 +25,15 @@ class TestReverseReader(object):
 
         assert names == ['Julia', 'Mary', 'John', 'name']
 
-    # def test_tricky(self):
-        # with open('./test/resources/tricky-reverse.csv') as f:
-        #     reader = casanova.reader(f)
-        #     rows = list(reader)
+    def test_tricky(self):
+        with open('./test/resources/tricky-reverse.csv') as f:
+            reader = casanova.reader(f)
+            rows = list(reader)
 
-        # with open('./test/resources/tricky-reverse.csv') as f:
-        #     reverse_reader = casanova.reverse_reader(f)
+        with open('./test/resources/tricky-reverse.csv') as f:
+            reverse_reader = casanova.reverse_reader(f)
 
-        #     print(list(reverse_reader))
-
-        # with open('./test/resources/tricky-reverse.csv') as f:
-        #     reverse_reader = casanova.reverse_reader(f)
-
-        #     assert list(reverse_reader) == rows
+            assert list(reversed(list(reverse_reader))) == rows
 
     def test_last_cell(self):
         last_cell = casanova.reverse_reader.last_cell('./test/resources/people.csv', 'name')

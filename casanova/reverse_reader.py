@@ -58,8 +58,9 @@ class Batch(object):
 class ReverseReader(Reader):
     namespace = 'casanova.reverse_reader'
 
-    def __init__(self, input_file, **kwargs):
-        super().__init__(input_file, **kwargs)
+    def __init__(self, input_file, quotechar=None, **kwargs):
+        super().__init__(input_file, quotechar=quotechar, **kwargs)
+        quotechar = quotechar or '"'
 
         self.backwards_file = ensure_open(self.input_file.name, mode='rb')
 
@@ -69,10 +70,25 @@ class ReverseReader(Reader):
             DEFAULT_BUFFER_SIZE
         )
 
-        backwards_reader = csv.reader(backwards_iterator)
+        def correctly_escaped_backwards_iterator():
+            acc = None
+
+            for line in backwards_iterator:
+                if acc is not None:
+                    acc = line + '\n' + acc
+                else:
+                    acc = line
+
+                if acc.count(quotechar) % 2 == 0:
+                    yield acc
+                    acc = None
+
+            if acc is not None:
+                yield acc
+
+        backwards_reader = csv.reader(correctly_escaped_backwards_iterator())
 
         def generator():
-
             for is_last, row in with_is_last(backwards_reader):
                 if not is_last or self.fieldnames is None:
                     yield row
