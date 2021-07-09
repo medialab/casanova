@@ -6,6 +6,7 @@ import casanova
 import pytest
 from io import StringIO
 
+from casanova.defaults import set_default_prebuffer_bytes
 from casanova.reader import DictLikeRow, Headers
 from casanova.exceptions import (
     EmptyFileError,
@@ -239,3 +240,17 @@ class TestReader(object):
             reader = casanova.reader(f, multiplex=('colors', '|'), prebuffer_bytes=1024)
 
             assert reader.total == 7
+
+    def test_global_defaults(self):
+        with pytest.raises(TypeError):
+            set_default_prebuffer_bytes([])
+
+        set_default_prebuffer_bytes(1024)
+
+        with open('./test/resources/people.csv') as f:
+            reader = casanova.reader(f)
+
+            assert list(reader.cells('surname')) == ['Matthews', 'Sue', 'Stone']
+            assert reader.total == 3
+
+        set_default_prebuffer_bytes(None)

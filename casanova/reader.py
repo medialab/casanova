@@ -11,6 +11,7 @@ from collections.abc import Iterable
 from io import IOBase
 from operator import itemgetter
 
+from casanova.defaults import DEFAULTS
 from casanova.utils import ensure_open, suppress_BOM, size_of_row_in_file
 from casanova.exceptions import EmptyFileError, MissingColumnError, NoHeadersError
 
@@ -98,6 +99,11 @@ class Reader(object):
                  dialect=None, quotechar=None, delimiter=None, prebuffer_bytes=None,
                  total=None, multiplex=None):
 
+        # Resolving global defaults
+        if prebuffer_bytes is None:
+            prebuffer_bytes = DEFAULTS['prebuffer_bytes']
+
+        # Detecting input type
         if isinstance(input_file, IOBase):
             input_type = 'file'
 
