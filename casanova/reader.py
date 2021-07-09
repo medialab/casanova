@@ -208,7 +208,7 @@ class Reader(object):
                 self.buffered_rows.append(row)
 
     def __repr__(self):
-        columns_info = ' '.join('%s=%s' % t for t in zip(self.headers._fields, self.headers))
+        columns_info = ' '.join('%s=%s' % t for t in self.headers)
 
         return '<%s %s>' % (self.namespace, columns_info)
 
