@@ -9,6 +9,7 @@ import csv
 from ebbe import with_is_last
 
 from casanova.resuming import (
+    LastCellComparisonResumer,
     Resumer,
     RowCountResumer,
     ThreadSafeResumer,
@@ -22,7 +23,7 @@ from casanova.reader import (
 
 
 class Enricher(Reader):
-    __supported_resumers__ = (RowCountResumer,)
+    __supported_resumers__ = (RowCountResumer, LastCellComparisonResumer)
 
     def __init__(self, input_file, output_file, no_headers=False,
                  keep=None, add=None, **kwargs):

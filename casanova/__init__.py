@@ -19,7 +19,8 @@ from casanova.resuming import (
     RowCountResumer,
     ThreadSafeResumer,
     BatchResumer,
-    LastCellResumer
+    LastCellResumer,
+    LastCellComparisonResumer
 )
 from casanova.reverse_reader import (
     ReverseReader,

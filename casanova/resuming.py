@@ -249,3 +249,15 @@ class LastCellResumer(Resumer):
 
     def get_state(self):
         return self.last_cell
+
+
+class LastCellComparisonResumer(LastCellResumer):
+    '''
+    Warning : this resumer will not work as desired if the column read contains duplicate values.
+    '''
+    def resume(self, enricher):
+        for row in enricher:
+            self.emit('input.row', row)
+
+            if row[self.value_column] == self.last_cell:
+                break
