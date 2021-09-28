@@ -14,6 +14,7 @@ from quenouille import imap_unordered
 from test.utils import collect_csv
 
 from casanova.resuming import (
+    LastCellComparisonResumer,
     RowCountResumer,
     ThreadSafeResumer
 )
@@ -162,6 +163,53 @@ class TestEnricher(object):
             'output.row': [['John', '2']],
             'input.row': [['John', 'Matthews']]
         }
+
+    def test_resumable_last_cell_comparison(self, tmpdir):
+
+        log = defaultdict(list)
+
+        def listener(name, row):
+            log[name].append(list(row))
+
+        output_path = str(tmpdir.join('./enriched-resumable.csv'))
+
+        resumer = LastCellComparisonResumer(output_path, value_column=0, listener=listener)
+
+        with open('./test/resources/people.csv') as f, resumer:
+
+            enricher = casanova.enricher(
+                f, resumer,
+                add=('x2',),
+                keep=('name',)
+            )
+
+            row = next(iter(enricher))
+            enricher.writerow(row, [2])
+
+        assert collect_csv(output_path) == [
+            ['name', 'x2'],
+            ['John', '2']
+        ]
+
+        with open('./test/resources/people.csv') as f, resumer:
+
+            enricher = casanova.enricher(
+                f, resumer,
+                add=('x2',),
+                keep=('name',)
+            )
+
+            for i, row in enumerate(enricher):
+                enricher.writerow(row, [(i + 2) * 2])
+
+        assert collect_csv(output_path) == [
+            ['name', 'x2'],
+            ['John', '2'],
+            ['Mary', '4'],
+            ['Julia', '6']
+        ]
+
+        assert log == {'input.row': [['John', 'Matthews']]}
 
     def test_threadsafe(self, tmpdir):
         def job(payload):
