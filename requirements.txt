@@ -6,7 +6,7 @@ click==7.1.1
 importchecker==2.0
 pycodestyle==2.4.0
 pytest==3.5.1
-quenouille==0.6.0
+quenouille==1.4.2
 tqdm==4.31.1
 twine==1.11.0
 wheel==0.34.2
