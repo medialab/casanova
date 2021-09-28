@@ -173,7 +173,7 @@ class TestEnricher(object):
 
         output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
         with open('./test/resources/people_unordered.csv') as f, \
-                open(output_path, 'w', newline='') as of:
+             open(output_path, 'w', newline='') as of:
 
             enricher = casanova.threadsafe_enricher(
                 f, of,
@@ -184,24 +184,20 @@ class TestEnricher(object):
             for i, row in imap_unordered(enricher, job, 3):
                 enricher.writerow(i, row, [(i + 1) * 2])
 
-        assert collect_csv(output_path) == [
+        def sort_output(o):
+            return sorted(tuple(i) for i in o)
+
+        assert sort_output(collect_csv(output_path)) == sort_output([
             ['name', 'index', 'x2'],
             ['Mary', '1', '4'],
             ['Julia', '2', '6'],
             ['John', '0', '2']
-        ]
+        ])
 
     def test_threadsafe_cells(self, tmpdir):
-        def job(payload):
-            i, row = payload
-            s = int(row[2])
-            time.sleep(s * .01)
-
-            return i, row
-
         output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
         with open('./test/resources/people_unordered.csv') as f, \
-                open(output_path, 'a+') as of:
+             open(output_path, 'a+') as of:
 
             enricher = casanova.threadsafe_enricher(
                 f, of,
@@ -214,7 +210,7 @@ class TestEnricher(object):
         assert names == [(0, 'John'), (1, 'Mary'), (2, 'Julia')]
 
         with open('./test/resources/people_unordered.csv') as f, \
-                open(output_path, 'a+') as of:
+             open(output_path, 'a+') as of:
 
             enricher = casanova.threadsafe_enricher(
                 f, of,
