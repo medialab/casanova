@@ -37,7 +37,7 @@ class TestEnricher(object):
     def test_basics(self, tmpdir):
         output_path = str(tmpdir.join('./enriched.csv'))
         with open('./test/resources/people.csv') as f, \
-             open(output_path, 'w') as of:
+             open(output_path, 'w', newline='') as of:
             enricher = casanova.enricher(f, of, add=('line',))
 
             for i, row in enumerate(enricher):
@@ -53,7 +53,7 @@ class TestEnricher(object):
     def test_dialect(self, tmpdir):
         output_path = str(tmpdir.join('./enriched.csv'))
         with open('./test/resources/semicolons.csv') as f, \
-             open(output_path, 'w') as of:
+             open(output_path, 'w', newline='') as of:
             enricher = casanova.enricher(f, of, add=('line',), delimiter=';')
 
             for i, row in enumerate(enricher):
@@ -68,7 +68,7 @@ class TestEnricher(object):
     def test_gzip(self, tmpdir):
         output_path = str(tmpdir.join('./enriched.csv'))
         with gzip.open('./test/resources/people.csv.gz', 'rt') as f, \
-             open(output_path, 'w') as of:
+             open(output_path, 'w', newline='') as of:
             enricher = casanova.enricher(f, of, add=('line',))
 
             for i, row in enumerate(enricher):
@@ -84,7 +84,7 @@ class TestEnricher(object):
     def test_keep(self, tmpdir):
         output_path = str(tmpdir.join('./enriched-keep.csv'))
         with open('./test/resources/people.csv') as f, \
-             open(output_path, 'w') as of:
+             open(output_path, 'w', newline='') as of:
             enricher = casanova.enricher(f, of, keep=('name',), add=('line',))
 
             for i, row in enumerate(enricher):
@@ -100,7 +100,7 @@ class TestEnricher(object):
     def test_padding(self, tmpdir):
         output_path = str(tmpdir.join('./enriched-padding.csv'))
         with open('./test/resources/people.csv') as f, \
-             open(output_path, 'w') as of:
+             open(output_path, 'w', newline='') as of:
             enricher = casanova.enricher(f, of, keep=('name',), add=('line',))
 
             for i, row in enumerate(enricher):
@@ -173,7 +173,7 @@ class TestEnricher(object):
 
         output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
         with open('./test/resources/people_unordered.csv') as f, \
-                open(output_path, 'w') as of:
+                open(output_path, 'w', newline='') as of:
 
             enricher = casanova.threadsafe_enricher(
                 f, of,
@@ -307,7 +307,7 @@ class TestEnricher(object):
     def test_combined_pos(self, tmpdir):
         output_path = str(tmpdir.join('./enriched.csv'))
         with open('./test/resources/people.csv') as f, \
-             open(output_path, 'w') as of:
+             open(output_path, 'w', newline='') as of:
             enricher = casanova.enricher(f, of, add=('line',), keep=('surname',))
 
             assert len(enricher.output_headers) == 2
@@ -317,7 +317,7 @@ class TestEnricher(object):
     def test_batch_enricher(self, tmpdir):
         output_path = str(tmpdir.join('./enriched.csv'))
         with open('./test/resources/people.csv') as f, \
-             open(output_path, 'w') as of:
+             open(output_path, 'w', newline='') as of:
             enricher = casanova.batch_enricher(f, of, add=('color',), keep=('surname',))
 
             for row in enricher:
