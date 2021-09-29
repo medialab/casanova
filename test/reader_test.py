@@ -163,7 +163,7 @@ class TestReader(object):
             assert names == ['John', 'Mary', 'Julia']
 
     def test_bom(self):
-        with open('./test/resources/bom.csv') as f:
+        with open('./test/resources/bom.csv', encoding='utf-8') as f:
             reader = casanova.reader(f)
 
             assert reader.fieldnames == ['name', 'color']
