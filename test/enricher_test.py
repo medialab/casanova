@@ -255,7 +255,7 @@ class TestEnricher(object):
 
             names = [t for t in enricher.cells('name')]
 
-        assert names == [(0, 'John'), (1, 'Mary'), (2, 'Julia')]
+        assert sorted(names) == sorted([(0, 'John'), (1, 'Mary'), (2, 'Julia')])
 
         with open('./test/resources/people_unordered.csv') as f, \
              open(output_path, 'a+') as of:
@@ -301,11 +301,14 @@ class TestEnricher(object):
                 if j == 1:
                     break
 
-        assert collect_csv(output_path) == [
+        def sort_output(o):
+            return sorted(tuple(i) for i in o)
+
+        assert sort_output(collect_csv(output_path)) == sort_output([
             ['name', 'index', 'x2'],
             ['Mary', '1', '4'],
             ['Julia', '2', '6']
-        ]
+        ])
 
         with open('./test/resources/people_unordered.csv') as f, resumer:
 
@@ -318,17 +321,15 @@ class TestEnricher(object):
             for j, (i, row) in enumerate(imap_unordered(enricher, job, 3)):
                 enricher.writerow(i, row, [(i + 1) * 2])
 
-        assert collect_csv(output_path) == [
+        assert sort_output(collect_csv(output_path)) == sort_output([
             ['name', 'index', 'x2'],
             ['Mary', '1', '4'],
             ['Julia', '2', '6'],
             ['John', '0', '2']
-        ]
+        ])
 
-        assert log == {
-            'output.row': [['Mary', '1', '4'], ['Julia', '2', '6']],
-            'filter.row': [[1, ['Mary', 'Sue', '1']], [2, ['Julia', 'Stone', '2']]]
-        }
+        assert sort_output(log['output.row']) == sort_output([['Mary', '1', '4'], ['Julia', '2', '6']])
+        assert sort_output(log['filter.row']) == sort_output([[1, ['Mary', 'Sue', '1']], [2, ['Julia', 'Stone', '2']]])
 
     def test_stdout(self, capsys):
         sys.stdout.write('this,should,happen\n')
