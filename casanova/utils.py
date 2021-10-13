@@ -76,3 +76,14 @@ def CsvCellIO(column, value):
     buf.seek(0)
 
     return buf
+
+
+def CsvRowIO(columns, row):
+    buf = StringIO()
+    writer = csv.writer(buf, dialect=csv.unix_dialect, quoting=csv.QUOTE_MINIMAL)
+    writer.writerow(columns)
+    writer.writerow(row)
+
+    buf.seek(0)
+
+    return buf
