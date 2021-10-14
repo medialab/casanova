@@ -279,7 +279,7 @@ class TestEnricher(object):
         def job(payload):
             i, row = payload
             s = int(row[2])
-            time.sleep(s * .01)
+            time.sleep(s * .1)
 
             return i, row
 
