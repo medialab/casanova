@@ -10,10 +10,6 @@ import gzip
 from io import StringIO
 
 
-def encoding_fingerprint(encoding):
-    return encoding.lower().replace('-', '')
-
-
 def ensure_open(p, encoding='utf-8', mode='r'):
     if not isinstance(p, str):
         return p
@@ -25,10 +21,10 @@ def ensure_open(p, encoding='utf-8', mode='r'):
         mode += 't'
         return gzip.open(p, encoding=encoding, mode=mode)
 
-    if encoding_fingerprint(encoding) != 'utf8':
-        return codecs.open(p, encoding=encoding, mode=mode)
+    if 'b' in mode:
+        return open(p, mode=mode)
 
-    return open(p, mode=mode)
+    return open(p, encoding=encoding, mode=mode)
 
 
 BOM_RE = re.compile(r'^\ufeff')
