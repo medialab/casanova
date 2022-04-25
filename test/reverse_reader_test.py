@@ -26,11 +26,11 @@ class TestReverseReader(object):
         assert names == ['Julia', 'Mary', 'John', 'name']
 
     def test_tricky(self):
-        with open('./test/resources/tricky-reverse.csv') as f:
+        with open('./test/resources/tricky_reverse.csv') as f:
             reader = casanova.reader(f)
             rows = list(reader)
 
-        with open('./test/resources/tricky-reverse.csv') as f:
+        with open('./test/resources/tricky_reverse.csv') as f:
             reverse_reader = casanova.reverse_reader(f)
             rows_read_in_reverse = list(reversed(list(reverse_reader)))
 
@@ -52,15 +52,15 @@ class TestReverseReader(object):
             last_cell = casanova.reverse_reader.last_cell('./test/resources/empty.csv', 'name', no_headers=True)
 
         with pytest.raises(EmptyFileError):
-            last_cell = casanova.reverse_reader.last_cell('./test/resources/empty-with-headers.csv', 'name')
+            last_cell = casanova.reverse_reader.last_cell('./test/resources/empty_with_headers.csv', 'name')
 
     def test_last_batch(self):
         tests = [
             ('batches', Batch('Jack', finished=True)),
-            ('batches-no-end', Batch('Edmund', cursor='cursor1', rows=[['14', 'Edmund', 'Peony', ''], ['13', 'Edmund', 'Carlotta', '']])),
-            ('batches-cursor-end', Batch('Edmund', cursor='cursor2')),
-            ('batches-broken-first', Batch('Edmund', rows=[['12', 'Edmund', 'Maria', ''], ['11', 'Edmund', 'Maxim', '']])),
-            ('batches-raw', Batch('John', rows=[['1', 'John', 'Elisa', ''], ['0', 'John', 'Mary', '']]))
+            ('batches_no_end', Batch('Edmund', cursor='cursor1', rows=[['14', 'Edmund', 'Peony', ''], ['13', 'Edmund', 'Carlotta', '']])),
+            ('batches_cursor_end', Batch('Edmund', cursor='cursor2')),
+            ('batches_broken_first', Batch('Edmund', rows=[['12', 'Edmund', 'Maria', ''], ['11', 'Edmund', 'Maxim', '']])),
+            ('batches_raw', Batch('John', rows=[['1', 'John', 'Elisa', ''], ['0', 'John', 'Mary', '']]))
         ]
 
         for name, expected in tests:
@@ -103,7 +103,7 @@ class TestReverseReader(object):
 
         with pytest.raises(EmptyFileError):
             casanova.reverse_reader.last_batch(
-                './test/resources/empty-with-headers.csv',
+                './test/resources/empty_with_headers.csv',
                 batch_value='name',
                 batch_cursor='surname',
                 end_symbol='end'

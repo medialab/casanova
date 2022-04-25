@@ -28,7 +28,7 @@ class TestEnricher(object):
         with pytest.raises(EmptyFileError):
             casanova.enricher(StringIO(''), StringIO(''))
 
-        output_path = str(tmpdir.join('./wrong-resumer.csv'))
+        output_path = str(tmpdir.join('./wrong_resumer.csv'))
 
         with pytest.raises(TypeError):
             resumer = ThreadSafeResumer(output_path)
@@ -83,7 +83,7 @@ class TestEnricher(object):
         ]
 
     def test_keep(self, tmpdir):
-        output_path = str(tmpdir.join('./enriched-keep.csv'))
+        output_path = str(tmpdir.join('./enriched_keep.csv'))
         with open('./test/resources/people.csv') as f, \
              open(output_path, 'w', newline='') as of:
             enricher = casanova.enricher(f, of, keep=('name',), add=('line',))
@@ -99,7 +99,7 @@ class TestEnricher(object):
         ]
 
     def test_padding(self, tmpdir):
-        output_path = str(tmpdir.join('./enriched-padding.csv'))
+        output_path = str(tmpdir.join('./enriched_padding.csv'))
         with open('./test/resources/people.csv') as f, \
              open(output_path, 'w', newline='') as of:
             enricher = casanova.enricher(f, of, keep=('name',), add=('line',))
@@ -121,7 +121,7 @@ class TestEnricher(object):
         def listener(name, row):
             log[name].append(list(row))
 
-        output_path = str(tmpdir.join('./enriched-resumable.csv'))
+        output_path = str(tmpdir.join('./enriched_resumable.csv'))
 
         resumer = RowCountResumer(output_path, listener=listener)
 
@@ -171,7 +171,7 @@ class TestEnricher(object):
         def listener(name, row):
             log[name].append(list(row))
 
-        output_path = str(tmpdir.join('./enriched-resumable.csv'))
+        output_path = str(tmpdir.join('./enriched_resumable.csv'))
 
         resumer = LastCellComparisonResumer(output_path, value_column=0, listener=listener)
 
@@ -219,7 +219,7 @@ class TestEnricher(object):
 
             return i, row
 
-        output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
+        output_path = str(tmpdir.join('./enriched_resumable_threadsafe.csv'))
         with open('./test/resources/people_unordered.csv') as f, \
              open(output_path, 'w', newline='') as of:
 
@@ -243,7 +243,7 @@ class TestEnricher(object):
         ])
 
     def test_threadsafe_cells(self, tmpdir):
-        output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
+        output_path = str(tmpdir.join('./enriched_resumable_threadsafe.csv'))
         with open('./test/resources/people_unordered.csv') as f, \
              open(output_path, 'a+') as of:
 
@@ -283,7 +283,7 @@ class TestEnricher(object):
 
             return i, row
 
-        output_path = str(tmpdir.join('./enriched-resumable-threadsafe.csv'))
+        output_path = str(tmpdir.join('./enriched_resumable_threadsafe.csv'))
 
         resumer = ThreadSafeResumer(output_path, listener=listener)
 

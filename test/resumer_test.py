@@ -6,7 +6,7 @@ from casanova.resuming import Resumer
 
 class TestResumer(object):
     def test_buffer(self, tmpdir):
-        output_path = str(tmpdir.join('./resumer-test.csv'))
+        output_path = str(tmpdir.join('./resumer_test.csv'))
 
         resumer = Resumer(output_path)
 

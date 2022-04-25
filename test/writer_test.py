@@ -23,7 +23,7 @@ class TestWriter(object):
         ]
 
     def test_resumable(self, tmpdir):
-        output_path = str(tmpdir.join('./written-resumable.csv'))
+        output_path = str(tmpdir.join('./written_resumable.csv'))
 
         def stream(offset=0):
             return range(offset, 6)
