@@ -6,7 +6,6 @@
 # with csv.DictReader which is nice but very slow.
 #
 import csv
-from collections import deque
 from collections.abc import Iterable
 from io import IOBase
 from operator import itemgetter
@@ -138,7 +137,7 @@ class Reader(object):
         else:
             self.reader = csv.reader(input_file, **reader_kwargs)
 
-        self.buffered_rows = deque()
+        self.buffered_rows = []
         self.was_completely_buffered = False
         self.total = total
         self.headers = None
@@ -213,6 +212,8 @@ class Reader(object):
                 buffered_bytes += size_of_row_in_file(row)
                 self.buffered_rows.append(row)
 
+        self.buffered_rows.reverse()
+
     def __repr__(self):
         columns_info = ' '.join('%s=%s' % t for t in self.headers)
 
@@ -234,7 +235,7 @@ class Reader(object):
 
     def iter(self):
         while self.buffered_rows:
-            yield self.buffered_rows.popleft()
+            yield self.buffered_rows.pop()
 
         yield from self.reader
 
