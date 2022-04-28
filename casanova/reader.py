@@ -233,7 +233,7 @@ class Reader(object):
 
         return len(self.headers)
 
-    def iter(self):
+    def rows(self):
         while self.buffered_rows:
             yield self.buffered_rows.pop()
 
@@ -243,7 +243,7 @@ class Reader(object):
         return self.headers.wrap(row)
 
     def __iter__(self):
-        return self.iter()
+        return self.rows()
 
     def __cells(self, column, with_rows=False):
         if not isinstance(column, int):
@@ -262,11 +262,11 @@ class Reader(object):
 
         if with_rows:
             def iterator():
-                for row in self.iter():
+                for row in self.rows():
                     yield row, row[pos]
         else:
             def iterator():
-                for row in self.iter():
+                for row in self.rows():
                     yield row[pos]
 
         return iterator()

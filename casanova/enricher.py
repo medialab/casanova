@@ -81,18 +81,18 @@ class Enricher(Reader):
         if not no_headers and not can_resume:
             self.writeheader()
 
-    # NOTE: overriding #.iter and not #.__iter__ else other reader iterators won't work
-    def iter(self):
+    # NOTE: overriding #.rows and not #.__iter__ else other reader iterators won't work
+    def rows(self):
         if self.resumer is None:
-            yield from super().iter()
+            yield from super().rows()
             return
 
         if not hasattr(self.resumer, 'filter'):
             yield from self.resumer
-            yield from super().iter()
+            yield from super().rows()
             return
 
-        iterator = enumerate(super().iter())
+        iterator = enumerate(super().rows())
 
         for i, row in iterator:
             if self.resumer.filter_row(i, row):
