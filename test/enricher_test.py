@@ -334,7 +334,7 @@ class TestEnricher(object):
     def test_threadsafe_resuming_soundness(self, tmpdir):
         output_path = str(tmpdir.join('./threadsafe_resuming_soundness.csv'))
 
-        with open('./test/resources/more_people.csv') as f, open(output_path, 'w') as of:
+        with open('./test/resources/more_people.csv') as f, open(output_path, 'w', newline='') as of:
             enricher = casanova.threadsafe_enricher(f, of)
 
             for index, row in enricher:
