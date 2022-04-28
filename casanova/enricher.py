@@ -101,9 +101,8 @@ class Enricher(Reader):
     def __repr__(self):
         columns_info = ' '.join('%s=%s' % t for t in self.headers)
 
-        return '<%s%s %s>' % (
+        return '<%s %s>' % (
             self.__class__.__name__,
-            ' resumable' if self.resumable else '',
             columns_info
         )
 
@@ -151,7 +150,7 @@ class ThreadSafeEnricher(Enricher):
         super().__init__(
             input_file,
             output_file,
-            add=[index_column] + list(add),
+            add=[index_column] + list(add or []),
             **kwargs
         )
 
@@ -166,12 +165,7 @@ class ThreadSafeEnricher(Enricher):
             yield from enumerate(super().cells(column))
 
     def writerow(self, index, row, add=None):
-        index = [index]
-
-        if add is None:
-            add = self.padding
-
-        self.writer.writerow(self.formatrow(row, index + add))
+        super().writerow(row, add=[index] + (add or []))
 
 
 class BatchEnricher(Enricher):
