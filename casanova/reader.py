@@ -214,6 +214,11 @@ class Reader(object):
 
         self.buffered_rows.reverse()
 
+        # Iteration state
+        self.prelude_rows = None
+        self.row_filter = None
+        self.current_row_index = -1
+
     def __repr__(self):
         columns_info = ' '.join('%s=%s' % t for t in self.headers)
 
@@ -234,10 +239,31 @@ class Reader(object):
         return len(self.headers)
 
     def rows(self):
-        while self.buffered_rows:
-            yield self.buffered_rows.pop()
 
-        yield from self.reader
+        def chained():
+            if self.prelude_rows is not None:
+                for row in self.prelude_rows:
+                    self.current_row_index += 1
+                    yield row
+
+            while self.buffered_rows:
+                self.current_row_index += 1
+                yield self.buffered_rows.pop()
+
+            for row in self.reader:
+                self.current_row_index += 1
+                yield row
+
+        if self.row_filter is None:
+            yield from chained()
+
+        for row in chained():
+            if self.row_filter(self.current_row_index, row):
+                yield row
+
+    def enumerate(self):
+        for row in self.rows():
+            yield self.current_row_index, row
 
     def wrap(self, row):
         return self.headers.wrap(row)

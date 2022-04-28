@@ -331,31 +331,31 @@ class TestEnricher(object):
         assert sort_output(log['output.row']) == sort_output([['Mary', '1', '4'], ['Julia', '2', '6']])
         assert sort_output(log['filter.row']) == sort_output([[1, ['Mary', 'Sue', '1']], [2, ['Julia', 'Stone', '2']]])
 
-    # def test_threadsafe_resuming_soundness(self, tmpdir):
-    #     output_path = str(tmpdir.join('./threadsafe_resuming_soundness.csv'))
+    def test_threadsafe_resuming_soundness(self, tmpdir):
+        output_path = str(tmpdir.join('./threadsafe_resuming_soundness.csv'))
 
-    #     with open('./test/resources/more_people.csv') as f, open(output_path, 'w') as of:
-    #         enricher = casanova.threadsafe_enricher(f, of)
+        with open('./test/resources/more_people.csv') as f, open(output_path, 'w') as of:
+            enricher = casanova.threadsafe_enricher(f, of)
 
-    #         for index, row in enricher:
-    #             enricher.writerow(index, row)
+            for index, row in enricher:
+                enricher.writerow(index, row)
 
-    #             if index >= 2:
-    #                 break
+                if index >= 2:
+                    break
 
-    #     resumer = ThreadSafeResumer(output_path)
-    #     with casanova.threadsafe_enricher('./test/resources/more_people.csv', resumer) as enricher, resumer:
-    #         for index, row in enricher:
-    #             enricher.writerow(index, row)
+        resumer = ThreadSafeResumer(output_path)
+        with casanova.threadsafe_enricher('./test/resources/more_people.csv', resumer) as enricher, resumer:
+            for index, row in enricher:
+                enricher.writerow(index, row)
 
-    #     assert collect_csv(output_path) == [
-    #         ['name', 'index'],
-    #         ['John', '0'],
-    #         ['Lisa', '1'],
-    #         ['Mary', '2'],
-    #         ['Alexander', '3'],
-    #         ['Gary', '4']
-    #     ]
+        assert collect_csv(output_path) == [
+            ['name', 'index'],
+            ['John', '0'],
+            ['Lisa', '1'],
+            ['Mary', '2'],
+            ['Alexander', '3'],
+            ['Gary', '4']
+        ]
 
     def test_stdout(self, capsys):
         sys.stdout.write('this,should,happen\n')

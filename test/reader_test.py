@@ -97,6 +97,14 @@ class TestReader(object):
 
             assert names == [('Matthews', 'John'), ('Sue', 'Mary'), ('Stone', 'Julia')]
 
+    def test_enumerate(self):
+        with open('./test/resources/people.csv') as f:
+            reader = casanova.reader(f)
+
+            indices = [i for i, row in reader.enumerate()]
+
+            assert indices == list(range(3))
+
     def test_no_headers(self):
         with open('./test/resources/no_headers.csv') as f:
             reader = casanova.reader(f, no_headers=True)

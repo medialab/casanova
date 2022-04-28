@@ -74,29 +74,17 @@ class Enricher(Reader):
 
             output_file = self.resumer.open_output_file()
 
+            if hasattr(self.resumer, 'filter'):
+                self.row_filter = self.resumer.filter_row
+            else:
+                self.prelude_rows = self.resumer
+
         # Instantiating writer
         self.writer = csv.writer(output_file)
 
         # Need to write headers?
         if not no_headers and not can_resume:
             self.writeheader()
-
-    # NOTE: overriding #.rows and not #.__iter__ else other reader iterators won't work
-    def rows(self):
-        if self.resumer is None:
-            yield from super().rows()
-            return
-
-        if not hasattr(self.resumer, 'filter'):
-            yield from self.resumer
-            yield from super().rows()
-            return
-
-        iterator = enumerate(super().rows())
-
-        for i, row in iterator:
-            if self.resumer.filter_row(i, row):
-                yield row
 
     def __repr__(self):
         columns_info = ' '.join('%s=%s' % t for t in self.headers)
@@ -155,14 +143,15 @@ class ThreadSafeEnricher(Enricher):
         )
 
     def __iter__(self):
-        yield from enumerate(super().__iter__())
+        return self.enumerate()
 
     def cells(self, column, with_rows=False):
         if with_rows:
-            for index, (row, value) in enumerate(super().cells(column, with_rows=True)):
-                yield index, row, value
+            for row, value in super().cells(column, with_rows=True):
+                yield self.current_row_index, row, value
         else:
-            yield from enumerate(super().cells(column))
+            for value in super().cells(column):
+                yield self.current_row_index, value
 
     def writerow(self, index, row, add=None):
         super().writerow(row, add=[index] + (add or []))
