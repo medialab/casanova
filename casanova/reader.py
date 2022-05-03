@@ -96,7 +96,7 @@ class Reader(object):
 
     def __init__(self, input_file, no_headers=False, encoding='utf-8',
                  dialect=None, quotechar=None, delimiter=None, prebuffer_bytes=None,
-                 total=None, multiplex=None):
+                 total=None, multiplex=None, ignore_null_bytes=False):
 
         # Resolving global defaults
         if prebuffer_bytes is None:
@@ -135,6 +135,8 @@ class Reader(object):
         if self.input_type == 'iterable':
             self.reader = self.input_file
         else:
+            if ignore_null_bytes:
+                input_file = (item.replace("\0", '') for item in input_file)
             self.reader = csv.reader(input_file, **reader_kwargs)
 
         self.buffered_rows = []
