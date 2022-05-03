@@ -263,13 +263,13 @@ class TestReader(object):
 
         set_default_prebuffer_bytes(None)
 
-    # def test_ignore_null_bytes(self):
-    #     with open('./test/resources/with_null_bytes.csv') as f:
-    #         reader = casanova.reader(f, ignore_null_bytes=True)
+    def test_ignore_null_bytes(self):
+        with open('./test/resources/with_null_bytes.csv') as f:
+            reader = casanova.reader(f, ignore_null_bytes=True)
 
-    #         rows = list(reader)
+            rows = list(reader)
 
-    #         assert rows == [
-    #             ['John', 'Zero'],
-    #             ['Mary', 'La Croix']
-    #         ]
+            assert rows == [
+                ['John', 'Zero'],
+                ['Mary', 'La Croix']
+            ]
