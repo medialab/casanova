@@ -136,7 +136,7 @@ class Reader(object):
             self.reader = self.input_file
         else:
             if ignore_null_bytes:
-                input_file = (item.replace("\0", '') for item in input_file)
+                input_file = (item.replace('\0', '') for item in input_file)
             self.reader = csv.reader(input_file, **reader_kwargs)
 
         self.buffered_rows = []
