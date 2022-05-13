@@ -1,5 +1,5 @@
 # =============================================================================
-# Casanova K-Way Reader
+# Casanova K-Way Merge
 # =============================================================================
 #
 # Algorithm reading k sorted csv files and merging them into a single sorted csv
@@ -14,8 +14,9 @@ def kway_merge(readers, key):
     Merge multiple casanova readers into a single sorted output.
 
     Args:
-        readers (dict): dictionary of the form {file_id: casanova.reader}. The file_id keys
-            should be identifiers of the origin files.
+        readers (dict): dictionary of the form {file_id: casanova.reader} or
+            {file_id: csv.reader}. The file_id keys allow to identify the
+            origin files.
         key (int or dict): comparison key used to sort rows. If an integer is provided, it
             is treated as a column index, and all readers will be sorted on that column.
             If a dict is provided, it should contain the file_id as keys and a key function
