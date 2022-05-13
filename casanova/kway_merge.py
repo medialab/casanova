@@ -9,7 +9,7 @@
 from heapq import merge
 
 
-def kway_merge(readers, key):
+def kway_merge(readers, key, reverse=False):
     """
     Merge multiple casanova readers into a single sorted output.
 
@@ -21,6 +21,9 @@ def kway_merge(readers, key):
             is treated as a column index, and all readers will be sorted on that column.
             If a dict is provided, it should contain the file_id as keys and a key function
             (https://docs.python.org/3/glossary.html#term-key-function) as values.
+        reverse (bool, optional):  If set to True, then the input elements are sorted in
+            reverse order. This assumes that input files are sorted from largest to
+            smallest. Defaults to False.
 
     Returns:
         a sorted iterator of (row, file_id) tuples
@@ -33,6 +36,7 @@ def kway_merge(readers, key):
             return key[file_id](row)
 
     elif type(key) == int:
+
         def comparison_key(tuple):
             row, file_id = tuple
             return row[key]
@@ -44,5 +48,9 @@ def kway_merge(readers, key):
         for row in reader:
             yield row, file_id
 
-    for row, file_id in merge(*(iterate_on_rows(v, k) for k, v in readers.items()), key=comparison_key):
+    for row, file_id in merge(
+            *(iterate_on_rows(v, k) for k, v in readers.items()),
+            key=comparison_key,
+            reverse=reverse
+    ):
         yield row, file_id

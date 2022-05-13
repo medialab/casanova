@@ -89,3 +89,27 @@ class TestKWayMerge(object):
             (["Lisa", "3"], "lunch"),
             (["Lisa", "3"], "party")
         ]
+
+    def test_reverse(self):
+        file_names, file_paths = get_files()
+        files = [open(file_path) for file_path in file_paths]
+
+        readers = {fn: casanova.reverse_reader(f) for fn, f in zip(file_names, files)}
+
+        guest_name_pos = 0
+
+        result = [item for item in casanova.kway_merge(readers, guest_name_pos, reverse=True)]
+
+        for file in files:
+            file.close()
+
+        assert result == [
+            (["Lisa", "3"], "lunch"),
+            (["Lisa", "3"], "party"),
+            (["John", "2"], "party"),
+            (["Gary", "1"], "lunch"),
+            (["Gary", "1"], "dinner"),
+            (["Gary", "1"], "party"),
+            (["Alexander", "0"], "dinner"),
+            (["Alexander", "0"], "party"),
+        ]
