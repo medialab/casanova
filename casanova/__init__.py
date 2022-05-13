@@ -8,6 +8,7 @@ from casanova.enricher import (
     ThreadSafeEnricher,
     BatchEnricher
 )
+from casanova.kway_merge import kway_merge
 from casanova.namedrecord import namedrecord
 from casanova.reader import (
     Reader,
