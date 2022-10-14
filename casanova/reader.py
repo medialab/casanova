@@ -104,6 +104,8 @@ class Reader(object):
 
         if ignore_null_bytes is None:
             ignore_null_bytes = DEFAULTS['ignore_null_bytes']
+        if not isinstance(ignore_null_bytes, bool):
+            raise TypeError('expecting a boolean as "ignore_null_bytes" kwarg')
 
         # Detecting input type
         if isinstance(input_file, IOBase):
@@ -139,8 +141,6 @@ class Reader(object):
             self.reader = self.input_file
         else:
             if ignore_null_bytes:
-                if not isinstance(ignore_null_bytes, bool):
-                    raise TypeError('expecting a boolean as "ignore_null_bytes" kwarg')
                 input_file = (item.replace('\0', '') for item in input_file)
             self.reader = csv.reader(input_file, **reader_kwargs)
 
