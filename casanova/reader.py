@@ -96,11 +96,16 @@ class Reader(object):
 
     def __init__(self, input_file, no_headers=False, encoding='utf-8',
                  dialect=None, quotechar=None, delimiter=None, prebuffer_bytes=None,
-                 total=None, multiplex=None, ignore_null_bytes=False):
+                 total=None, multiplex=None, ignore_null_bytes=None):
 
         # Resolving global defaults
         if prebuffer_bytes is None:
             prebuffer_bytes = DEFAULTS['prebuffer_bytes']
+
+        if ignore_null_bytes is None:
+            ignore_null_bytes = DEFAULTS['ignore_null_bytes']
+        if not isinstance(ignore_null_bytes, bool):
+            raise TypeError('expecting a boolean as "ignore_null_bytes" kwarg')
 
         # Detecting input type
         if isinstance(input_file, IOBase):

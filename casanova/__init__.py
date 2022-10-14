@@ -28,7 +28,7 @@ from casanova.reverse_reader import (
 )
 from casanova.writer import Writer
 from casanova.utils import CsvCellIO, CsvRowIO
-from casanova.defaults import set_default_prebuffer_bytes
+from casanova.defaults import set_default_prebuffer_bytes, set_default_ignore_null_bytes
 
 reader = Reader
 enricher = Enricher
