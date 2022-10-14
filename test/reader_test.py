@@ -4,6 +4,7 @@
 import gzip
 import casanova
 import pytest
+import csv
 from io import StringIO
 
 from casanova.defaults import set_default_ignore_null_bytes, set_default_prebuffer_bytes
@@ -277,9 +278,11 @@ class TestReader(object):
                 ['John', 'Zero'],
                 ['Mary', 'La Croix']
             ]
+
         set_default_ignore_null_bytes(False)
 
     def test_ignore_null_bytes(self):
+
         with open('./test/resources/with_null_bytes.csv') as f:
             reader = casanova.reader(f, ignore_null_bytes=True)
 
@@ -289,3 +292,15 @@ class TestReader(object):
                 ['John', 'Zero'],
                 ['Mary', 'La Croix']
             ]
+
+        with open('./test/resources/with_null_bytes.csv') as f:
+            reader = casanova.reader(f, ignore_null_bytes=False)
+
+            with pytest.raises(csv.Error, message="NUL"):
+                rows = list(reader)
+
+        with open('./test/resources/with_null_bytes.csv') as f:
+            reader = casanova.reader(f)
+
+            with pytest.raises(csv.Error, message="NUL"):
+                rows = list(reader)
