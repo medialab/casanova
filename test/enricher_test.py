@@ -51,6 +51,34 @@ class TestEnricher(object):
             ['Julia', 'Stone', '2']
         ]
 
+        with open('./test/resources/people.csv') as f, \
+             open(output_path, 'w', newline='') as of:
+            enricher = casanova.enricher(f, of, add=('line', 'salutation'))
+
+            for i, row in enumerate(enricher):
+                enricher.writerow(row, (i, 'hey'))
+
+        assert collect_csv(output_path) == [
+            ['name', 'surname', 'line', 'salutation'],
+            ['John', 'Matthews', '0', 'hey'],
+            ['Mary', 'Sue', '1', 'hey'],
+            ['Julia', 'Stone', '2', 'hey']
+        ]
+
+        with open('./test/resources/people.csv') as f, \
+             open(output_path, 'w', newline='') as of:
+            enricher = casanova.enricher(f, of, add=('0', '1', '2'))
+
+            for i, row in enumerate(enricher):
+                enricher.writerow(row, (j for j in range(3)))
+
+        assert collect_csv(output_path) == [
+            ['name', 'surname', '0', '1', '2'],
+            ['John', 'Matthews', '0', '1', '2'],
+            ['Mary', 'Sue', '0', '1', '2'],
+            ['Julia', 'Stone', '0', '1', '2']
+        ]
+
     def test_dialect(self, tmpdir):
         output_path = str(tmpdir.join('./enriched.csv'))
         with open('./test/resources/semicolons.csv') as f, \

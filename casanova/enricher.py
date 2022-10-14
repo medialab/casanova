@@ -107,6 +107,9 @@ class Enricher(Reader):
             if add is None:
                 add = self.padding
             else:
+                if not isinstance(add, list):
+                    add = list(add)
+
                 assert len(add) == self.added_count, 'casanova.enricher.writerow: expected %i additional cells but got %i.' % (self.added_count, len(add))
 
             row = self.filterrow(row) + add
