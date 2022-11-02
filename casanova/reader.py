@@ -104,8 +104,11 @@ class Reader(object):
 
         if ignore_null_bytes is None:
             ignore_null_bytes = DEFAULTS['ignore_null_bytes']
+
         if not isinstance(ignore_null_bytes, bool):
             raise TypeError('expecting a boolean as "ignore_null_bytes" kwarg')
+
+        self.ignore_null_bytes = ignore_null_bytes
 
         # Detecting input type
         if isinstance(input_file, IOBase):

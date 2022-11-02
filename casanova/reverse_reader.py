@@ -80,10 +80,14 @@ class ReverseReader(Reader):
                     acc = line
 
                 if acc.count(quotechar) % 2 == 0:
+                    if self.ignore_null_bytes:
+                        acc = acc.replace('\0', '')
                     yield acc
                     acc = None
 
             if acc is not None:
+                if self.ignore_null_bytes:
+                    acc = acc.replace('\0', '')
                 yield acc
 
         backwards_reader = csv.reader(correctly_escaped_backwards_iterator())
