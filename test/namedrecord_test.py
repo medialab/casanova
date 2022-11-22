@@ -84,3 +84,23 @@ class TestNamedRecord(object):
         r = Record('Test', None)
 
         assert r.as_csv_row() == ['Test', None]
+
+    def test_set_is_plural(self):
+
+        Video = namedrecord(
+            'Video',
+            ['title', 'has_captions', 'tags'],
+            boolean=['has_captions'],
+            plural=['tags']
+        )
+
+        v = Video('Super video', True, {'film', 'pop'})
+
+        assert v.as_csv_row() == ['Super video', 'true', 'film|pop'] or v.as_csv_row() == ['Super video', 'true', 'pop|film']
+        assert v.as_dict() == {
+            'title': 'Super video',
+            'has_captions': True,
+            'tags': {'film', 'pop'}
+        }
+
+        assert Video.fieldnames == ['title', 'has_captions', 'tags']

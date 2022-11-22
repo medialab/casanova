@@ -6,6 +6,7 @@
 #
 from json import dumps
 from collections import OrderedDict
+from collections.abc import Iterable
 
 from casanova._namedtuple import future_namedtuple
 
@@ -37,7 +38,7 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
             return 'true' if v else 'false'
 
         if m == 2:
-            assert isinstance(v, list)
+            assert isinstance(v, Iterable)
             return plural_separator.join(str(i) for i in v)
 
         if m == 3:
