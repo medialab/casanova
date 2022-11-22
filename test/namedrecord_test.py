@@ -84,3 +84,42 @@ class TestNamedRecord(object):
         r = Record('Test', None)
 
         assert r.as_csv_row() == ['Test', None]
+
+    def test_set(self):
+
+        Record = namedrecord('Record', {'x', 'y'})
+
+        r = Record(x=34, y=22)
+
+        assert len(r) == 2
+        assert set(r) == {34, 22}
+        assert r.x == 34
+        assert r['x'] == 34
+
+        with pytest.raises(KeyError):
+            r['z']
+
+        assert r.get('x') == 34
+        assert r.get('z') is None
+
+        Video = namedrecord(
+            'Video',
+            ['title', 'has_captions', 'tags'],
+            boolean=['has_captions'],
+            plural=['tags']
+        )
+
+        v = Video('Super video', True, {'film', 'pop'})
+
+        assert v.as_csv_row() == ['Super video', 'true', 'film|pop'] or v.as_csv_row() == ['Super video', 'true', 'pop|film']
+        assert v.as_dict() == {
+            'title': 'Super video',
+            'has_captions': True,
+            'tags': {'film', 'pop'}
+        }
+
+        assert Video.fieldnames == ['title', 'has_captions', 'tags']
+
+        v = Video(*['Title', False, set()])
+
+        assert v.as_dict() == {'title': 'Title', 'has_captions': False, 'tags': set()}
