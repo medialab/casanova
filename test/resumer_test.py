@@ -1,7 +1,8 @@
 # =============================================================================
 # Casanova Resumer Unit Tests
 # =============================================================================
-from casanova.resuming import Resumer
+import casanova
+from casanova.resuming import Resumer, RowCountResumer
 
 
 class TestResumer(object):
@@ -14,3 +15,15 @@ class TestResumer(object):
 
         assert list(resumer) == [[0, 1]]
         assert list(resumer) == []
+
+    def test_encoding(self):
+        output_file = './test/resources/latin_1_encoding.csv'
+
+        resumer = RowCountResumer(output_file, encoding='latin-1')
+
+        assert resumer.already_done_count() == 0
+
+        with open(output_file, encoding='latin-1') as f:
+            enricher = casanova.enricher(f, resumer)
+
+        assert resumer.already_done_count() == 6
