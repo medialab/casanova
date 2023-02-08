@@ -5,8 +5,8 @@ file-read-backwards==2.0.0
 click==7.1.1
 importchecker==2.0
 pycodestyle==2.4.0
-pytest==3.5.1
+pytest==7.2.1
 quenouille==1.4.2
 tqdm==4.31.1
-twine==1.11.0
+twine==4.0.2
 wheel==0.34.2

@@ -296,11 +296,11 @@ class TestReader(object):
         with open('./test/resources/with_null_bytes.csv') as f:
             reader = casanova.reader(f, ignore_null_bytes=False)
 
-            with pytest.raises(csv.Error, message="NUL"):
+            with pytest.raises(csv.Error, match="NUL"):
                 rows = list(reader)
 
         with open('./test/resources/with_null_bytes.csv') as f:
             reader = casanova.reader(f)
 
-            with pytest.raises(csv.Error, message="NUL"):
+            with pytest.raises(csv.Error, match="NUL"):
                 rows = list(reader)
