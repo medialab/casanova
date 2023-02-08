@@ -5,10 +5,8 @@
 # CSV-aware improvement over python's namedtuple.
 #
 from json import dumps
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from collections.abc import Iterable
-
-from casanova._namedtuple import future_namedtuple
 
 
 def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=None):
@@ -46,7 +44,7 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
 
         raise TypeError
 
-    class Record(future_namedtuple(name, fields, defaults=defaults)):
+    class Record(namedtuple(name, fields, defaults=defaults)):
         def __getitem__(self, key):
             if isinstance(key, str):
                 idx = mapping.get(key)

@@ -8,27 +8,25 @@ jobs:
       matrix:
         include:
 
-          # Old ubuntu
-          - os: ubuntu-18.04
-            python-version: "3.6"
-
           # Current ubuntu
-          - os: ubuntu-20.04
-            python-version: "3.6"
           - os: ubuntu-20.04
             python-version: "3.7"
           - os: ubuntu-20.04
             python-version: "3.8"
           - os: ubuntu-20.04
             python-version: "3.9"
+          - os: ubuntu-20.04
+            python-version: "3.10"
+          - os: ubuntu-20.04
+            python-version: "3.11"
 
           # Mac
           - os: macos-10.15
-            python-version: "3.6"
+            python-version: "3.7"
 
           # Windows
           - os: windows-latest
-            python-version: "3.6"
+            python-version: "3.7"
 
     runs-on: ${{ matrix.os }}
 

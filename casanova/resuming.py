@@ -7,9 +7,8 @@
 #
 from threading import Lock
 from os.path import isfile, getsize
-from collections import deque
+from collections import deque, namedtuple
 
-from casanova._namedtuple import future_namedtuple
 from casanova.reader import Reader
 from casanova.reverse_reader import ReverseReader
 from casanova.exceptions import (
@@ -173,7 +172,7 @@ class ThreadSafeResumer(Resumer):
         return len(self.already_done)
 
 
-BatchResumerContext = future_namedtuple('BatchResumerContext', ['last_cursor', 'values_to_skip'])
+BatchResumerContext = namedtuple('BatchResumerContext', ['last_cursor', 'values_to_skip'])
 
 
 class BatchResumer(Resumer):

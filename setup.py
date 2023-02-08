@@ -13,7 +13,7 @@ setup(name='casanova',
       author='Guillaume Plique',
       author_email='kropotkinepiotr@gmail.com',
       keywords='csv',
-      python_requires='>=3.5',
+      python_requires='>=3.7',
       packages=find_packages(exclude=['benchmark', 'test']),
       package_data={'docs': ['README.md']},
       install_requires=[
