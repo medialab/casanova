@@ -24,7 +24,7 @@ deps:
 
 lint:
 	@echo Linting source code using pep8...
-	pycodestyle --ignore E127,E501,E722,E741,W504 $(SOURCE) test
+	pycodestyle --ignore E127,E501,E722,E741,W504 $(SOURCE) scripts test
 	@echo
 	@echo Searching for unused imports...
 	importchecker $(SOURCE) | grep -v __init__ || true
