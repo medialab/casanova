@@ -6,6 +6,7 @@ import casanova
 import pytest
 import csv
 from io import StringIO
+from platform import python_version_tuple
 
 from casanova.defaults import set_default_ignore_null_bytes, set_default_prebuffer_bytes
 from casanova.reader import DictLikeRow, Headers
@@ -13,6 +14,9 @@ from casanova.exceptions import (
     EmptyFileError,
     MissingColumnError
 )
+
+PYTHON_MAJOR, PYTHON_MINOR, _ = python_version_tuple()
+GTE_PY311 = int(PYTHON_MAJOR) >= 3 and int(PYTHON_MINOR) >= 11
 
 
 class TestReader(object):
@@ -292,6 +296,10 @@ class TestReader(object):
                 ['John', 'Zero'],
                 ['Mary', 'La Croix']
             ]
+
+        # Null byte issues are solved in csv readers from py3.11
+        if GTE_PY311:
+            return
 
         with open('./test/resources/with_null_bytes.csv') as f:
             reader = casanova.reader(f, ignore_null_bytes=False)

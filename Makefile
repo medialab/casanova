@@ -39,3 +39,8 @@ unit:
 upload:
 	python setup.py sdist bdist_wheel
 	twine upload dist/*
+
+# To be sure it works with pyenv:
+#   $ pyenv local casanova 3.7 3.8 3.9 3.10 3.11
+tox:
+	tox
