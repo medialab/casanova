@@ -288,6 +288,14 @@ class TestReader(object):
 
             assert rows == [["John", "Zero"], ["Mary", "La Croix"]]
 
+        # It should also work with arbitrary iterables
+        # data = [["name"], ["Joh\x00n"], ["Mary"]]
+
+        # reader = casanova.reader(data, ignore_null_bytes=True)
+        # rows = list(reader)
+
+        # assert rows == [["John"], ["Mary"]]
+
         # Null byte issues are solved in csv readers from py3.11
         if GTE_PY311:
             return
