@@ -24,7 +24,10 @@ class Writer(object):
             resumer = output_file
 
             if not isinstance(output_file, self.__class__.__supported_resumers__):
-                raise TypeError('%s: does not support %s!' % (self.__class__.__name__, output_file.__class__.__name__))
+                raise TypeError(
+                    "%s: does not support %s!"
+                    % (self.__class__.__name__, output_file.__class__.__name__)
+                )
 
             can_resume = resumer.can_resume()
 

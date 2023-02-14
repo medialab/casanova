@@ -15,13 +15,13 @@ from casanova.exceptions import (
     ResumeError,
     NotResumableError,
     MissingColumnError,
-    CorruptedIndexColumn
+    CorruptedIndexColumn,
 )
 from casanova.contiguous_range_set import ContiguousRangeSet
 
 
 class Resumer(object):
-    def __init__(self, path, listener=None, encoding='utf-8'):
+    def __init__(self, path, listener=None, encoding="utf-8"):
         self.path = path
         self.listener = listener
         self.encoding = encoding
@@ -33,19 +33,14 @@ class Resumer(object):
     def can_resume(self):
         return isfile(self.path) and getsize(self.path) > 0
 
-    def open(self, mode='a', newline=''):
-        return open(
-            self.path,
-            mode=mode,
-            encoding=self.encoding,
-            newline=newline
-        )
+    def open(self, mode="a", newline=""):
+        return open(self.path, mode=mode, encoding=self.encoding, newline=newline)
 
     def open_output_file(self, **kwargs):
         if self.output_file is not None:
-            raise ResumeError('output file is already opened')
+            raise ResumeError("output file is already opened")
 
-        mode = 'a+' if self.can_resume() else 'w'
+        mode = "a+" if self.can_resume() else "w"
 
         self.output_file = self.open(mode=mode, **kwargs)
         return self.output_file
@@ -64,7 +59,7 @@ class Resumer(object):
         result = self.filter(i, row)
 
         if not result:
-            self.emit('filter.row', (i, row))
+            self.emit("filter.row", (i, row))
 
         return result
 
@@ -90,17 +85,15 @@ class Resumer(object):
             self.output_file = None
 
     def __repr__(self):
-        return '<{name} path={path!r} can_resume={can_resume!r}>'.format(
-            name=self.__class__.__name__,
-            path=self.path,
-            can_resume=self.can_resume()
+        return "<{name} path={path!r} can_resume={can_resume!r}>".format(
+            name=self.__class__.__name__, path=self.path, can_resume=self.can_resume()
         )
 
     def already_done_count(self):
         raise NotImplementedError
 
     def __iter__(self):
-        if hasattr(self, 'filter'):
+        if hasattr(self, "filter"):
             raise NotImplementedError
 
         while self.buffer:
@@ -115,13 +108,13 @@ class RowCountResumer(Resumer):
     def get_insights_from_output(self, enricher):
         self.row_count = 0
 
-        with self.open(mode='r') as f:
+        with self.open(mode="r") as f:
             reader = Reader(f)
 
             count = 0
 
             for row in reader:
-                self.emit('output.row', row)
+                self.emit("output.row", row)
                 count += 1
 
         self.row_count = count
@@ -132,7 +125,7 @@ class RowCountResumer(Resumer):
 
         while i < self.row_count:
             row = next(iterator)
-            self.emit('input.row', row)
+            self.emit("input.row", row)
             i += 1
 
     def already_done_count(self):
@@ -147,7 +140,7 @@ class ThreadSafeResumer(Resumer):
     def get_insights_from_output(self, enricher):
         self.already_done = ContiguousRangeSet()
 
-        with self.open(mode='r') as f:
+        with self.open(mode="r") as f:
             reader = Reader(f)
 
             pos = reader.headers.get(enricher.index_column)
@@ -156,7 +149,7 @@ class ThreadSafeResumer(Resumer):
                 raise MissingColumnError(enricher.index_column)
 
             for row in reader:
-                self.emit('output.row', row)
+                self.emit("output.row", row)
 
                 try:
                     current_index = int(row[pos])
@@ -172,7 +165,9 @@ class ThreadSafeResumer(Resumer):
         return len(self.already_done)
 
 
-BatchResumerContext = namedtuple('BatchResumerContext', ['last_cursor', 'values_to_skip'])
+BatchResumerContext = namedtuple(
+    "BatchResumerContext", ["last_cursor", "values_to_skip"]
+)
 
 
 class BatchResumer(Resumer):
@@ -189,17 +184,14 @@ class BatchResumer(Resumer):
             self.path,
             batch_value=self.value_column,
             batch_cursor=enricher.cursor_column,
-            end_symbol=enricher.end_symbol
+            end_symbol=enricher.end_symbol,
         )
         self.value_pos = enricher.output_headers[self.value_column]
         self.last_cursor = None
         self.values_to_skip = None
 
     def get_state(self):
-        return BatchResumerContext(
-            self.last_cursor,
-            self.values_to_skip
-        )
+        return BatchResumerContext(self.last_cursor, self.values_to_skip)
 
     def resume(self, enricher):
         last_batch = self.last_batch
@@ -215,7 +207,7 @@ class BatchResumer(Resumer):
             if row is None:
                 raise NotResumableError
 
-            self.emit('input.row', row)
+            self.emit("input.row", row)
 
             value = row[self.value_pos]
 
@@ -242,22 +234,20 @@ class LastCellResumer(Resumer):
         self.value_column = value_column
 
     def get_insights_from_output(self, enricher):
-        self.last_cell = ReverseReader.last_cell(
-            self.path,
-            column=self.value_column
-        )
+        self.last_cell = ReverseReader.last_cell(self.path, column=self.value_column)
 
     def get_state(self):
         return self.last_cell
 
 
 class LastCellComparisonResumer(LastCellResumer):
-    '''
+    """
     Warning : this resumer will not work as desired if the column read contains duplicate values.
-    '''
+    """
+
     def resume(self, enricher):
         for row in enricher:
-            self.emit('input.row', row)
+            self.emit("input.row", row)
 
             if row[self.value_column] == self.last_cell:
                 break

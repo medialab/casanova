@@ -23,7 +23,7 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
         else:
             mask.append(0)
 
-    def cast_for_csv(i, v, plural_separator='|'):
+    def cast_for_csv(i, v, plural_separator="|"):
         if v is None:
             return None
 
@@ -33,7 +33,7 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
             return v
 
         if m == 1:
-            return 'true' if v else 'false'
+            return "true" if v else "false"
 
         if m == 2:
             assert isinstance(v, Iterable)
@@ -62,7 +62,7 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
             except (IndexError, KeyError):
                 return default
 
-        def as_csv_row(self, plural_separator='|'):
+        def as_csv_row(self, plural_separator="|"):
             row = list(
                 cast_for_csv(i, v, plural_separator=plural_separator)
                 for i, v in enumerate(self)
@@ -70,7 +70,7 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
 
             return row
 
-        def as_csv_dict_row(self, plural_separator='|'):
+        def as_csv_dict_row(self, plural_separator="|"):
             row = OrderedDict(
                 (fields[i], cast_for_csv(i, v, plural_separator=plural_separator))
                 for i, v in enumerate(self)

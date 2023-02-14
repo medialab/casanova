@@ -28,7 +28,7 @@ class ContiguousRangeSet(object):
         count = 0
 
         for start, end in self.intervals:
-            count += (end + 1 - start)
+            count += end + 1 - start
 
         return count
 
@@ -69,11 +69,9 @@ class ContiguousRangeSet(object):
         previous_interval = self.intervals[index - 1] if index != 0 else None
 
         if point == matched_interval[0] - 1:
-
             self.intervals[index] = (point, matched_interval[1])
 
             if previous_interval is not None:
-
                 if point == previous_interval[1] + 1:
                     self.intervals[index] = (previous_interval[0], matched_interval[1])
                     self.intervals.pop(index - 1)
@@ -81,7 +79,6 @@ class ContiguousRangeSet(object):
             return
 
         elif previous_interval is not None and point == previous_interval[1] + 1:
-
             self.intervals[index - 1] = (previous_interval[0], point)
             return
 

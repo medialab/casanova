@@ -19,7 +19,7 @@ END_OF_FILE = object()
 
 
 class Batch(object):
-    __slots__ = ('value', 'finished', 'cursor', 'rows')
+    __slots__ = ("value", "finished", "cursor", "rows")
 
     def __init__(self, value, finished=False, cursor=None, rows=None):
         self.value = value
@@ -29,10 +29,10 @@ class Batch(object):
 
     def __eq__(self, other):
         return (
-            self.value == other.value and
-            self.finished == other.finished and
-            self.cursor == other.cursor and
-            self.rows == other.rows
+            self.value == other.value
+            and self.finished == other.finished
+            and self.cursor == other.cursor
+            and self.rows == other.rows
         )
 
     def __iter__(self):
@@ -45,29 +45,27 @@ class Batch(object):
         class_name = self.__class__.__name__
 
         return (
-            '<%(class_name)s value=%(value)s finished=%(finished)s cursor=%(cursor)s rows=%(rows)i>'
+            "<%(class_name)s value=%(value)s finished=%(finished)s cursor=%(cursor)s rows=%(rows)i>"
         ) % {
-            'class_name': class_name,
-            'value': self.value,
-            'finished': self.finished,
-            'cursor': self.cursor,
-            'rows': len(self.rows)
+            "class_name": class_name,
+            "value": self.value,
+            "finished": self.finished,
+            "cursor": self.cursor,
+            "rows": len(self.rows),
         }
 
 
 class ReverseReader(Reader):
-    namespace = 'casanova.reverse_reader'
+    namespace = "casanova.reverse_reader"
 
     def __init__(self, input_file, quotechar=None, **kwargs):
         super().__init__(input_file, quotechar=quotechar, **kwargs)
         quotechar = quotechar or '"'
 
-        self.backwards_file = ensure_open(self.input_file.name, mode='rb')
+        self.backwards_file = ensure_open(self.input_file.name, mode="rb")
 
         backwards_iterator = FileReadBackwardsIterator(
-            self.backwards_file,
-            self.input_file.encoding,
-            DEFAULT_BUFFER_SIZE
+            self.backwards_file, self.input_file.encoding, DEFAULT_BUFFER_SIZE
         )
 
         def correctly_escaped_backwards_iterator():
@@ -75,19 +73,19 @@ class ReverseReader(Reader):
 
             for line in backwards_iterator:
                 if acc is not None:
-                    acc = line + '\n' + acc
+                    acc = line + "\n" + acc
                 else:
                     acc = line
 
                 if acc.count(quotechar) % 2 == 0:
                     if self.ignore_null_bytes:
-                        acc = acc.replace('\0', '')
+                        acc = acc.replace("\0", "")
                     yield acc
                     acc = None
 
             if acc is not None:
                 if self.ignore_null_bytes:
-                    acc = acc.replace('\0', '')
+                    acc = acc.replace("\0", "")
                 yield acc
 
         backwards_reader = csv.reader(correctly_escaped_backwards_iterator())

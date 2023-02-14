@@ -10,28 +10,28 @@ import gzip
 from io import StringIO
 
 
-def ensure_open(p, encoding='utf-8', mode='r'):
+def ensure_open(p, encoding="utf-8", mode="r"):
     if not isinstance(p, str):
         return p
 
-    if p.endswith('.gz'):
-        if 'b' in mode:
+    if p.endswith(".gz"):
+        if "b" in mode:
             return gzip.open(p, mode=mode)
 
-        mode += 't'
+        mode += "t"
         return gzip.open(p, encoding=encoding, mode=mode)
 
-    if 'b' in mode:
+    if "b" in mode:
         return open(p, mode=mode)
 
     return open(p, encoding=encoding, mode=mode)
 
 
-BOM_RE = re.compile(r'^\ufeff')
+BOM_RE = re.compile(r"^\ufeff")
 
 
 def suppress_BOM(string):
-    return re.sub(BOM_RE, '', string)
+    return re.sub(BOM_RE, "", string)
 
 
 def size_of_row_in_memory(row):

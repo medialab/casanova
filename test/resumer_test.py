@@ -7,7 +7,7 @@ from casanova.resuming import Resumer, RowCountResumer
 
 class TestResumer(object):
     def test_buffer(self, tmpdir):
-        output_path = str(tmpdir.join('./resumer_test.csv'))
+        output_path = str(tmpdir.join("./resumer_test.csv"))
 
         resumer = Resumer(output_path)
 
@@ -17,13 +17,13 @@ class TestResumer(object):
         assert list(resumer) == []
 
     def test_encoding(self):
-        output_file = './test/resources/latin_1_encoding.csv'
+        output_file = "./test/resources/latin_1_encoding.csv"
 
-        resumer = RowCountResumer(output_file, encoding='latin-1')
+        resumer = RowCountResumer(output_file, encoding="latin-1")
 
         assert resumer.already_done_count() == 0
 
-        with open(output_file, encoding='latin-1') as f:
+        with open(output_file, encoding="latin-1") as f:
             enricher = casanova.enricher(f, resumer)
 
         assert resumer.already_done_count() == 6

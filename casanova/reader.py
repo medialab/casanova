@@ -17,14 +17,14 @@ from casanova.exceptions import EmptyFileError, MissingColumnError, NoHeadersErr
 
 def validate_multiplex_tuple(multiplex):
     return (
-        isinstance(multiplex, tuple) and
-        len(multiplex) in [2, 3] and
-        all(isinstance(t, str) for t in multiplex)
+        isinstance(multiplex, tuple)
+        and len(multiplex) in [2, 3]
+        and all(isinstance(t, str) for t in multiplex)
     )
 
 
 class DictLikeRow(object):
-    __slots__ = ('__mapping', '__row')
+    __slots__ = ("__mapping", "__row")
 
     def __init__(self, mapping, row):
         self.__mapping = mapping
@@ -78,32 +78,41 @@ class Headers(object):
     def __repr__(self):
         class_name = self.__class__.__name__
 
-        representation = '<' + class_name
+        representation = "<" + class_name
 
         for h, i in self:
             if h.isidentifier():
-                representation += ' %s=%s' % (h, i)
+                representation += " %s=%s" % (h, i)
             else:
                 representation += ' "%s"=%s' % (h, i)
 
-        representation += '>'
+        representation += ">"
 
         return representation
 
 
 class Reader(object):
-    namespace = 'casanova.reader'
+    namespace = "casanova.reader"
 
-    def __init__(self, input_file, no_headers=False, encoding='utf-8',
-                 dialect=None, quotechar=None, delimiter=None, prebuffer_bytes=None,
-                 total=None, multiplex=None, ignore_null_bytes=None):
-
+    def __init__(
+        self,
+        input_file,
+        no_headers=False,
+        encoding="utf-8",
+        dialect=None,
+        quotechar=None,
+        delimiter=None,
+        prebuffer_bytes=None,
+        total=None,
+        multiplex=None,
+        ignore_null_bytes=None,
+    ):
         # Resolving global defaults
         if prebuffer_bytes is None:
-            prebuffer_bytes = DEFAULTS['prebuffer_bytes']
+            prebuffer_bytes = DEFAULTS["prebuffer_bytes"]
 
         if ignore_null_bytes is None:
-            ignore_null_bytes = DEFAULTS['ignore_null_bytes']
+            ignore_null_bytes = DEFAULTS["ignore_null_bytes"]
 
         if not isinstance(ignore_null_bytes, bool):
             raise TypeError('expecting a boolean as "ignore_null_bytes" kwarg')
@@ -112,39 +121,41 @@ class Reader(object):
 
         # Detecting input type
         if isinstance(input_file, IOBase):
-            input_type = 'file'
+            input_type = "file"
 
         elif isinstance(input_file, str):
-            input_type = 'path'
+            input_type = "path"
             input_file = ensure_open(input_file, encoding=encoding)
 
         elif isinstance(input_file, Iterable):
-            input_type = 'iterable'
+            input_type = "iterable"
             input_file = iter(input_file)
 
         else:
-            raise TypeError('expecting a file, a path or an iterable of rows')
+            raise TypeError("expecting a file, a path or an iterable of rows")
 
         if multiplex is not None and not validate_multiplex_tuple(multiplex):
-            raise TypeError('`multiplex` should be a 2-tuple or 3-tuple containing the column to split, the split character and optionally a new name for the column')
+            raise TypeError(
+                "`multiplex` should be a 2-tuple or 3-tuple containing the column to split, the split character and optionally a new name for the column"
+            )
 
         reader_kwargs = {}
 
         if dialect is not None:
-            reader_kwargs['dialect'] = dialect
+            reader_kwargs["dialect"] = dialect
         if quotechar is not None:
-            reader_kwargs['quotechar'] = quotechar
+            reader_kwargs["quotechar"] = quotechar
         if delimiter is not None:
-            reader_kwargs['delimiter'] = delimiter
+            reader_kwargs["delimiter"] = delimiter
 
         self.input_type = input_type
         self.input_file = input_file
 
-        if self.input_type == 'iterable':
+        if self.input_type == "iterable":
             self.reader = self.input_file
         else:
             if ignore_null_bytes:
-                input_file = (item.replace('\0', '') for item in input_file)
+                input_file = (item.replace("\0", "") for item in input_file)
             self.reader = csv.reader(input_file, **reader_kwargs)
 
         self.buffered_rows = []
@@ -207,7 +218,9 @@ class Reader(object):
         # Prebuffering
         if prebuffer_bytes is not None and self.total is None:
             if not isinstance(prebuffer_bytes, int) or prebuffer_bytes < 1:
-                raise TypeError('expecting a positive integer as "prebuffer_bytes" kwarg')
+                raise TypeError(
+                    'expecting a positive integer as "prebuffer_bytes" kwarg'
+                )
 
             buffered_bytes = 0
 
@@ -230,9 +243,9 @@ class Reader(object):
         self.current_row_index = -1
 
     def __repr__(self):
-        columns_info = ' '.join('%s=%s' % t for t in self.headers)
+        columns_info = " ".join("%s=%s" % t for t in self.headers)
 
-        return '<%s %s>' % (self.namespace, columns_info)
+        return "<%s %s>" % (self.namespace, columns_info)
 
     @property
     def fieldnames(self):
@@ -249,7 +262,6 @@ class Reader(object):
         return len(self.headers)
 
     def rows(self):
-
         def chained():
             if self.prelude_rows is not None:
                 for row in self.prelude_rows:
@@ -297,10 +309,13 @@ class Reader(object):
             pos = column
 
         if with_rows:
+
             def iterator():
                 for row in self.rows():
                     yield row, row[pos]
+
         else:
+
             def iterator():
                 for row in self.rows():
                     yield row[pos]
@@ -314,7 +329,7 @@ class Reader(object):
         return self.__cells(column, with_rows=with_rows)
 
     def close(self):
-        if self.input_type == 'file':
+        if self.input_type == "file":
             self.input_file.close()
 
     def __enter__(self):
@@ -325,7 +340,9 @@ class Reader(object):
 
     @classmethod
     def count(cls, input_file, max_rows=None, **kwargs):
-        assert max_rows is None or max_rows > 0, '%s.count: expected max_rows to be `None` or > 0.' % cls.namespace
+        assert max_rows is None or max_rows > 0, (
+            "%s.count: expected max_rows to be `None` or > 0." % cls.namespace
+        )
 
         n = 0
 
