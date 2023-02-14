@@ -8,7 +8,7 @@ import csv
 from io import StringIO
 from platform import python_version_tuple
 
-from casanova.defaults import set_default_ignore_null_bytes, set_default_prebuffer_bytes
+from casanova.defaults import set_defaults
 from casanova.reader import DictLikeRow, Headers
 from casanova.exceptions import EmptyFileError, MissingColumnError
 
@@ -254,9 +254,9 @@ class TestReader(object):
 
     def test_global_defaults(self):
         with pytest.raises(TypeError):
-            set_default_prebuffer_bytes([])
+            set_defaults(prebuffer_bytes=[])
 
-        set_default_prebuffer_bytes(1024)
+        set_defaults(prebuffer_bytes=1024)
 
         with open("./test/resources/people.csv") as f:
             reader = casanova.reader(f)
@@ -264,12 +264,12 @@ class TestReader(object):
             assert list(reader.cells("surname")) == ["Matthews", "Sue", "Stone"]
             assert reader.total == 3
 
-        set_default_prebuffer_bytes(None)
+        set_defaults(prebuffer_bytes=None)
 
         with pytest.raises(TypeError):
-            set_default_ignore_null_bytes(1324)
+            set_defaults(ignore_null_bytes=1324)
 
-        set_default_ignore_null_bytes(True)
+        set_defaults(ignore_null_bytes=True)
 
         with open("./test/resources/with_null_bytes.csv") as f:
             reader = casanova.reader(f)
@@ -278,7 +278,7 @@ class TestReader(object):
 
             assert rows == [["John", "Zero"], ["Mary", "La Croix"]]
 
-        set_default_ignore_null_bytes(False)
+        set_defaults(ignore_null_bytes=False)
 
     def test_ignore_null_bytes(self):
         with open("./test/resources/with_null_bytes.csv") as f:

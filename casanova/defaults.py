@@ -5,21 +5,22 @@
 # Global mutable defaults used by casanova classes.
 #
 DEFAULTS = {"prebuffer_bytes": None, "ignore_null_bytes": False}
+NOT_GIVEN = object()
 
 
-def set_default_prebuffer_bytes(value):
+def set_defaults(prebuffer_bytes=NOT_GIVEN, ignore_null_bytes=NOT_GIVEN):
     global DEFAULTS
 
-    if value is not None and (not isinstance(value, int) or value < 1):
-        raise TypeError("expecting a positive integer")
+    if prebuffer_bytes is not NOT_GIVEN:
+        if prebuffer_bytes is not None and (
+            not isinstance(prebuffer_bytes, int) or prebuffer_bytes < 1
+        ):
+            raise TypeError("prebuffer_bytes should be None or a positive integer")
 
-    DEFAULTS["prebuffer_bytes"] = value
+        DEFAULTS["prebuffer_bytes"] = prebuffer_bytes
 
+    if ignore_null_bytes is not NOT_GIVEN:
+        if not isinstance(ignore_null_bytes, bool):
+            raise TypeError("expecting a boolean")
 
-def set_default_ignore_null_bytes(value):
-    global DEFAULTS
-
-    if not isinstance(value, bool):
-        raise TypeError("expecting a boolean")
-
-    DEFAULTS["ignore_null_bytes"] = value
+        DEFAULTS["ignore_null_bytes"] = ignore_null_bytes
