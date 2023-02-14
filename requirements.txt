@@ -3,7 +3,7 @@ file-read-backwards==2.0.0
 
 # Dev Dependenciesy
 black==23.1.0
-click==7.1.1
+click
 importchecker==2.0
 pytest==7.2.1
 quenouille==1.4.2
