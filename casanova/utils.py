@@ -34,6 +34,36 @@ def suppress_BOM(string):
     return re.sub(BOM_RE, "", string)
 
 
+def has_null_byte(string):
+    return "\0" in string
+
+
+def strip_null_bytes(string):
+    return string.replace("\0", "")
+
+
+def lines_without_null_bytes(iterable):
+    for line in iterable:
+        yield strip_null_bytes(line)
+
+
+def first_cell_index_with_null_byte(row):
+    for i, cell in enumerate(row):
+        if has_null_byte(cell):
+            return i
+
+    return None
+
+
+def rows_without_null_bytes(iterable):
+    for row in iterable:
+        if any(has_null_byte(cell) for cell in row):
+            yield [strip_null_bytes(cell) for cell in row]
+
+        else:
+            yield row
+
+
 def size_of_row_in_memory(row):
     """
     Returns the approximate amount of bytes needed to represent the given row into

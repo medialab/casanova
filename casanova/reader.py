@@ -11,7 +11,13 @@ from io import IOBase
 from operator import itemgetter
 
 from casanova.defaults import DEFAULTS
-from casanova.utils import ensure_open, suppress_BOM, size_of_row_in_file
+from casanova.utils import (
+    ensure_open,
+    suppress_BOM,
+    size_of_row_in_file,
+    lines_without_null_bytes,
+    rows_without_null_bytes,
+)
 from casanova.exceptions import EmptyFileError, MissingColumnError, NoHeadersError
 
 
@@ -149,14 +155,23 @@ class Reader(object):
             reader_kwargs["delimiter"] = delimiter
 
         self.input_type = input_type
-        self.input_file = input_file
+        self.input_file = None
 
         if self.input_type == "iterable":
-            self.reader = self.input_file
-        else:
             if ignore_null_bytes:
-                input_file = (item.replace("\0", "") for item in input_file)
-            self.reader = csv.reader(input_file, **reader_kwargs)
+                self.reader = rows_without_null_bytes(input_file)
+            else:
+                self.reader = input_file
+
+        else:
+            self.input_file = input_file
+
+            if ignore_null_bytes:
+                self.reader = csv.reader(
+                    lines_without_null_bytes(self.input_file), **reader_kwargs
+                )
+            else:
+                self.reader = csv.reader(self.input_file, **reader_kwargs)
 
         self.buffered_rows = []
         self.was_completely_buffered = False
