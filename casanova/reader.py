@@ -238,6 +238,9 @@ class Reader(object):
     def __iter__(self):
         return self.rows()
 
+    # NOTE: this function exists because it takes into
+    # account rows skipped by resumers, which is
+    # essential for threadsafe operations etc.
     def enumerate(self):
         for row in self.rows():
             yield self.current_row_index, row
