@@ -9,7 +9,7 @@ from io import StringIO
 from platform import python_version_tuple
 
 from casanova.defaults import set_defaults
-from casanova.reader import DictLikeRow, Headers
+from casanova.headers import DictLikeRow, Headers
 from casanova.exceptions import EmptyFileError, MissingColumnError
 
 PYTHON_MAJOR, PYTHON_MINOR, _ = python_version_tuple()
