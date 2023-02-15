@@ -256,6 +256,7 @@ class Reader(object):
         self.prelude_rows = None
         self.row_filter = None
         self.current_row_index = -1
+        self.__iterator = self.__create_inner_rows_iterator()
 
     def __repr__(self):
         columns_info = " ".join("%s=%s" % t for t in self.headers)
@@ -276,7 +277,7 @@ class Reader(object):
 
         return len(self.headers)
 
-    def rows(self):
+    def __create_inner_rows_iterator(self):
         def chained():
             if self.prelude_rows is not None:
                 for row in self.prelude_rows:
@@ -298,15 +299,21 @@ class Reader(object):
             if self.row_filter(self.current_row_index, row):
                 yield row
 
+    def rows(self):
+        return self.__iterator
+
+    def __next__(self):
+        return next(self.__iterator)
+
+    def __iter__(self):
+        return self.rows()
+
     def enumerate(self):
         for row in self.rows():
             yield self.current_row_index, row
 
     def wrap(self, row):
         return self.headers.wrap(row)
-
-    def __iter__(self):
-        return self.rows()
 
     def __cells(self, column, with_rows=False):
         if not isinstance(column, int):

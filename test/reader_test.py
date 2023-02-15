@@ -311,3 +311,25 @@ class TestReader(object):
 
             with pytest.raises(csv.Error, match="NUL"):
                 rows = list(reader)
+
+    def test_iterable_iterator(self):
+        with open("./test/resources/people.csv") as f:
+            reader = casanova.reader(f)
+
+            assert next(reader) == ["John", "Matthews"]
+            assert next(reader) == ["Mary", "Sue"]
+            assert next(reader) == ["Julia", "Stone"]
+
+            with pytest.raises(StopIteration):
+                next(reader)
+
+    def test_no_double_iteration(self):
+        with open("./test/resources/people.csv") as f:
+            reader = casanova.reader(f)
+
+            data = list(reader)
+
+            assert len(data) == 3
+
+            for _ in reader:
+                assert False
