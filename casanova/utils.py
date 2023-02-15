@@ -159,7 +159,21 @@ class CsvDictRowIO(CsvIOBase):
     def __init__(self, row):
         super().__init__()
 
-        self.writer = normalized_csv_dict_writer(self, list(row.keys()))
+        self.fieldnames = list(row.keys())
+        self.writer = normalized_csv_dict_writer(self, self.fieldnames)
 
         self.writer.writeheader()
         self.writer.writerow(row)
+
+
+class CsvIO(CsvIOBase):
+    def __init__(self, fieldnames, rows):
+        super().__init__()
+
+        self.fieldnames = fieldnames
+        self.writer = normalized_csv_writer(self)
+
+        self.writer.writerow(fieldnames)
+
+        for row in rows:
+            self.writer.writerow(row)

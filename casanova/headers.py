@@ -4,6 +4,8 @@
 #
 # Utility class representing a CSV file's headers
 #
+import csv
+from io import StringIO
 from operator import itemgetter
 
 
@@ -52,6 +54,47 @@ class Headers(object):
 
     def get(self, key, default=None):
         return self.__mapping.get(key, default)
+
+    def selection(self, selection):
+        """
+        From xsv:
+
+        Select one column by name:
+            * name
+
+        Select one column by index (1-based):
+            * 2
+
+        Select the first and fourth columns:
+            * 1,4
+
+        Select the first 4 columns (by index and by name):
+            * 1-4
+            * Header1-Header4
+
+        Ignore the first 2 columns (by range and by omission):
+            * 3-
+            * '!1-2'
+
+        Select the third column named 'Foo':
+            * 'Foo[2]'
+
+        Re-order and duplicate columns arbitrarily:
+            * 3-1,Header3-Header1,Header1,Foo[2],Header1
+
+        Quote column names that conflict with selector syntax:
+            * '"Date - Opening","Date - Actual Closing"'
+        """
+
+        # TODO: ability to pass list and not raw string
+
+        # NOTE: using a csv reader
+        reader = csv.reader(StringIO(selection))
+        parts = list(reader)
+
+        print(parts)
+
+        raise NotImplementedError
 
     def collect(self, keys):
         return [self[k] for k in keys]

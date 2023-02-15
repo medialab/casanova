@@ -7,6 +7,7 @@ from casanova.utils import (
     CsvCellIO,
     CsvRowIO,
     CsvDictRowIO,
+    CsvIO,
 )
 
 
@@ -37,4 +38,11 @@ class TestUtils(object):
         assert (
             CsvDictRowIO({"name": "John", "surname": "Michael"}).getvalue().strip()
             == "name,surname\nJohn,Michael"
+        )
+
+        assert (
+            CsvIO(["name", "surname"], [["John", "Matthews"], ["Lisa", "Orange"]])
+            .getvalue()
+            .strip()
+            == "name,surname\nJohn,Matthews\nLisa,Orange"
         )
