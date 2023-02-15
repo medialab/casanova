@@ -1,4 +1,4 @@
-from benchmark.utils import Timer
+from ebbe import Timer
 import click
 import csv
 import casanova
@@ -31,6 +31,16 @@ def bench(path, column, headers=True, skip_std=True):
     with Timer("casanova.reader: cached pos"):
         with open(path) as f:
             reader = casanova.reader(f, no_headers=not headers)
+            pos = reader.headers[column]
+
+            for row in reader:
+                a = row[pos]
+
+    with Timer("casanova.reader: cached pos, strip null bytes"):
+        with open(path) as f:
+            reader = casanova.reader(
+                f, no_headers=not headers, strip_null_bytes_on_read=True
+            )
             pos = reader.headers[column]
 
             for row in reader:
