@@ -191,16 +191,14 @@ class Reader(object):
         self.__iterator = self.__create_inner_rows_iterator()
 
     def __repr__(self):
-        columns_info = " ".join("%s=%s" % t for t in self.headers)
-
-        return "<%s %s>" % (self.namespace, columns_info)
+        return "<%s>" % self.namespace
 
     @property
     def fieldnames(self):
         if self.headers is None:
             return None
 
-        return [k for k, _ in self.headers]
+        return self.headers.fieldnames
 
     @property
     def row_len(self):

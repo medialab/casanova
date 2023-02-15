@@ -37,11 +37,11 @@ class TestReader(object):
         headers = Headers(["name", "surname"])
 
         assert len(headers) == 2
-        assert list(headers) == [("name", 0), ("surname", 1)]
+        assert list(headers) == ["name", "surname"]
 
         headers.rename("name", "first_name")
 
-        assert list(headers) == [("first_name", 0), ("surname", 1)]
+        assert list(headers) == ["first_name", "surname"]
 
     def test_basics(self):
         with open("./test/resources/people.csv") as f:
@@ -64,10 +64,6 @@ class TestReader(object):
 
             assert len(reader.headers) == 2
             assert reader.fieldnames == ["name", "surname"]
-
-            assert list(reader.headers) == [("name", 0), ("surname", 1)]
-            assert dict(list(reader.headers)) == {"name": 0, "surname": 1}
-            assert reader.headers.as_dict() == {"name": 0, "surname": 1}
 
             with pytest.raises(KeyError):
                 reader.headers["whatever"]

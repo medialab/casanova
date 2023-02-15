@@ -5,9 +5,8 @@
 # Utility class representing a CSV file's headers
 #
 import re
-from operator import itemgetter
 from ebbe import with_next
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 from casanova.exceptions import InvalidSelectionError
 
@@ -153,20 +152,35 @@ class DictLikeRow(object):
 
 class Headers(object):
     def __init__(self, fieldnames):
-        self.__mapping = {h: i for i, h in enumerate(fieldnames)}
+        self.__mapping = defaultdict(list)
+        self.__flat_mapping = {}
+        self.fieldnames = fieldnames
+
+        for i, h in enumerate(fieldnames):
+            self.__mapping[h].append(i)
+            self.__flat_mapping[h] = i
 
     def rename(self, old_name, new_name):
-        if old_name == new_name:
-            raise TypeError
+        new_fieldnames = list(self.fieldnames)
 
-        self.__mapping[new_name] = self[old_name]
-        del self.__mapping[old_name]
+        for i, f in enumerate(new_fieldnames):
+            if f == old_name:
+                new_fieldnames[i] = new_name
+
+        self.__init__(new_fieldnames)
 
     def __len__(self):
-        return len(self.__mapping)
+        return len(self.fieldnames)
 
     def __getitem__(self, key):
-        return self.__mapping[key]
+        indices = self.__mapping.get(key)
+
+        if indices is None:
+            raise KeyError(key)
+
+        assert len(indices) > 0
+
+        return indices[0]
 
     def __getattr__(self, key):
         return self.__getitem__(key)
@@ -175,13 +189,17 @@ class Headers(object):
         return key in self.__mapping
 
     def __iter__(self):
-        yield from sorted(self.__mapping.items(), key=itemgetter(1))
-
-    def as_dict(self):
-        return self.__mapping.copy()
+        yield from self.fieldnames
 
     def get(self, key, default=None):
-        return self.__mapping.get(key, default)
+        indices = self.__mapping.get(key)
+
+        if indices is None:
+            return default
+
+        assert len(indices) > 0
+
+        return indices[0]
 
     def select(self, selection):
         """
@@ -217,21 +235,21 @@ class Headers(object):
         # TODO: ability to pass list and not raw string
 
         # NOTE: using a csv reader
-        parts = selection.split(",")
-        print(parts)
+        # parts = selection.split(",")
+        pass
 
     def collect(self, keys):
         return [self[k] for k in keys]
 
     def wrap(self, row):
-        return DictLikeRow(self.__mapping, row)
+        return DictLikeRow(self.__flat_mapping, row)
 
     def __repr__(self):
         class_name = self.__class__.__name__
 
         representation = "<" + class_name
 
-        for h, i in self:
+        for i, h in enumerate(self):
             if h.isidentifier():
                 representation += " %s=%s" % (h, i)
             else:

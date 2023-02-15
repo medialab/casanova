@@ -109,9 +109,7 @@ class Enricher(Reader):
             self.writeheader()
 
     def __repr__(self):
-        columns_info = " ".join("%s=%s" % t for t in self.headers)
-
-        return "<%s %s>" % (self.__class__.__name__, columns_info)
+        return "<%s>" % self.__class__.__name__
 
     def filterrow(self, row):
         if self.keep_indices is not None:
