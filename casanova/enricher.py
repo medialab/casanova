@@ -17,16 +17,33 @@ from casanova.resuming import (
 )
 from casanova.exceptions import MissingColumnError
 from casanova.reader import Reader, Headers
+from casanova.defaults import DEFAULTS
+from casanova.utils import strip_null_bytes_from_row, py310_wrap_csv_writerow
 
 
 class Enricher(Reader):
     __supported_resumers__ = (RowCountResumer, LastCellComparisonResumer)
 
     def __init__(
-        self, input_file, output_file, no_headers=False, keep=None, add=None, **kwargs
+        self,
+        input_file,
+        output_file,
+        no_headers=False,
+        keep=None,
+        add=None,
+        strip_null_bytes_on_write=None,
+        **kwargs
     ):
         # Inheritance
         super().__init__(input_file, no_headers=no_headers, **kwargs)
+
+        if strip_null_bytes_on_write is None:
+            strip_null_bytes_on_write = DEFAULTS["strip_null_bytes_on_write"]
+
+        if not isinstance(strip_null_bytes_on_write, bool):
+            raise TypeError('expecting a boolean as "strip_null_bytes_on_write" kwarg')
+
+        self.strip_null_bytes_on_write = strip_null_bytes_on_write
 
         self.keep_indices = None
         self.output_fieldnames = self.fieldnames
@@ -85,6 +102,7 @@ class Enricher(Reader):
 
         # Instantiating writer
         self.writer = csv.writer(output_file)
+        self._writerow = py310_wrap_csv_writerow(self.writer)
 
         # Need to write headers?
         if not no_headers and not can_resume:
@@ -123,13 +141,18 @@ class Enricher(Reader):
 
             row = self.filterrow(row)
 
+        # NOTE: maybe it could be faster to wrap writerow altogether
+        # instead of running this condition on each write
+        if self.strip_null_bytes_on_write:
+            row = strip_null_bytes_from_row(row)
+
         return row
 
     def writeheader(self):
-        self.writer.writerow(self.output_fieldnames)
+        self._writerow(self.output_fieldnames)
 
     def writerow(self, row, add=None):
-        self.writer.writerow(self.formatrow(row, add))
+        self._writerow(self.formatrow(row, add))
 
 
 class ThreadSafeEnricher(Enricher):

@@ -7,14 +7,24 @@
 #
 import csv
 
+from casanova.defaults import DEFAULTS
 from casanova.resuming import Resumer, LastCellResumer
 from casanova.reader import Headers
+from casanova.utils import py310_wrap_csv_writerow, strip_null_bytes_from_row
 
 
 class Writer(object):
     __supported_resumers__ = (LastCellResumer,)
 
-    def __init__(self, output_file, fieldnames):
+    def __init__(self, output_file, fieldnames, strip_null_bytes_on_write=None):
+        if strip_null_bytes_on_write is None:
+            strip_null_bytes_on_write = DEFAULTS["strip_null_bytes_on_write"]
+
+        if not isinstance(strip_null_bytes_on_write, bool):
+            raise TypeError('expecting a boolean as "strip_null_bytes_on_write" kwarg')
+
+        self.strip_null_bytes_on_write = strip_null_bytes_on_write
+
         self.fieldnames = fieldnames
         self.headers = Headers(fieldnames)
 
@@ -37,12 +47,20 @@ class Writer(object):
             output_file = resumer.open_output_file()
 
         self.writer = csv.writer(output_file)
+        self._writerow = py310_wrap_csv_writerow(self.writer)
 
         if not can_resume:
             self.writeheader()
 
     def writeheader(self):
-        self.writer.writerow(self.fieldnames)
+        row = self.fieldnames
+
+        if self.strip_null_bytes_on_write:
+            row = strip_null_bytes_from_row(row)
+
+        self._writerow(row)
 
     def writerow(self, row):
-        self.writer.writerow(row)
+        self._writerow(
+            strip_null_bytes_from_row(row) if self.strip_null_bytes_on_write else row
+        )

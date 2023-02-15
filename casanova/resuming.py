@@ -15,7 +15,7 @@ from casanova.exceptions import (
     ResumeError,
     NotResumableError,
     MissingColumnError,
-    CorruptedIndexColumn,
+    CorruptedIndexColumnError,
 )
 from casanova.contiguous_range_set import ContiguousRangeSet
 
@@ -154,7 +154,7 @@ class ThreadSafeResumer(Resumer):
                 try:
                     current_index = int(row[pos])
                 except ValueError:
-                    raise CorruptedIndexColumn
+                    raise CorruptedIndexColumnError
 
                 self.already_done.add(current_index)
 

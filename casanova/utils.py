@@ -8,6 +8,29 @@ import re
 import csv
 import gzip
 from io import StringIO
+from platform import python_version_tuple
+
+from casanova.exceptions import Py310NullByteWriteError
+
+PY_310 = python_version_tuple()[:2] == ("3", "10")
+
+
+def py310_wrap_csv_writerow(writer):
+    if not PY_310:
+        return writer.writerow
+
+    def wrapped(*args, **kwargs):
+        try:
+            writer.writerow(*args, **kwargs)
+        except csv.Error as e:
+            if str(e).lower() == "need to escape, but no escapechar set":
+                raise Py310NullByteWriteError(
+                    "Cannot write row containing null byte. This error only happens on python 3.10 (see https://github.com/python/cpython/issues/56387). Consider using the strip_null_bytes_on_write=True kwarg or change python version."
+                )
+
+            raise
+
+    return wrapped
 
 
 def ensure_open(p, encoding="utf-8", mode="r"):
@@ -55,13 +78,16 @@ def first_cell_index_with_null_byte(row):
     return None
 
 
+def strip_null_bytes_from_row(row):
+    if any(has_null_byte(cell) for cell in row):
+        return [strip_null_bytes(cell) for cell in row]
+
+    return row
+
+
 def rows_without_null_bytes(iterable):
     for row in iterable:
-        if any(has_null_byte(cell) for cell in row):
-            yield [strip_null_bytes(cell) for cell in row]
-
-        else:
-            yield row
+        yield strip_null_bytes_from_row(row)
 
 
 def size_of_row_in_memory(row):

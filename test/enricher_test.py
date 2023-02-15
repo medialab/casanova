@@ -18,7 +18,8 @@ from casanova.resuming import (
     RowCountResumer,
     ThreadSafeResumer,
 )
-from casanova.exceptions import EmptyFileError
+from casanova.exceptions import EmptyFileError, Py310NullByteWriteError
+from casanova.utils import PY_310
 
 
 class TestEnricher(object):
@@ -411,3 +412,28 @@ class TestEnricher(object):
             ["Stone", "", "purple"],
             ["Stone", "end", "cyan"],
         ]
+
+    def test_strip_null_bytes_on_write(self):
+        data = [["name"], ["John\0 Kawazaki"]]
+        output = StringIO()
+
+        enricher = casanova.enricher(data, output, strip_null_bytes_on_write=True)
+
+        for row in enricher:
+            enricher.writerow(row)
+
+        result = output.getvalue().strip()
+
+        assert "\0" not in result
+
+    def test_py310_wrapper(self):
+        if not PY_310:
+            return
+
+        data = [["name"], ["John\0 Kawazaki"]]
+
+        with pytest.raises(Py310NullByteWriteError):
+            enricher = casanova.enricher(data, StringIO())
+
+            for row in enricher:
+                enricher.writerow(row)

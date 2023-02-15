@@ -36,5 +36,9 @@ class ResumeError(CasanovaError):
     pass
 
 
-class CorruptedIndexColumn(CasanovaError):
+class CorruptedIndexColumnError(CasanovaError):
+    pass
+
+
+class Py310NullByteWriteError(CasanovaError):
     pass

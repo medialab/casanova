@@ -1,12 +1,15 @@
 # =============================================================================
 # Casanova Writer Unit Tests
 # =============================================================================
+import pytest
 from io import StringIO
 
 from test.utils import collect_csv
 
+from casanova.utils import PY_310
 from casanova.writer import Writer
 from casanova.resuming import LastCellResumer
+from casanova.exceptions import Py310NullByteWriteError
 
 
 class TestWriter(object):
@@ -59,3 +62,21 @@ class TestWriter(object):
             ["4"],
             ["5"],
         ]
+
+    def test_strip_null_bytes_on_write(self):
+        output = StringIO()
+
+        writer = Writer(output, fieldnames=["name"], strip_null_bytes_on_write=True)
+        writer.writerow(["John\0 Kawazaki"])
+
+        result = output.getvalue().strip()
+
+        assert "\0" not in result
+
+    def test_py310_wrapper(self):
+        if not PY_310:
+            return
+
+        with pytest.raises(Py310NullByteWriteError):
+            writer = Writer(StringIO(), fieldnames=["name"])
+            writer.writerow(["John\0 Kawazaki"])
