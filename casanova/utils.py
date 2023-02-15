@@ -143,6 +143,8 @@ class CsvCellIO(CsvIOBase):
         self.writer.writerow(self.fieldnames)
         self.writer.writerow([value])
 
+        self.seek(0)
+
 
 class CsvRowIO(CsvIOBase):
     def __init__(self, fieldnames, row):
@@ -154,6 +156,8 @@ class CsvRowIO(CsvIOBase):
         self.writer.writerow(self.fieldnames)
         self.writer.writerow(row)
 
+        self.seek(0)
+
 
 class CsvDictRowIO(CsvIOBase):
     def __init__(self, row):
@@ -164,6 +168,8 @@ class CsvDictRowIO(CsvIOBase):
 
         self.writer.writeheader()
         self.writer.writerow(row)
+
+        self.seek(0)
 
 
 class CsvIO(CsvIOBase):
@@ -177,3 +183,5 @@ class CsvIO(CsvIOBase):
 
         for row in rows:
             self.writer.writerow(row)
+
+        self.seek(0)

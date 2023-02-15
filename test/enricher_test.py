@@ -19,7 +19,7 @@ from casanova.resuming import (
     ThreadSafeResumer,
 )
 from casanova.exceptions import EmptyFileError, Py310NullByteWriteError
-from casanova.utils import PY_310
+from casanova.utils import PY_310, CsvIO
 
 
 class TestEnricher(object):
@@ -437,3 +437,14 @@ class TestEnricher(object):
 
             for row in enricher:
                 enricher.writerow(row)
+
+    # def test_duplicate_input_columns(self):
+    #     data = CsvIO(["name", "name", "surname"], [["John", "Mary", "Matthews"]])
+    #     output = StringIO()
+
+    #     enricher = casanova.enricher(data, output, add=("nb",))
+
+    #     for row in enricher:
+    #         enricher.writerow(row, add=[1])
+
+    #     print(output.getvalue())
