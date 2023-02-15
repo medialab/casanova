@@ -42,3 +42,9 @@ class CorruptedIndexColumnError(CasanovaError):
 
 class Py310NullByteWriteError(CasanovaError):
     pass
+
+
+class InvalidSelectionError(CasanovaError):
+    def __init__(self, msg=None, selection=None):
+        super().__init__(msg)
+        self.selection = selection
