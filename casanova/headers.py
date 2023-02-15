@@ -245,6 +245,9 @@ class Headers(object):
         return [self[k] for k in keys]
 
     def wrap(self, row):
+        if len(row) != len(self.fieldnames):
+            raise TypeError("len mismatch for row and headers")
+
         return DictLikeRow(self.__flat_mapping, row)
 
     def __repr__(self):
