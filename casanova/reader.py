@@ -268,7 +268,7 @@ class Reader(object):
         if self.headers is None:
             return None
 
-        return [k for k, v in self.headers]
+        return [k for k, _ in self.headers]
 
     @property
     def row_len(self):
