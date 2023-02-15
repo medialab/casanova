@@ -18,19 +18,21 @@ class TestHeaders(object):
         assert headers.get("Foo", index=2) == 3
 
     def test_selection_dsl(self):
-        fieldnames = [
-            "Header1",
-            "Header2",
-            "Header3",
-            "Header4",
-            "Foo",
-            "Foo",
-            "Header5",
-            "Foo",
-            "Date - Opening",
-            "Date - Actual Closing",
-            "Header, Whatever",
-        ]
+        headers = Headers(
+            [
+                "Header1",
+                "Header2",
+                "Header3",
+                "Header4",
+                "Foo",
+                "Foo",
+                "Header5",
+                "Foo",
+                "Date - Opening",
+                "Date - Actual Closing",
+                "Header, Whatever",
+            ]
+        )
 
         selection = list(
             parse_selection(
@@ -53,3 +55,11 @@ class TestHeaders(object):
         selection = list(parse_selection("!1-4"))
 
         assert selection == [RangeSelection(start=0, end=3, negative=True)]
+
+        indices = headers.select("1-4")
+
+        assert indices == [0, 1, 2]
+
+        indices = headers.select('Header2,1-4,6-4,"Date - Opening",1-1,10-')
+
+        assert indices == [1, 0, 1, 2, 5, 4, 8, 0, 9, 10]

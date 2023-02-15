@@ -37,6 +37,36 @@ def parse_key(key):
 
 # TODO: in escape backslash
 def parse_selection(selection):
+    """
+    From xsv:
+
+    Select one column by name:
+        * name
+
+    Select one column by index (1-based):
+        * 2
+
+    Select the first and fourth columns:
+        * 1,4
+
+    Select the first 4 columns (by index and by name):
+        * 1-4
+        * Header1-Header4
+
+    Ignore the first 2 columns (by range and by omission):
+        * 3-
+        * '!1-2'
+
+    Select the third column named 'Foo':
+        * 'Foo[2]'
+
+    Re-order and duplicate columns arbitrarily:
+        * 3-1,Header3-Header1,Header1,Foo[2],Header1
+
+    Quote column names that conflict with selector syntax:
+        * '"Date - Opening","Date - Actual Closing"'
+    """
+
     def parts():
         acc = ""
         current_escapechar = None
@@ -109,6 +139,10 @@ def parse_selection(selection):
                     if key < 0 or (end_key is not None and end_key < 0):
                         raise InvalidSelectionError("range has negative index")
 
+                if end_key is not None and key == end_key:
+                    yield SimpleSelection(key=key, negative=negative)
+                    continue
+
                 yield RangeSelection(
                     start=key,
                     end=end_key,
@@ -173,6 +207,14 @@ class Headers(object):
         return len(self.fieldnames)
 
     def __getitem__(self, key):
+        # NOTE: for numeric keys (i.e. no headers), this function
+        # is identity
+        if isinstance(key, int):
+            if key >= len(self.fieldnames):
+                raise IndexError(key)
+
+            return key
+
         indices = self.__mapping.get(key)
 
         if indices is None:
@@ -205,41 +247,53 @@ class Headers(object):
         return indices[0]
 
     def select(self, selection):
-        """
-        From xsv:
+        # TODO: maybe we don't need to accumulate slices
+        # TODO: handle simple case when selection is a simple integer
 
-        Select one column by name:
-            * name
+        slices = []
 
-        Select one column by index (1-based):
-            * 2
+        for item in parse_selection(selection):
+            if item.negative:
+                raise NotImplementedError
 
-        Select the first and fourth columns:
-            * 1,4
+            if isinstance(item, SimpleSelection):
+                if isinstance(item.key, int):
+                    slices.append(item.key)
+                else:
+                    slices.append(self[item.key])
 
-        Select the first 4 columns (by index and by name):
-            * 1-4
-            * Header1-Header4
+            elif isinstance(item, RangeSelection):
+                start = item.start
+                end = item.end
 
-        Ignore the first 2 columns (by range and by omission):
-            * 3-
-            * '!1-2'
+                if not isinstance(start, int):
+                    start = self[start]
 
-        Select the third column named 'Foo':
-            * 'Foo[2]'
+                    if end is not None:
+                        end = self[end]
 
-        Re-order and duplicate columns arbitrarily:
-            * 3-1,Header3-Header1,Header1,Foo[2],Header1
+                if end is not None and start > end:
+                    slices.append(slice(start, end, -1))
+                else:
+                    slices.append(slice(start, end))
+            else:
+                idx = self.get(item.key, index=item.index)
 
-        Quote column names that conflict with selector syntax:
-            * '"Date - Opening","Date - Actual Closing"'
-        """
+                if idx is None:
+                    raise KeyError("%s[%i]" % item)
 
-        # TODO: ability to pass list and not raw string
+                slices.append(idx)
 
-        # NOTE: using a csv reader
-        # parts = selection.split(",")
-        pass
+        all_indices = list(range(len(self)))
+        indices = []
+
+        for i in slices:
+            if isinstance(i, slice):
+                indices.extend(all_indices[i])
+            else:
+                indices.append(all_indices[i])
+
+        return indices
 
     def collect(self, keys):
         return [self[k] for k in keys]
