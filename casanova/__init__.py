@@ -16,7 +16,7 @@ from casanova.resuming import (
 )
 from casanova.reverse_reader import ReverseReader, Batch
 from casanova.writer import Writer
-from casanova.utils import CsvCellIO, CsvRowIO
+from casanova.utils import CsvCellIO, CsvRowIO, CsvDictRowIO
 from casanova.defaults import set_defaults
 
 reader = Reader

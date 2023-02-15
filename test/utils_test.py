@@ -6,6 +6,7 @@ from casanova.utils import (
     size_of_row_in_file,
     CsvCellIO,
     CsvRowIO,
+    CsvDictRowIO,
 )
 
 
@@ -27,8 +28,13 @@ class TestUtils(object):
             == 'name\n"Yomgui, the real"'
         )
 
-    def test_csv_row_io(self):
+    def test_io(self):
         assert (
             CsvRowIO(["tweet_id", "user_id"], ["7274", "971"]).getvalue().strip()
             == "tweet_id,user_id\n7274,971"
+        )
+
+        assert (
+            CsvDictRowIO({"name": "John", "surname": "Michael"}).getvalue().strip()
+            == "name,surname\nJohn,Michael"
         )

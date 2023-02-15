@@ -93,23 +93,47 @@ def size_of_row_in_file(row):
     return a
 
 
-def CsvCellIO(column, value):
-    buf = StringIO()
-    writer = csv.writer(buf, dialect=csv.unix_dialect, quoting=csv.QUOTE_MINIMAL)
-    writer.writerow([column])
-    writer.writerow([value])
-
-    buf.seek(0)
-
-    return buf
+def normalized_csv_writer(f):
+    return csv.writer(f, dialect=csv.unix_dialect, quoting=csv.QUOTE_MINIMAL)
 
 
-def CsvRowIO(columns, row):
-    buf = StringIO()
-    writer = csv.writer(buf, dialect=csv.unix_dialect, quoting=csv.QUOTE_MINIMAL)
-    writer.writerow(columns)
-    writer.writerow(row)
+def normalized_csv_dict_writer(f, fieldnames):
+    return csv.DictWriter(
+        f, fieldnames=fieldnames, dialect=csv.unix_dialect, quoting=csv.QUOTE_MINIMAL
+    )
 
-    buf.seek(0)
 
-    return buf
+class CsvIOBase(StringIO):
+    ...
+
+
+class CsvCellIO(CsvIOBase):
+    def __init__(self, column, value):
+        super().__init__()
+
+        self.writer = normalized_csv_writer(self)
+        self.fieldnames = [column]
+
+        self.writer.writerow(self.fieldnames)
+        self.writer.writerow([value])
+
+
+class CsvRowIO(CsvIOBase):
+    def __init__(self, fieldnames, row):
+        super().__init__()
+
+        self.writer = normalized_csv_writer(self)
+        self.fieldnames = fieldnames
+
+        self.writer.writerow(self.fieldnames)
+        self.writer.writerow(row)
+
+
+class CsvDictRowIO(CsvIOBase):
+    def __init__(self, row):
+        super().__init__()
+
+        self.writer = normalized_csv_dict_writer(self, list(row.keys()))
+
+        self.writer.writeheader()
+        self.writer.writerow(row)
