@@ -191,13 +191,16 @@ class Headers(object):
     def __iter__(self):
         yield from self.fieldnames
 
-    def get(self, key, default=None):
+    def get(self, key, default=None, index=None):
         indices = self.__mapping.get(key)
 
         if indices is None:
             return default
 
         assert len(indices) > 0
+
+        if index is not None:
+            return indices[index]
 
         return indices[0]
 
