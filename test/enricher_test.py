@@ -438,13 +438,16 @@ class TestEnricher(object):
             for row in enricher:
                 enricher.writerow(row)
 
-    # def test_duplicate_input_columns(self):
-    #     data = CsvIO(["name", "name", "surname"], [["John", "Mary", "Matthews"]])
-    #     output = StringIO()
+    def test_duplicate_input_columns(self):
+        data = CsvIO(["name", "name", "surname"], [["John", "Mary", "Matthews"]])
+        output = StringIO()
 
-    #     enricher = casanova.enricher(data, output, add=("nb",))
+        enricher = casanova.enricher(data, output)
 
-    #     for row in enricher:
-    #         enricher.writerow(row, add=[1])
+        for row in enricher:
+            enricher.writerow(row)
 
-    #     print(output.getvalue())
+        assert (
+            output.getvalue().replace("\r\n", "\n").strip()
+            == "name,name,surname\nJohn,Mary,Matthews"
+        )
