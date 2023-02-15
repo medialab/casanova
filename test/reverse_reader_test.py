@@ -140,8 +140,8 @@ class TestReverseReader(object):
                 end_symbol="end",
             )
 
-    def test_ignore_null_bytes(self):
+    def test_strip_null_bytes_on_read(self):
         with open("./test/resources/with_null_bytes.csv") as f:
-            reader = casanova.reverse_reader(f, ignore_null_bytes=True)
+            reader = casanova.reverse_reader(f, strip_null_bytes_on_read=True)
 
             assert list(reader) == [["Mary", "La Croix"], ["John", "Zero"]]

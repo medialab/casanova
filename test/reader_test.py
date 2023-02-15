@@ -267,9 +267,9 @@ class TestReader(object):
         set_defaults(prebuffer_bytes=None)
 
         with pytest.raises(TypeError):
-            set_defaults(ignore_null_bytes=1324)
+            set_defaults(strip_null_bytes_on_read=1324)
 
-        set_defaults(ignore_null_bytes=True)
+        set_defaults(strip_null_bytes_on_read=True)
 
         with open("./test/resources/with_null_bytes.csv") as f:
             reader = casanova.reader(f)
@@ -278,11 +278,11 @@ class TestReader(object):
 
             assert rows == [["John", "Zero"], ["Mary", "La Croix"]]
 
-        set_defaults(ignore_null_bytes=False)
+        set_defaults(strip_null_bytes_on_read=False)
 
-    def test_ignore_null_bytes(self):
+    def test_strip_null_bytes_on_read(self):
         with open("./test/resources/with_null_bytes.csv") as f:
-            reader = casanova.reader(f, ignore_null_bytes=True)
+            reader = casanova.reader(f, strip_null_bytes_on_read=True)
 
             rows = list(reader)
 
@@ -291,7 +291,7 @@ class TestReader(object):
         # It should also work with arbitrary iterables
         data = [["name"], ["Joh\x00n"], ["Mary"]]
 
-        reader = casanova.reader(data, ignore_null_bytes=True)
+        reader = casanova.reader(data, strip_null_bytes_on_read=True)
         rows = list(reader)
 
         assert rows == [["John"], ["Mary"]]
@@ -301,7 +301,7 @@ class TestReader(object):
             return
 
         with open("./test/resources/with_null_bytes.csv") as f:
-            reader = casanova.reader(f, ignore_null_bytes=False)
+            reader = casanova.reader(f, strip_null_bytes_on_read=False)
 
             with pytest.raises(csv.Error, match="NUL"):
                 rows = list(reader)

@@ -111,19 +111,19 @@ class Reader(object):
         prebuffer_bytes=None,
         total=None,
         multiplex=None,
-        ignore_null_bytes=None,
+        strip_null_bytes_on_read=None,
     ):
         # Resolving global defaults
         if prebuffer_bytes is None:
             prebuffer_bytes = DEFAULTS["prebuffer_bytes"]
 
-        if ignore_null_bytes is None:
-            ignore_null_bytes = DEFAULTS["ignore_null_bytes"]
+        if strip_null_bytes_on_read is None:
+            strip_null_bytes_on_read = DEFAULTS["strip_null_bytes_on_read"]
 
-        if not isinstance(ignore_null_bytes, bool):
-            raise TypeError('expecting a boolean as "ignore_null_bytes" kwarg')
+        if not isinstance(strip_null_bytes_on_read, bool):
+            raise TypeError('expecting a boolean as "strip_null_bytes_on_read" kwarg')
 
-        self.ignore_null_bytes = ignore_null_bytes
+        self.strip_null_bytes_on_read = strip_null_bytes_on_read
 
         # Detecting input type
         if isinstance(input_file, IOBase):
@@ -158,7 +158,7 @@ class Reader(object):
         self.input_file = None
 
         if self.input_type == "iterable":
-            if ignore_null_bytes:
+            if strip_null_bytes_on_read:
                 self.reader = rows_without_null_bytes(input_file)
             else:
                 self.reader = input_file
@@ -166,7 +166,7 @@ class Reader(object):
         else:
             self.input_file = input_file
 
-            if ignore_null_bytes:
+            if strip_null_bytes_on_read:
                 self.reader = csv.reader(
                     lines_without_null_bytes(self.input_file), **reader_kwargs
                 )

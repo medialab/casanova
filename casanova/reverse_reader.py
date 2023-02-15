@@ -78,13 +78,13 @@ class ReverseReader(Reader):
                     acc = line
 
                 if acc.count(quotechar) % 2 == 0:
-                    if self.ignore_null_bytes:
+                    if self.strip_null_bytes_on_read:
                         acc = acc.replace("\0", "")
                     yield acc
                     acc = None
 
             if acc is not None:
-                if self.ignore_null_bytes:
+                if self.strip_null_bytes_on_read:
                     acc = acc.replace("\0", "")
                 yield acc
 
