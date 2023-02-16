@@ -20,6 +20,26 @@ class Selection(object):
     def add(self, group):
         self.groups.append(group)
 
+    def is_suitable_without_headers(self) -> bool:
+        for group in self.groups:
+            if isinstance(group, SingleColumn):
+                if not isinstance(group.key, int):
+                    return False
+
+            elif isinstance(group, IndexedColumn):
+                return False
+
+            elif isinstance(group, ColumnRange):
+                # NOTE: start and end cannot be mixed, so it does not
+                # make sense to also test end
+                if not isinstance(group.start, int):
+                    return False
+
+            else:
+                return False
+
+        return True
+
     def __iter__(self):
         yield from self.groups
 
@@ -205,22 +225,24 @@ class DictLikeRow(object):
 
 class Headers(object):
     def __init__(self, fieldnames):
-        self.__mapping = defaultdict(list)
-        self.__flat_mapping = {}
         self.fieldnames = list(fieldnames)
 
-        for i, h in enumerate(fieldnames):
+        self.__hydrate_mappings()
+
+    def __hydrate_mappings(self):
+        self.__mapping = defaultdict(list)
+        self.__flat_mapping = {}
+
+        for i, h in enumerate(self.fieldnames):
             self.__mapping[h].append(i)
             self.__flat_mapping[h] = i
 
     def rename(self, old_name, new_name):
-        new_fieldnames = list(self.fieldnames)
-
-        for i, f in enumerate(new_fieldnames):
+        for i, f in enumerate(self.fieldnames):
             if f == old_name:
-                new_fieldnames[i] = new_name
+                self.fieldnames[i] = new_name
 
-        self.__init__(new_fieldnames)
+        self.__hydrate_mappings()
 
     def __eq__(self, other):
         return self.fieldnames == other.fieldnames
@@ -279,7 +301,7 @@ class Headers(object):
     def select(self, selection):
         indices = []
 
-        if not isinstance(selection, str):
+        if not isinstance(selection, (str, Selection)):
             if not isinstance(selection, Iterable):
                 raise TypeError("invalid selection. expecting str or iterable")
 
@@ -289,7 +311,11 @@ class Headers(object):
             return indices
 
         try:
-            parsed_selection = parse_selection(selection)
+            parsed_selection = (
+                parse_selection(selection)
+                if not isinstance(selection, Selection)
+                else selection
+            )
 
             for group in parsed_selection:
                 if isinstance(group, SingleColumn):
@@ -373,3 +399,20 @@ class Headers(object):
         representation += ">"
 
         return representation
+
+    @classmethod
+    def select_no_headers(cls, count, selection):
+        if isinstance(selection, str):
+            parsed_selection = parse_selection(selection)
+
+            if not parsed_selection.is_suitable_without_headers():
+                raise InvalidSelectionError(
+                    selection=selection,
+                    reason=TypeError("irrelevant-naming-no-headers"),
+                )
+
+            selection = parsed_selection
+
+        headers = cls(range(count))
+
+        return headers.select(selection)

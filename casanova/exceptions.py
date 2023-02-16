@@ -38,6 +38,14 @@ class LtPy311ByteReadError(CasanovaError):
 
 class InvalidSelectionError(CasanovaError):
     def __init__(self, msg=None, selection=None, reason=None):
-        super().__init__(msg)
+        if not msg:
+            if isinstance(reason, TypeError):
+                msg = str(reason)
+            elif isinstance(reason, IndexError):
+                msg = "index %s out of range" % str(reason)
+            elif isinstance(reason, KeyError):
+                msg = "unknown key %s" % str(reason)
+
+        super().__init__(msg or str(reason))
         self.selection = selection
         self.reason = reason

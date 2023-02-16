@@ -1,6 +1,8 @@
 # =============================================================================
 # Casanova Headers Unit Tests
 # =============================================================================
+import pytest
+
 from casanova.headers import (
     parse_selection,
     SingleColumn,
@@ -8,6 +10,7 @@ from casanova.headers import (
     IndexedColumn,
     Headers,
 )
+from casanova.exceptions import InvalidSelectionError
 
 
 class TestHeaders(object):
@@ -86,3 +89,14 @@ class TestHeaders(object):
         selection = list(parse_selection('"Date - \\"Opening"'))
 
         assert selection == [SingleColumn(key='Date - "Opening')]
+
+        assert parse_selection("3").is_suitable_without_headers()
+        assert not parse_selection("Header1").is_suitable_without_headers()
+
+        with pytest.raises(InvalidSelectionError, match="no-headers"):
+            Headers.select_no_headers(3, "Header1")
+
+        with pytest.raises(InvalidSelectionError, match="index"):
+            Headers.select_no_headers(2, "6")
+
+        assert Headers.select_no_headers(5, "1-4") == [0, 1, 2, 3]
