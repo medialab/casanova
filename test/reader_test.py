@@ -8,6 +8,7 @@ from io import StringIO
 
 from casanova.defaults import set_defaults
 from casanova.headers import DictLikeRow, Headers
+from casanova.reader import Multiplexer
 from casanova.exceptions import MissingColumnError, LtPy311ByteReadError
 from casanova.utils import LT_PY311
 
@@ -20,11 +21,10 @@ class TestReader(object):
         with pytest.raises(TypeError):
             casanova.reader(StringIO("name\nYomgui"), buffer=-456)
 
-        with pytest.raises(TypeError, match="multiplex"):
-            casanova.reader(StringIO("name\nYomgui"), multiplex=(45, "test"))
-
         with pytest.raises(MissingColumnError):
-            casanova.reader(StringIO("name\nYomgui"), multiplex=("surname", "test"))
+            casanova.reader(
+                StringIO("name\nYomgui"), multiplex=Multiplexer("surname", "test")
+            )
 
     def test_headers_positions(self):
         headers = Headers(["name", "surname"])
@@ -236,7 +236,7 @@ class TestReader(object):
 
     def test_multiplexing(self):
         with open("./test/resources/multiplex.csv") as f:
-            reader = casanova.reader(f, multiplex=("colors", "|"))
+            reader = casanova.reader(f, multiplex=Multiplexer("colors", "|"))
 
             rows = list(reader)
 
@@ -251,14 +251,16 @@ class TestReader(object):
             ]
 
         with open("./test/resources/multiplex.csv") as f:
-            reader = casanova.reader(f, multiplex=("colors", "|", "color?"))
+            reader = casanova.reader(f, multiplex=Multiplexer("colors", "|", "color?"))
 
             cells = list(reader.cells("color?"))
 
             assert cells == ["blue", "yellow", "orange", "purple", "blue", "", "cyan"]
 
         with open("./test/resources/multiplex.csv") as f:
-            reader = casanova.reader(f, multiplex=("colors", "|"), prebuffer_bytes=1024)
+            reader = casanova.reader(
+                f, multiplex=Multiplexer("colors", "|"), prebuffer_bytes=1024
+            )
 
             assert reader.total == 7
 

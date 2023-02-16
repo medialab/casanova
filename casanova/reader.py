@@ -6,6 +6,7 @@
 # with csv.DictReader which is nice but very slow.
 #
 import csv
+from collections import namedtuple
 from collections.abc import Iterable
 from itertools import chain
 from io import IOBase
@@ -24,13 +25,9 @@ from casanova.utils import (
 )
 from casanova.exceptions import MissingColumnError, NoHeadersError
 
-
-def validate_multiplex_tuple(multiplex):
-    return (
-        isinstance(multiplex, tuple)
-        and len(multiplex) in [2, 3]
-        and all(isinstance(t, str) for t in multiplex)
-    )
+Multiplexer = namedtuple(
+    "Multiplexer", ["column_name", "separator", "new_column_name"], defaults=["|", None]
+)
 
 
 class Reader(object):
@@ -77,10 +74,8 @@ class Reader(object):
         else:
             raise TypeError("expecting a file, a path or an iterable of rows")
 
-        if multiplex is not None and not validate_multiplex_tuple(multiplex):
-            raise TypeError(
-                "`multiplex` should be a 2-tuple or 3-tuple containing the column to split, the split character and optionally a new name for the column"
-            )
+        if multiplex is not None and not isinstance(multiplex, Multiplexer):
+            raise TypeError("`multiplex` should be a casanova.Multiplexer")
 
         reader_kwargs = {}
 
@@ -169,17 +164,14 @@ class Reader(object):
 
         # Multiplexing
         if multiplex is not None:
-            multiplex_column = multiplex[0]
-            split_char = multiplex[1]
+            if multiplex.column_name not in self.headers:
+                raise MissingColumnError(multiplex.column_name)
 
-            if multiplex_column not in self.headers:
-                raise MissingColumnError(multiplex_column)
-
-            multiplex_pos = self.headers[multiplex_column]
+            multiplex_pos = self.headers[multiplex.column_name]
 
             # New col
             if len(multiplex) == 3:
-                self.headers.rename(multiplex_column, multiplex[2])
+                self.headers.rename(multiplex.column_name, multiplex.new_column_name)
 
             original_reader = self.reader
             already_buffered_rows = []
@@ -191,11 +183,11 @@ class Reader(object):
                 for row in chain(already_buffered_rows, original_reader):
                     cell = row[multiplex_pos]
 
-                    if split_char not in cell:
+                    if multiplex.separator not in cell:
                         yield row
 
                     else:
-                        for value in cell.split(split_char):
+                        for value in cell.split(multiplex.separator):
                             copy = list(row)
                             copy[multiplex_pos] = value
                             yield copy
