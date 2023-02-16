@@ -228,7 +228,9 @@ class TestEnricher(object):
         with open("./test/resources/people_unordered.csv") as f, open(
             output_path, "w", newline=""
         ) as of:
-            enricher = casanova.threadsafe_enricher(f, of, add=("x2",), select=("name",))
+            enricher = casanova.threadsafe_enricher(
+                f, of, add=("x2",), select=("name",)
+            )
 
             for i, row in imap_unordered(enricher, job, 3):
                 enricher.writerow(i, row, [(i + 1) * 2])
@@ -250,7 +252,9 @@ class TestEnricher(object):
         with open("./test/resources/people_unordered.csv") as f, open(
             output_path, "a+"
         ) as of:
-            enricher = casanova.threadsafe_enricher(f, of, add=("x2",), select=("name",))
+            enricher = casanova.threadsafe_enricher(
+                f, of, add=("x2",), select=("name",)
+            )
 
             names = [t for t in enricher.cells("name")]
 
@@ -259,7 +263,9 @@ class TestEnricher(object):
         with open("./test/resources/people_unordered.csv") as f, open(
             output_path, "a+"
         ) as of:
-            enricher = casanova.threadsafe_enricher(f, of, add=("x2",), select=("name",))
+            enricher = casanova.threadsafe_enricher(
+                f, of, add=("x2",), select=("name",)
+            )
 
             names = [(i, v) for i, row, v in enricher.cells("name", with_rows=True)]
 
@@ -388,7 +394,9 @@ class TestEnricher(object):
         with open("./test/resources/people.csv") as f, open(
             output_path, "w", newline=""
         ) as of:
-            enricher = casanova.batch_enricher(f, of, add=("color",), select=("surname",))
+            enricher = casanova.batch_enricher(
+                f, of, add=("color",), select=("surname",)
+            )
 
             for row in enricher:
                 enricher.writebatch(row, [["blue"], ["red"]], cursor="next")
@@ -435,16 +443,26 @@ class TestEnricher(object):
             for row in enricher:
                 enricher.writerow(row)
 
-    def test_duplicate_input_columns(self):
-        data = CsvIO(["name", "name", "surname"], [["John", "Mary", "Matthews"]])
+    def test_different_writer_dialect(self):
+        data = CsvIO(["name", "surname"], [["John", "Matthews"]])
         output = StringIO()
 
-        enricher = casanova.enricher(data, output)
+        enricher = casanova.enricher(
+            data, output, writer_lineterminator="\n", writer_delimiter=";"
+        )
 
         for row in enricher:
             enricher.writerow(row)
 
-        assert (
-            output.getvalue().replace("\r\n", "\n").strip()
-            == "name,name,surname\nJohn,Mary,Matthews"
-        )
+        assert output.getvalue().strip() == "name;surname\nJohn;Matthews"
+
+    def test_input_duplicate_column_names(self):
+        data = CsvIO(["name", "name", "surname"], [["John", "Mary", "Matthews"]])
+        output = StringIO()
+
+        enricher = casanova.enricher(data, output, writer_lineterminator="\n")
+
+        for row in enricher:
+            enricher.writerow(row)
+
+        assert output.getvalue().strip() == "name,name,surname\nJohn,Mary,Matthews"

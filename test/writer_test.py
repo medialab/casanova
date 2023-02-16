@@ -80,3 +80,13 @@ class TestWriter(object):
         with pytest.raises(Py310NullByteWriteError):
             writer = Writer(StringIO(), fieldnames=["name"])
             writer.writerow(["John\0 Kawazaki"])
+
+    def test_dialect(self):
+        buf = StringIO()
+
+        writer = Writer(
+            buf, fieldnames=["name", "surname"], lineterminator="\n", delimiter=";"
+        )
+        writer.writerow(["John", "Dandy"])
+
+        assert buf.getvalue().strip() == "name;surname\nJohn;Dandy"

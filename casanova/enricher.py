@@ -32,6 +32,12 @@ class Enricher(Reader):
         select=None,
         add=None,
         strip_null_bytes_on_write=None,
+        writer_dialect=None,
+        writer_delimiter=None,
+        writer_quotechar=None,
+        writer_escapechar=None,
+        writer_quoting=None,
+        writer_lineterminator=None,
         **kwargs
     ):
         # Inheritance
@@ -101,7 +107,27 @@ class Enricher(Reader):
                 self.prelude_rows = self.resumer
 
         # Instantiating writer
-        self.writer = csv.writer(output_file)
+        writer_kwargs = {}
+
+        if writer_dialect is not None:
+            writer_kwargs["dialect"] = writer_dialect
+
+        if writer_delimiter is not None:
+            writer_kwargs["delimiter"] = writer_delimiter
+
+        if writer_quotechar is not None:
+            writer_kwargs["quotechar"] = writer_quotechar
+
+        if writer_escapechar is not None:
+            writer_kwargs["escapechar"] = writer_escapechar
+
+        if writer_quoting is not None:
+            writer_kwargs["quoting"] = writer_quoting
+
+        if writer_lineterminator is not None:
+            writer_kwargs["lineterminator"] = writer_lineterminator
+
+        self.writer = csv.writer(output_file, **writer_kwargs)
         self._writerow = self.writer.writerow
 
         if not strip_null_bytes_on_write:

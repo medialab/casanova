@@ -16,7 +16,18 @@ from casanova.utils import py310_wrap_csv_writerow, strip_null_bytes_from_row
 class Writer(object):
     __supported_resumers__ = (LastCellResumer,)
 
-    def __init__(self, output_file, fieldnames, strip_null_bytes_on_write=None):
+    def __init__(
+        self,
+        output_file,
+        fieldnames,
+        strip_null_bytes_on_write=None,
+        dialect=None,
+        delimiter=None,
+        quotechar=None,
+        quoting=None,
+        escapechar=None,
+        lineterminator=None,
+    ):
         if strip_null_bytes_on_write is None:
             strip_null_bytes_on_write = DEFAULTS["strip_null_bytes_on_write"]
 
@@ -46,13 +57,37 @@ class Writer(object):
 
             output_file = resumer.open_output_file()
 
-        self.writer = csv.writer(output_file)
-        self._writerow = py310_wrap_csv_writerow(self.writer)
+        # Instantiating writer
+        writer_kwargs = {}
+
+        if dialect is not None:
+            writer_kwargs["dialect"] = dialect
+
+        if delimiter is not None:
+            writer_kwargs["delimiter"] = delimiter
+
+        if quotechar is not None:
+            writer_kwargs["quotechar"] = quotechar
+
+        if escapechar is not None:
+            writer_kwargs["escapechar"] = escapechar
+
+        if quoting is not None:
+            writer_kwargs["quoting"] = quoting
+
+        if lineterminator is not None:
+            writer_kwargs["lineterminator"] = lineterminator
+
+        self.writer = csv.writer(output_file, **writer_kwargs)
+        self._writerow = self.writer.writerow
+
+        if not strip_null_bytes_on_write:
+            self._writerow = py310_wrap_csv_writerow(self.writer)
 
         if not can_resume:
-            self.writeheader()
+            self.__writeheader()
 
-    def writeheader(self):
+    def __writeheader(self):
         row = self.fieldnames
 
         if self.strip_null_bytes_on_write:
