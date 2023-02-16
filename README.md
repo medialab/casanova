@@ -81,11 +81,15 @@ with open('./people.csv') as f:
 
 # Note that you can also create a reader from a path
 with casanova.reader('./people.csv') as reader:
-  pass
+  ...
 
 # And if you need exotic encodings
 with casanova.reader('./people.csv', encoding='latin1') as reader:
-  pass
+  ...
+
+# The reader will also handle gzipped files out of the box
+with casanove.reader('./people.csv.gz') as reader:
+  ...
 
 # And you can of course use the typical dialect-related kwargs
 reader = casanova.reader('./french-semicolons.csv', delimiter=';')
