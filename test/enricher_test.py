@@ -495,3 +495,27 @@ class TestEnricher(object):
             ["Mary", "4"],
             ["Julia", "6"],
         ]
+
+    def test_no_headers(self):
+        with open("./test/resources/no_headers.csv") as f:
+            with pytest.raises(TypeError, match="no_headers"):
+                casanova.enricher(f, StringIO(), add=("test",), no_headers=True)
+
+        with open("./test/resources/no_headers.csv") as f:
+            buf = StringIO()
+
+            enricher = casanova.enricher(
+                f, buf, writer_lineterminator="\n", add=1, no_headers=True
+            )
+
+            with pytest.raises(TypeError):
+                enricher.writerow(["John", "Martin"], [1, 2])
+
+            for i, row in enumerate(enricher):
+                enricher.writerow(row, [i])
+
+            assert collect_csv(buf) == [
+                ["John", "Matthews", "0"],
+                ["Mary", "Sue", "1"],
+                ["Julia", "Stone", "2"],
+            ]

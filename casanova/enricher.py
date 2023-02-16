@@ -65,8 +65,17 @@ class Enricher(Reader):
             self.output_fieldnames = self.filterrow(self.output_fieldnames)
 
         if add is not None:
-            self.output_fieldnames += add
-            self.added_count = len(add)
+            if no_headers:
+                if not isinstance(add, int):
+                    raise TypeError(
+                        "cannot add named columns with no_headers=True. Use a number of columns instead."
+                    )
+
+                self.added_count = add
+            else:
+                self.output_fieldnames += add
+                self.added_count = len(add)
+
             self.padding = [""] * self.added_count
 
         # Resuming?
@@ -137,7 +146,8 @@ class Enricher(Reader):
                 if not isinstance(add, list):
                     add = list(add)
 
-                assert len(add) == self.added_count, (
+                if len(add) != self.added_count:
+                    raise TypeError(
                     "casanova.enricher.writerow: expected %i additional cells but got %i."
                     % (self.added_count, len(add))
                 )
@@ -146,7 +156,8 @@ class Enricher(Reader):
 
         # No additions
         else:
-            assert add is None, "casanova.enricher.writerow: expected no additions."
+            if add:
+                raise TypeError("casanova.enricher.writerow: expected no additions.")
 
             row = self.filterrow(row)
 
