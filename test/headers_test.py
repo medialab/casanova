@@ -58,8 +58,8 @@ class TestHeaders(object):
 
         indices = headers.select("1-4")
 
-        assert indices == [0, 1, 2]
+        assert indices == [0, 1, 2, 3]
 
         indices = headers.select('Header2,1-4,6-4,"Date - Opening",1-1,10-')
 
-        assert indices == [1, 0, 1, 2, 5, 4, 8, 0, 9, 10]
+        assert indices == [1, 0, 1, 2, 3, 5, 4, 3, 8, 0, 9, 10]

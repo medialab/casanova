@@ -129,7 +129,7 @@ def parse_selection(selection):
                         "range selection should not be mixed", selection=selection
                     )
 
-                # NOTE: fixing 1-based
+                # NOTE: ranges are 1-based in xsv
                 if isinstance(key, int):
                     key -= 1
 
@@ -228,6 +228,9 @@ class Headers(object):
     def __iter__(self):
         yield from self.fieldnames
 
+    def nth(self, index):
+        return self.fieldnames[index]
+
     def get(self, key, default=None, index=None):
         indices = self.__mapping.get(key)
 
@@ -242,10 +245,7 @@ class Headers(object):
         return indices[0]
 
     def select(self, selection):
-        # TODO: maybe we don't need to accumulate slices
-        # TODO: handle simple case when selection is a simple integer
-
-        slices = []
+        indices = []
 
         for item in parse_selection(selection):
             if item.negative:
@@ -253,9 +253,12 @@ class Headers(object):
 
             if isinstance(item, SimpleSelection):
                 if isinstance(item.key, int):
-                    slices.append(item.key)
+                    if item.key >= len(self):
+                        raise IndexError(item.key)
+
+                    indices.append(item.key)
                 else:
-                    slices.append(self[item.key])
+                    indices.append(self[item.key])
 
             elif isinstance(item, RangeSelection):
                 start = item.start
@@ -266,31 +269,35 @@ class Headers(object):
 
                     if end is not None:
                         end = self[end]
-
-                if end is not None and start > end:
-                    slices.append(slice(start, end, -1))
                 else:
-                    slices.append(slice(start, end))
+                    if start >= len(self):
+                        raise IndexError(start)
+
+                    if end is not None and end >= len(self):
+                        raise IndexError(end)
+
+                if end is not None:
+                    # NOTE: ranges are all inclusive
+                    if start > end:
+                        indices.extend(list(range(start, end - 1, -1)))
+                    else:
+                        indices.extend(list(range(start, end + 1)))
+
+                else:
+                    indices.extend(list(range(start, len(self))))
             else:
                 idx = self.get(item.key, index=item.index)
 
                 if idx is None:
                     raise KeyError("%s[%i]" % item)
 
-                slices.append(idx)
-
-        all_indices = list(range(len(self)))
-        indices = []
-
-        for i in slices:
-            if isinstance(i, slice):
-                indices.extend(all_indices[i])
-            else:
-                indices.append(all_indices[i])
+                indices.append(idx)
 
         return indices
 
     def collect(self, keys):
+        # NOTE: collect could work with arbitrary indices mixed with names
+        # This is also the case for getters
         return [self[k] for k in keys]
 
     def wrap(self, row):
