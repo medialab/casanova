@@ -2,7 +2,7 @@
 
 # Casanova
 
-If you often find yourself reading CSV files using python, you will quickly notice that, while being more comfortable, `csv.DictReader` remains way slower than `csv.reader`:
+If you often find yourself processing CSV files using python, you will quickly notice that, while being more comfortable, `csv.DictReader` remains way slower than `csv.reader`:
 
 ```
 # To read a 1.5G CSV file:
@@ -11,7 +11,7 @@ csv.DictReader: 84s
 casanova.reader: 25s
 ```
 
-Casanova is therefore an attempt to stick to `csv.reader` performance while still keeping a comfortable interface, still able to consider headers etc.
+Casanova is therefore an attempt to stick to `csv.reader` performance while still keeping a comfortable interface, still able to consider headers (even duplicate ones also, something that `csv.DictReader` is incapable of) etc.
 
 Casanova is thus a good fit for you if you need to:
 
@@ -19,6 +19,8 @@ Casanova is thus a good fit for you if you need to:
 * Enrich the same CSV files by outputing a similar file, all while adding, filtering and editing cells.
 * Have the possibility to resume said enrichment if your process exited
 * Do so in a threadsafe fashion, and be able to resume even if your output does not have the same order as the input
+
+Casanova also packs exotic utilities able to read csv files in reverse (in constant time), so you can fetch useful information to restart some aborted process.
 
 ## Installation
 
@@ -32,6 +34,7 @@ pip install casanova
 
 * [reader](#reader)
 * [enricher](#enricher)
+* [threadsafe_enricher](#threadsafe_enricher)
 * [reverse_reader](#reverse_reader)
 * [namedrecord](#namedrecord)
 
@@ -189,7 +192,7 @@ resumer.can_resume()
 resumer.already_done_count()
 ```
 
-*Threadsafe version*
+## threadsafe_enricher
 
 To safely resume, the threadsafe version needs you to add an index column to the output so we can make sense of what was already done. Therefore, its `writerow` method is a bit different because it takes an additional argument being the original index of the row you need to enrich.
 
@@ -250,11 +253,14 @@ from casanova import namedrecord
 
 Record = namedrecord(
   'Record',
-  ['title', 'urls', 'is_accessible'],
-  defaults=[True],
+  ['title', 'urls', 'is_accessible', 'data'],
+  defaults=[True, None],
   boolean=['is_accessible'],
   plural=['urls']
 )
+
+Record.fieldnames
+>>> ['title', 'urls', 'is_accessible']
 
 example = Record('Le Monde', ['https://lemonde.fr', 'https://www.lemonde.fr'])
 
@@ -288,4 +294,24 @@ example.as_dict()
 # You can format it as a CSV row:
 example.as_csv_row():
 >>> ['Le Monde', 'https://lemonde.fr|https://www.lemonde.fr', 'true']
+
+# You can format as a CSV dict row (suitable for csv.DictWriter, if required):
+example.as_csv_dict_row():
+>>> {
+  'title': 'Le Monde',
+  'urls': 'https://lemonde.fr|https://www.lemonde.fr',
+  'is_accessible': 'true'
+}
+
+# You can also embed json data if you feel crazy:
+Record = namedrecord(
+  'Record',
+  ['title', 'data'],
+  json=['data']
+)
+
+example = Record('With JSON', {'hello': 'world'})
+
+example.as_csv_row()
+>>> ['With JSON', '{"hello": "world"}']
 ```
