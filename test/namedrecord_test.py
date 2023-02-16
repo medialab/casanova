@@ -75,7 +75,7 @@ class TestNamedRecord(object):
 
         r = Record("Test", None)
 
-        assert r.as_csv_row() == ["Test", None]
+        assert r.as_csv_row() == ["Test", ""]
 
     def test_set_is_plural(self):
         Video = namedrecord(

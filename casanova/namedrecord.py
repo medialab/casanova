@@ -8,6 +8,13 @@ from json import dumps
 from collections import OrderedDict, namedtuple
 from collections.abc import Iterable
 
+# from casanova.defaults import DEFAULTS
+
+STRING = 0
+BOOL = 1
+PLURAL = 2
+JSON = 3
+
 
 def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=None):
     mapping = {k: i for i, k in enumerate(fields)}
@@ -15,31 +22,37 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
 
     for k in fields:
         if boolean and k in boolean:
-            mask.append(1)
+            mask.append(BOOL)
         elif plural and k in plural:
-            mask.append(2)
+            mask.append(PLURAL)
         elif json and k in json:
-            mask.append(3)
+            mask.append(JSON)
         else:
-            mask.append(0)
+            mask.append(STRING)
 
-    def cast_for_csv(i, v, plural_separator="|"):
+    def cast_for_csv(i, v, p="|", n="", t="true", f="false", I=False):
         if v is None:
-            return None
+            return n
 
         m = mask[i]
 
-        if m == 0:
+        if m == STRING:
             return v
 
-        if m == 1:
-            return "true" if v else "false"
+        if m == BOOL:
+            if v:
+                return t
 
-        if m == 2:
+            if I:
+                return ""
+
+            return f
+
+        if m == PLURAL:
             assert isinstance(v, Iterable)
-            return plural_separator.join(str(i) for i in v)
+            return p.join(str(i) for i in v)
 
-        if m == 3:
+        if m == JSON:
             return dumps(v, ensure_ascii=False)
 
         raise TypeError
@@ -64,15 +77,14 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
 
         def as_csv_row(self, plural_separator="|"):
             row = list(
-                cast_for_csv(i, v, plural_separator=plural_separator)
-                for i, v in enumerate(self)
+                cast_for_csv(i, v, p=plural_separator) for i, v in enumerate(self)
             )
 
             return row
 
         def as_csv_dict_row(self, plural_separator="|"):
             row = OrderedDict(
-                (fields[i], cast_for_csv(i, v, plural_separator=plural_separator))
+                (fields[i], cast_for_csv(i, v, p=plural_separator))
                 for i, v in enumerate(self)
             )
 
