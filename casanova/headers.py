@@ -203,6 +203,9 @@ class Headers(object):
 
         self.__init__(new_fieldnames)
 
+    def __eq__(self, other):
+        return self.fieldnames == other.fieldnames
+
     def __len__(self):
         return len(self.fieldnames)
 

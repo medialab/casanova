@@ -12,7 +12,7 @@ from file_read_backwards.file_read_backwards import FileReadBackwardsIterator
 from ebbe import with_is_last
 
 from casanova.reader import Reader
-from casanova.utils import ensure_open
+from casanova.utils import ensure_open, strip_null_bytes
 from casanova.exceptions import EmptyFileError, MissingColumnError
 
 END_OF_FILE = object()
@@ -72,20 +72,19 @@ class ReverseReader(Reader):
             acc = None
 
             for line in backwards_iterator:
+                if self.strip_null_bytes_on_read:
+                    line = strip_null_bytes(line)
+
                 if acc is not None:
                     acc = line + "\n" + acc
                 else:
                     acc = line
 
                 if acc.count(quotechar) % 2 == 0:
-                    if self.strip_null_bytes_on_read:
-                        acc = acc.replace("\0", "")
                     yield acc
                     acc = None
 
             if acc is not None:
-                if self.strip_null_bytes_on_read:
-                    acc = acc.replace("\0", "")
                 yield acc
 
         backwards_reader = csv.reader(correctly_escaped_backwards_iterator())

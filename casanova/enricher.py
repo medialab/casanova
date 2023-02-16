@@ -105,8 +105,8 @@ class Enricher(Reader):
         self._writerow = py310_wrap_csv_writerow(self.writer)
 
         # Need to write headers?
-        if not no_headers and not can_resume:
-            self.writeheader()
+        if self.output_fieldnames and not no_headers and not can_resume:
+            self.__writeheader()
 
     def __repr__(self):
         return "<%s>" % self.__class__.__name__
@@ -146,7 +146,7 @@ class Enricher(Reader):
 
         return row
 
-    def writeheader(self):
+    def __writeheader(self):
         self._writerow(self.output_fieldnames)
 
     def writerow(self, row, add=None):

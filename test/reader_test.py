@@ -10,7 +10,7 @@ from platform import python_version_tuple
 
 from casanova.defaults import set_defaults
 from casanova.headers import DictLikeRow, Headers
-from casanova.exceptions import EmptyFileError, MissingColumnError
+from casanova.exceptions import MissingColumnError
 
 PYTHON_MAJOR, PYTHON_MINOR, _ = python_version_tuple()
 GTE_PY311 = int(PYTHON_MAJOR) >= 3 and int(PYTHON_MINOR) >= 11
@@ -18,9 +18,6 @@ GTE_PY311 = int(PYTHON_MAJOR) >= 3 and int(PYTHON_MINOR) >= 11
 
 class TestReader(object):
     def test_exceptions(self):
-        with pytest.raises(EmptyFileError):
-            casanova.reader(StringIO(""))
-
         with pytest.raises(TypeError):
             casanova.reader(StringIO("name\nYomgui"), buffer=4.5)
 
@@ -42,6 +39,23 @@ class TestReader(object):
         headers.rename("name", "first_name")
 
         assert list(headers) == ["first_name", "surname"]
+
+    def test_empty_file(self):
+        reader = casanova.reader(StringIO())
+
+        assert reader.empty
+        assert reader.headers == None
+        assert list(reader) == []
+
+        reader = casanova.reader(StringIO("name"))
+
+        assert reader.empty
+        assert reader.headers == Headers(["name"])
+        assert list(reader) == []
+
+        reader = casanova.reader(StringIO("name\nJohn"))
+
+        assert not reader.empty
 
     def test_basics(self):
         with open("./test/resources/people.csv") as f:
@@ -141,6 +155,10 @@ class TestReader(object):
             assert list(reader.cells("Person's name")) == ["John", "Mary", "Julia"]
 
     def test_static_count(self):
+        count = casanova.reader.count(StringIO())
+
+        assert count == 0
+
         count = casanova.reader.count("./test/resources/people.csv")
 
         assert count == 3
@@ -297,15 +315,13 @@ class TestReader(object):
             return
 
         with open("./test/resources/with_null_bytes.csv") as f:
-            reader = casanova.reader(f, strip_null_bytes_on_read=False)
-
             with pytest.raises(csv.Error, match="NUL"):
+                reader = casanova.reader(f, strip_null_bytes_on_read=False)
                 rows = list(reader)
 
         with open("./test/resources/with_null_bytes.csv") as f:
-            reader = casanova.reader(f)
-
             with pytest.raises(csv.Error, match="NUL"):
+                reader = casanova.reader(f)
                 rows = list(reader)
 
     def test_iterable_iterator(self):

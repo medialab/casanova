@@ -7,6 +7,7 @@
 #
 import csv
 from collections.abc import Iterable
+from itertools import chain
 from io import IOBase
 
 from casanova.defaults import DEFAULTS
@@ -109,16 +110,18 @@ class Reader(object):
         self.was_completely_buffered = False
         self.total = total
         self.headers = None
-        self.expected_row_length = None
+        self.empty = False
+
+        self.__no_headers_row_len = None
 
         # Reading headers
         if no_headers:
             try:
                 self.buffered_rows.append(next(self.reader))
             except StopIteration:
-                raise EmptyFileError
-
-            self.expected_row_length = len(self.buffered_rows[0])
+                self.empty = True
+            else:
+                self.__no_headers_row_len = len(self.buffered_rows[0])
         else:
             try:
                 fieldnames = next(self.reader)
@@ -127,9 +130,14 @@ class Reader(object):
                     fieldnames[0] = suppress_BOM(fieldnames[0])
 
             except StopIteration:
-                raise EmptyFileError
+                self.empty = True
+            else:
+                self.headers = Headers(fieldnames)
 
-            self.headers = Headers(fieldnames)
+                try:
+                    self.buffered_rows.append(next(self.reader))
+                except StopIteration:
+                    self.empty = True
 
         # Multiplexing
         if multiplex is not None:
@@ -146,12 +154,16 @@ class Reader(object):
                 self.headers.rename(multiplex_column, multiplex[2])
 
             original_reader = self.reader
+            already_buffered_rows = []
 
-            def reader_wrapper():
-                for row in original_reader:
+            if self.buffered_rows:
+                already_buffered_rows.append(self.buffered_rows.pop())
+
+            def multiplexing_reader():
+                for row in chain(already_buffered_rows, original_reader):
                     cell = row[multiplex_pos]
 
-                    if not cell or split_char not in cell:
+                    if split_char not in cell:
                         yield row
 
                     else:
@@ -160,9 +172,11 @@ class Reader(object):
                             copy[multiplex_pos] = value
                             yield copy
 
-            self.reader = reader_wrapper()
+            self.reader = multiplexing_reader()
 
         # Prebuffering
+        # NOTE: does not take into account probable first row of actual data
+        # except the header one.
         if prebuffer_bytes is not None and self.total is None:
             if not isinstance(prebuffer_bytes, int) or prebuffer_bytes < 1:
                 raise TypeError(
@@ -202,8 +216,8 @@ class Reader(object):
 
     @property
     def row_len(self):
-        if self.expected_row_length is not None:
-            return self.expected_row_length
+        if self.__no_headers_row_len is not None:
+            return self.__no_headers_row_len
 
         return len(self.headers)
 

@@ -18,15 +18,12 @@ from casanova.resuming import (
     RowCountResumer,
     ThreadSafeResumer,
 )
-from casanova.exceptions import EmptyFileError, Py310NullByteWriteError
+from casanova.exceptions import Py310NullByteWriteError
 from casanova.utils import PY_310, CsvIO
 
 
 class TestEnricher(object):
     def test_exceptions(self, tmpdir):
-        with pytest.raises(EmptyFileError):
-            casanova.enricher(StringIO(""), StringIO(""))
-
         output_path = str(tmpdir.join("./wrong_resumer.csv"))
 
         with pytest.raises(TypeError):
