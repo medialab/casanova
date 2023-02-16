@@ -82,18 +82,24 @@ class Writer(object):
         if lineterminator is not None:
             writer_kwargs["lineterminator"] = lineterminator
 
-        self.writer = csv.writer(output_file, **writer_kwargs)
-        self._writerow = self.writer.writerow
+        self.__writer = csv.writer(output_file, **writer_kwargs)
 
         if not strip_null_bytes_on_write:
-            self._writerow = py310_wrap_csv_writerow(self.writer)
+            self.__writerow = py310_wrap_csv_writerow(self.__writer)
+        else:
+            self.__writerow = lambda row: self.__writer.writerow(
+                strip_null_bytes_from_row(row)
+            )
 
         self.should_write_header = not can_resume and self.fieldnames is not None
 
         if self.should_write_header and write_header:
-            self.__writeheader()
+            self.writeheader()
 
-    def __writeheader(self):
+    def writeheader(self):
+        if self.fieldnames is None:
+            raise TypeError("cannot write header if fieldnames were not provided")
+
         self.should_write_header = False
 
         row = self.fieldnames
@@ -101,9 +107,7 @@ class Writer(object):
         if self.strip_null_bytes_on_write:
             row = strip_null_bytes_from_row(row)
 
-        self._writerow(row)
+        self.__writerow(row)
 
     def writerow(self, row):
-        self._writerow(
-            strip_null_bytes_from_row(row) if self.strip_null_bytes_on_write else row
-        )
+        self.__writerow(row)

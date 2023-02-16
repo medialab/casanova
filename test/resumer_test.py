@@ -24,6 +24,6 @@ class TestResumer(object):
         assert resumer.already_done_count() == 0
 
         with open(output_file, encoding="latin-1") as f:
-            enricher = casanova.enricher(f, resumer)
+            _ = casanova.enricher(f, resumer)
 
         assert resumer.already_done_count() == 6

@@ -5,7 +5,6 @@
 # A CSV reader/writer combo that can be used to read an input CSV file and
 # easily ouput a similar CSV file while editing, adding and filtering cell_count.
 #
-import csv
 from ebbe import with_is_last
 
 from casanova.resuming import (
@@ -16,9 +15,9 @@ from casanova.resuming import (
     BatchResumer,
 )
 from casanova.exceptions import MissingColumnError
-from casanova.reader import Reader, Headers
+from casanova.reader import Reader
+from casanova.writer import Writer
 from casanova.defaults import DEFAULTS
-from casanova.utils import strip_null_bytes_from_row, py310_wrap_csv_writerow
 
 
 class Enricher(Reader):
@@ -38,6 +37,7 @@ class Enricher(Reader):
         writer_escapechar=None,
         writer_quoting=None,
         writer_lineterminator=None,
+        write_header=True,
         **kwargs
     ):
         # Inheritance
@@ -69,15 +69,6 @@ class Enricher(Reader):
             self.added_count = len(add)
             self.padding = [""] * self.added_count
 
-        self.output_headers = None
-
-        if self.headers is not None:
-            self.output_headers = Headers(
-                self.output_fieldnames
-                if not no_headers
-                else len(self.output_fieldnames)
-            )
-
         # Resuming?
         self.resumer = None
         can_resume = False
@@ -107,38 +98,29 @@ class Enricher(Reader):
                 self.prelude_rows = self.resumer
 
         # Instantiating writer
-        writer_kwargs = {}
-
-        if writer_dialect is not None:
-            writer_kwargs["dialect"] = writer_dialect
-
-        if writer_delimiter is not None:
-            writer_kwargs["delimiter"] = writer_delimiter
-
-        if writer_quotechar is not None:
-            writer_kwargs["quotechar"] = writer_quotechar
-
-        if writer_escapechar is not None:
-            writer_kwargs["escapechar"] = writer_escapechar
-
-        if writer_quoting is not None:
-            writer_kwargs["quoting"] = writer_quoting
-
-        if writer_lineterminator is not None:
-            writer_kwargs["lineterminator"] = writer_lineterminator
-
-        self.writer = csv.writer(output_file, **writer_kwargs)
-        self._writerow = self.writer.writerow
-
-        if not strip_null_bytes_on_write:
-            self._writerow = py310_wrap_csv_writerow(self.writer)
-
-        # Need to write headers?
-        if self.output_fieldnames and not no_headers and not can_resume:
-            self.__writeheader()
+        self.writer = Writer(
+            output_file,
+            fieldnames=self.output_fieldnames,
+            strip_null_bytes_on_write=strip_null_bytes_on_write,
+            dialect=writer_dialect,
+            delimiter=writer_delimiter,
+            quotechar=writer_quotechar,
+            escapechar=writer_escapechar,
+            quoting=writer_quoting,
+            lineterminator=writer_lineterminator,
+            write_header=not can_resume,
+        )
 
     def __repr__(self):
         return "<%s>" % self.__class__.__name__
+
+    @property
+    def output_headers(self):
+        return self.writer.headers
+
+    @property
+    def should_write_header(self):
+        return self.writer.should_write_header
 
     def filterrow(self, row):
         if self.selected_indices is not None:
@@ -168,18 +150,13 @@ class Enricher(Reader):
 
             row = self.filterrow(row)
 
-        # NOTE: maybe it could be faster to wrap writerow altogether
-        # instead of running this condition on each write
-        if self.strip_null_bytes_on_write:
-            row = strip_null_bytes_from_row(row)
-
         return row
 
-    def __writeheader(self):
-        self._writerow(self.output_fieldnames)
+    def writeheader(self):
+        self.writer.writeheader()
 
     def writerow(self, row, add=None):
-        self._writerow(self.formatrow(row, add))
+        self.writer.writerow(self.formatrow(row, add))
 
 
 class ThreadSafeEnricher(Enricher):
