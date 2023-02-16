@@ -42,7 +42,6 @@ def parse_key(key):
     return INDEX_REPLACER_RE.sub("", key)
 
 
-# TODO: in escape backslash
 def parse_selection(string):
     """
     From xsv:
@@ -84,8 +83,18 @@ def parse_selection(string):
     def tokens():
         acc = ""
         current_escapechar = None
+        escaping = False
 
         for c in string:
+            if c == "\\":
+                escaping = True
+                continue
+
+            if escaping:
+                escaping = False
+                acc += c
+                continue
+
             if c == current_escapechar:
                 current_escapechar = None
                 continue

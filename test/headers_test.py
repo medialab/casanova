@@ -78,3 +78,11 @@ class TestHeaders(object):
 
         assert headers.select("2-6") == [1, 2, 3, 4, 5]
         assert indices == [0, 6, 7, 8, 9, 10]
+
+        selection = list(parse_selection('\\"Hey\\"'))
+
+        assert selection == [SingleColumn(key='"Hey"')]
+
+        selection = list(parse_selection('"Date - \\"Opening"'))
+
+        assert selection == [SingleColumn(key='Date - "Opening')]
