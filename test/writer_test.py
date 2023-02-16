@@ -90,3 +90,31 @@ class TestWriter(object):
         writer.writerow(["John", "Dandy"])
 
         assert buf.getvalue().strip() == "name;surname\nJohn;Dandy"
+
+    def test_writeheader(self):
+        buf = StringIO()
+
+        writer = Writer(
+            buf,
+            fieldnames=["name", "surname"],
+            lineterminator="\n",
+            delimiter=";",
+            write_header=False,
+        )
+
+        writer.writerow(["John", "Dandy"])
+
+        assert buf.getvalue().strip() == "John;Dandy"
+
+    def test_no_headers(self):
+        buf = StringIO()
+
+        writer = Writer(
+            buf,
+            lineterminator="\n",
+            delimiter=";",
+        )
+
+        writer.writerow(["John", "Dandy"])
+
+        assert buf.getvalue().strip() == "John;Dandy"

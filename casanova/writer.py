@@ -19,7 +19,7 @@ class Writer(object):
     def __init__(
         self,
         output_file,
-        fieldnames,
+        fieldnames=None,
         strip_null_bytes_on_write=None,
         dialect=None,
         delimiter=None,
@@ -27,6 +27,7 @@ class Writer(object):
         quoting=None,
         escapechar=None,
         lineterminator=None,
+        write_header=True,
     ):
         if strip_null_bytes_on_write is None:
             strip_null_bytes_on_write = DEFAULTS["strip_null_bytes_on_write"]
@@ -37,11 +38,14 @@ class Writer(object):
         self.strip_null_bytes_on_write = strip_null_bytes_on_write
 
         self.fieldnames = fieldnames
-        self.headers = Headers(fieldnames)
+        self.headers = Headers(fieldnames) if fieldnames is not None else None
 
         can_resume = False
 
         if isinstance(output_file, Resumer):
+            if self.fieldnames is None:
+                raise NotImplementedError
+
             resumer = output_file
 
             if not isinstance(output_file, self.__class__.__supported_resumers__):
@@ -84,10 +88,14 @@ class Writer(object):
         if not strip_null_bytes_on_write:
             self._writerow = py310_wrap_csv_writerow(self.writer)
 
-        if not can_resume:
+        self.should_write_header = not can_resume and self.fieldnames is not None
+
+        if self.should_write_header and write_header:
             self.__writeheader()
 
     def __writeheader(self):
+        self.should_write_header = False
+
         row = self.fieldnames
 
         if self.strip_null_bytes_on_write:
