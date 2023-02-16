@@ -16,6 +16,40 @@ PLURAL = 2
 JSON = 3
 
 
+def cast_for_csv(
+    m: int,
+    v: str,
+    p: str = "|",
+    n: str = "",
+    t: str = "true",
+    f: str = "false",
+    i: bool = False,
+):
+    if v is None:
+        return n
+
+    if m == STRING:
+        return v
+
+    if m == BOOL:
+        if v:
+            return t
+
+        if i:
+            return ""
+
+        return f
+
+    if m == PLURAL:
+        assert isinstance(v, Iterable)
+        return p.join(str(i) for i in v)
+
+    if m == JSON:
+        return dumps(v, ensure_ascii=False)
+
+    raise TypeError
+
+
 def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=None):
     mapping = {k: i for i, k in enumerate(fields)}
     mask = []
@@ -29,33 +63,6 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
             mask.append(JSON)
         else:
             mask.append(STRING)
-
-    def cast_for_csv(i, v, p="|", n="", t="true", f="false", I=False):
-        if v is None:
-            return n
-
-        m = mask[i]
-
-        if m == STRING:
-            return v
-
-        if m == BOOL:
-            if v:
-                return t
-
-            if I:
-                return ""
-
-            return f
-
-        if m == PLURAL:
-            assert isinstance(v, Iterable)
-            return p.join(str(i) for i in v)
-
-        if m == JSON:
-            return dumps(v, ensure_ascii=False)
-
-        raise TypeError
 
     class Record(namedtuple(name, fields, defaults=defaults)):
         def __getitem__(self, key):
@@ -77,14 +84,14 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
 
         def as_csv_row(self, plural_separator="|"):
             row = list(
-                cast_for_csv(i, v, p=plural_separator) for i, v in enumerate(self)
+                cast_for_csv(mask[i], v, p=plural_separator) for i, v in enumerate(self)
             )
 
             return row
 
         def as_csv_dict_row(self, plural_separator="|"):
             row = OrderedDict(
-                (fields[i], cast_for_csv(i, v, p=plural_separator))
+                (fields[i], cast_for_csv(mask[i], v, p=plural_separator))
                 for i, v in enumerate(self)
             )
 
