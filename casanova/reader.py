@@ -26,7 +26,7 @@ from casanova.utils import (
 from casanova.exceptions import MissingColumnError, NoHeadersError
 
 Multiplexer = namedtuple(
-    "Multiplexer", ["column_name", "separator", "new_column_name"], defaults=["|", None]
+    "Multiplexer", ["column", "separator", "new_column"], defaults=["|", None]
 )
 
 
@@ -165,14 +165,22 @@ class Reader(object):
 
         # Multiplexing
         if multiplex is not None:
-            if multiplex.column_name not in self.headers:
-                raise MissingColumnError(multiplex.column_name)
+            if self.no_headers:
+                multiplex_pos = multiplex.column
 
-            multiplex_pos = self.headers[multiplex.column_name]
+                if multiplex.new_column is not None:
+                    raise TypeError(
+                        "multiplexer cannot rename the column with no_headers=True"
+                    )
+            else:
+                if multiplex.column not in self.headers:
+                    raise MissingColumnError(multiplex.column)
+
+                multiplex_pos = self.headers[multiplex.column]
 
             # New col
-            if len(multiplex) == 3:
-                self.headers.rename(multiplex.column_name, multiplex.new_column_name)
+            if multiplex.new_column is not None:
+                self.headers.rename(multiplex.column, multiplex.new_column)
 
             original_reader = self.reader
             already_buffered_rows = []

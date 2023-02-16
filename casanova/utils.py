@@ -196,13 +196,14 @@ class CsvDictRowIO(CsvIOBase):
 
 
 class CsvIO(CsvIOBase):
-    def __init__(self, fieldnames, rows):
+    def __init__(self, rows, fieldnames=None):
         super().__init__()
 
         self.fieldnames = fieldnames
         self.writer = normalized_csv_writer(self)
 
-        self.writer.writerow(fieldnames)
+        if fieldnames is not None:
+            self.writer.writerow(fieldnames)
 
         for row in rows:
             self.writer.writerow(row)

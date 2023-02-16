@@ -10,7 +10,7 @@ from casanova.defaults import set_defaults
 from casanova.headers import DictLikeRow, Headers
 from casanova.reader import Multiplexer
 from casanova.exceptions import MissingColumnError, LtPy311ByteReadError
-from casanova.utils import LT_PY311
+from casanova.utils import LT_PY311, CsvIO
 
 
 class TestReader(object):
@@ -343,3 +343,17 @@ class TestReader(object):
 
             for _ in reader:
                 assert False
+
+    def test_multiplexing_no_headers(self):
+        data = CsvIO([["John", "blue|gray"], ["Paris", "yellow"]])
+
+        with pytest.raises(TypeError, match="multiplexer"):
+            reader = casanova.reader(
+                StringIO(), no_headers=True, multiplex=Multiplexer(1, new_column="name")
+            )
+
+        reader = casanova.reader(data, no_headers=True, multiplex=Multiplexer(1))
+
+        rows = list(reader)
+
+        assert rows == [["John", "blue"], ["John", "gray"], ["Paris", "yellow"]]

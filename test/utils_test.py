@@ -41,7 +41,10 @@ class TestUtils(object):
         )
 
         assert (
-            CsvIO(["name", "surname"], [["John", "Matthews"], ["Lisa", "Orange"]])
+            CsvIO(
+                [["John", "Matthews"], ["Lisa", "Orange"]],
+                fieldnames=["name", "surname"],
+            )
             .getvalue()
             .strip()
             == "name,surname\nJohn,Matthews\nLisa,Orange"

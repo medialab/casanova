@@ -444,7 +444,7 @@ class TestEnricher(object):
                 enricher.writerow(row)
 
     def test_different_writer_dialect(self):
-        data = CsvIO(["name", "surname"], [["John", "Matthews"]])
+        data = CsvIO([["John", "Matthews"]], fieldnames=["name", "surname"])
         output = StringIO()
 
         enricher = casanova.enricher(
@@ -457,7 +457,9 @@ class TestEnricher(object):
         assert output.getvalue().strip() == "name;surname\nJohn;Matthews"
 
     def test_input_duplicate_column_names(self):
-        data = CsvIO(["name", "name", "surname"], [["John", "Mary", "Matthews"]])
+        data = CsvIO(
+            [["John", "Mary", "Matthews"]], fieldnames=["name", "name", "surname"]
+        )
         output = StringIO()
 
         enricher = casanova.enricher(data, output, writer_lineterminator="\n")
