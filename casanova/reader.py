@@ -106,7 +106,7 @@ class Reader(object):
             else:
                 self.reader = ltpy311_csv_reader(self.input_file, **reader_kwargs)
 
-        self.buffered_rows = []
+        self.__buffered_rows = []
         self.was_completely_buffered = False
         self.total = total
         self.headers = None
@@ -118,11 +118,11 @@ class Reader(object):
         # Reading headers
         if no_headers:
             try:
-                self.buffered_rows.append(next(self.reader))
+                self.__buffered_rows.append(next(self.reader))
             except StopIteration:
                 self.empty = True
             else:
-                self.__no_headers_row_len = len(self.buffered_rows[0])
+                self.__no_headers_row_len = len(self.__buffered_rows[0])
         else:
             try:
                 fieldnames = next(self.reader)
@@ -136,7 +136,7 @@ class Reader(object):
                 self.headers = Headers(fieldnames)
 
                 try:
-                    self.buffered_rows.append(next(self.reader))
+                    self.__buffered_rows.append(next(self.reader))
                 except StopIteration:
                     self.empty = True
 
@@ -145,7 +145,7 @@ class Reader(object):
             if self.input_file is None:
                 raise NotImplementedError
 
-            self.buffered_rows.clear()
+            self.__buffered_rows.clear()
             (
                 self.backward_file,
                 backwards_lines_iterator,
@@ -176,8 +176,8 @@ class Reader(object):
             original_reader = self.reader
             already_buffered_rows = []
 
-            if self.buffered_rows:
-                already_buffered_rows.append(self.buffered_rows.pop())
+            if self.__buffered_rows:
+                already_buffered_rows.append(self.__buffered_rows.pop())
 
             def multiplexing_reader():
                 for row in chain(already_buffered_rows, original_reader):
@@ -210,13 +210,13 @@ class Reader(object):
 
                 if row is None:
                     self.was_completely_buffered = True
-                    self.total = len(self.buffered_rows)
+                    self.total = len(self.__buffered_rows)
                     break
 
                 buffered_bytes += size_of_row_in_file(row)
-                self.buffered_rows.append(row)
+                self.__buffered_rows.append(row)
 
-        self.buffered_rows.reverse()
+        self.__buffered_rows.reverse()
 
         # Iteration state
         self.prelude_rows = None
@@ -248,9 +248,9 @@ class Reader(object):
                     self.current_row_index += 1
                     yield row
 
-            while self.buffered_rows:
+            while self.__buffered_rows:
                 self.current_row_index += 1
-                yield self.buffered_rows.pop()
+                yield self.__buffered_rows.pop()
 
             for row in self.reader:
                 self.current_row_index += 1
