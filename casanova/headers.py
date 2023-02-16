@@ -10,13 +10,22 @@ from collections import namedtuple, defaultdict
 
 from casanova.exceptions import InvalidSelectionError
 
-SimpleSelection = namedtuple("SimpleSelection", ["key", "negative"], defaults=[False])
-RangeSelection = namedtuple(
-    "RangeSelection", ["start", "end", "negative"], defaults=[False]
-)
-IndexedSelection = namedtuple(
-    "IndexedSelection", ["key", "index", "negative"], defaults=[False]
-)
+
+class Selection(object):
+    def __init__(self, inverted=False):
+        self.groups = []
+        self.inverted = inverted
+
+    def add(self, group):
+        self.groups.append(group)
+
+    def __iter__(self):
+        yield from self.groups
+
+
+SingleColumn = namedtuple("SingleColumn", ["key"])
+ColumnRange = namedtuple("ColumnRange", ["start", "end"])
+IndexedColumn = namedtuple("IndexedColumn", ["key", "index"])
 
 INDEXED_HEADER_RE = re.compile(r"^.+\[(\d+)\]$")
 INDEX_REPLACER_RE = re.compile(r"\[\d+\]$")
@@ -26,9 +35,6 @@ def parse_key(key):
     if not key:
         return None
 
-    if key.startswith("!"):
-        key = key[1:]
-
     if key.isdigit():
         return int(key)
 
@@ -36,7 +42,7 @@ def parse_key(key):
 
 
 # TODO: in escape backslash
-def parse_selection(selection):
+def parse_selection(string):
     """
     From xsv:
 
@@ -66,12 +72,19 @@ def parse_selection(selection):
     Quote column names that conflict with selector syntax:
         * '"Date - Opening","Date - Actual Closing"'
     """
+    inverted = False
 
-    def parts():
+    if string.startswith("!"):
+        inverted = True
+        string = string[1:]
+
+    selection = Selection(inverted=inverted)
+
+    def tokens():
         acc = ""
         current_escapechar = None
 
-        for c in selection:
+        for c in string:
             if c == current_escapechar:
                 current_escapechar = None
                 continue
@@ -96,26 +109,25 @@ def parse_selection(selection):
         if acc:
             yield (acc, None)
 
-    def combined_parts():
+    def combined_tokens():
         init = True
         skip_next = False
 
         for (
-            (part, sep),
+            (token, sep),
             next_item,
-        ) in with_next(parts()):
+        ) in with_next(tokens()):
             if skip_next:
                 skip_next = False
                 continue
 
-            negative = part.startswith("!")
-
-            if not init and negative:
+            if not init and inverted:
                 raise InvalidSelectionError(
-                    "negative selection can only have one part", selection=selection
+                    "negative selection can only have one selection group",
+                    selection=string,
                 )
 
-            key = parse_key(part)
+            key = parse_key(token)
 
             init = False
 
@@ -126,7 +138,7 @@ def parse_selection(selection):
 
                 if end_key is not None and type(key) is not type(end_key):
                     raise InvalidSelectionError(
-                        "range selection should not be mixed", selection=selection
+                        "range selection should not be mixed", selection=string
                     )
 
                 # NOTE: ranges are 1-based in xsv
@@ -140,34 +152,29 @@ def parse_selection(selection):
                         raise InvalidSelectionError("range has negative index")
 
                 if end_key is not None and key == end_key:
-                    yield SimpleSelection(key=key, negative=negative)
+                    yield SingleColumn(key=key)
                     continue
 
-                yield RangeSelection(
-                    start=key,
-                    end=end_key,
-                    negative=negative,
-                )
+                yield ColumnRange(start=key, end=end_key)
                 continue
 
-            index_match = INDEXED_HEADER_RE.match(part)
+            index_match = INDEXED_HEADER_RE.match(token)
 
             if index_match:
                 if isinstance(key, int):
                     raise InvalidSelectionError(
-                        "indexed selection cannot be numerical", selection=selection
+                        "indexed selection cannot be numerical", selection=string
                     )
 
-                yield IndexedSelection(
-                    key=key,
-                    index=int(index_match.group(1)),
-                    negative=negative,
-                )
+                yield IndexedColumn(key=key, index=int(index_match.group(1)))
                 continue
 
-            yield SimpleSelection(key=key, negative=negative)
+            yield SingleColumn(key=key)
 
-    yield from combined_parts()
+    for group in combined_tokens():
+        selection.add(group)
+
+    return selection
 
 
 class DictLikeRow(object):
@@ -245,24 +252,46 @@ class Headers(object):
         return indices[0]
 
     def select(self, selection):
+        # TODO: all this should be wrapped to catch IndexError and KeyError to have
+        # a selection error
+
         indices = []
 
-        for item in parse_selection(selection):
-            if item.negative:
-                raise NotImplementedError
+        selection = parse_selection(selection)
 
-            if isinstance(item, SimpleSelection):
-                if isinstance(item.key, int):
-                    if item.key >= len(self):
-                        raise IndexError(item.key)
+        for group in selection:
+            if selection.inverted:
+                if isinstance(group, SingleColumn):
+                    key = group.key
 
-                    indices.append(item.key)
+                    if isinstance(key, int):
+                        if key >= len(self):
+                            raise IndexError(key)
+                    else:
+                        key = self[key]
+
+                    for i in range(len(self)):
+                        if i == key:
+                            continue
+
+                        indices.append(i)
                 else:
-                    indices.append(self[item.key])
+                    raise NotImplementedError
 
-            elif isinstance(item, RangeSelection):
-                start = item.start
-                end = item.end
+                continue
+
+            if isinstance(group, SingleColumn):
+                if isinstance(group.key, int):
+                    if group.key >= len(self):
+                        raise IndexError(group.key)
+
+                    indices.append(group.key)
+                else:
+                    indices.append(self[group.key])
+
+            elif isinstance(group, ColumnRange):
+                start = group.start
+                end = group.end
 
                 if not isinstance(start, int):
                     start = self[start]
@@ -286,10 +315,10 @@ class Headers(object):
                 else:
                     indices.extend(list(range(start, len(self))))
             else:
-                idx = self.get(item.key, index=item.index)
+                idx = self.get(group.key, index=group.index)
 
                 if idx is None:
-                    raise KeyError("%s[%i]" % item)
+                    raise KeyError("%s[%i]" % group)
 
                 indices.append(idx)
 

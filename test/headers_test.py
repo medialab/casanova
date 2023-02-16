@@ -3,9 +3,9 @@
 # =============================================================================
 from casanova.headers import (
     parse_selection,
-    SimpleSelection,
-    RangeSelection,
-    IndexedSelection,
+    SingleColumn,
+    ColumnRange,
+    IndexedColumn,
     Headers,
 )
 
@@ -41,20 +41,21 @@ class TestHeaders(object):
         )
 
         assert selection == [
-            SimpleSelection(key="Date - Opening"),
-            SimpleSelection(key="Date - Actual Closing"),
-            RangeSelection(start="Header1", end="Header2"),
-            IndexedSelection(key="Foo", index=3),
-            SimpleSelection(key="Header, Whatever"),
-            RangeSelection(start=0, end=3),
-            RangeSelection(start=2, end=None),
-            SimpleSelection(key=2),
-            RangeSelection(start=8, end=4),
+            SingleColumn(key="Date - Opening"),
+            SingleColumn(key="Date - Actual Closing"),
+            ColumnRange(start="Header1", end="Header2"),
+            IndexedColumn(key="Foo", index=3),
+            SingleColumn(key="Header, Whatever"),
+            ColumnRange(start=0, end=3),
+            ColumnRange(start=2, end=None),
+            SingleColumn(key=2),
+            ColumnRange(start=8, end=4),
         ]
 
-        selection = list(parse_selection("!1-4"))
+        selection = parse_selection("!1-4")
 
-        assert selection == [RangeSelection(start=0, end=3, negative=True)]
+        assert selection.inverted
+        assert list(selection) == [ColumnRange(start=0, end=3)]
 
         indices = headers.select("1-4")
 
@@ -63,3 +64,7 @@ class TestHeaders(object):
         indices = headers.select('Header2,1-4,6-4,"Date - Opening",1-1,10-')
 
         assert indices == [1, 0, 1, 2, 3, 5, 4, 3, 8, 0, 9, 10]
+
+        indices = headers.select("!Header2")
+
+        assert indices == [0, 2, 3, 4, 5, 6, 7, 8, 9, 10]
