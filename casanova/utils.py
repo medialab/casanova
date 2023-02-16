@@ -11,9 +11,10 @@ from io import StringIO, DEFAULT_BUFFER_SIZE
 from platform import python_version_tuple
 from file_read_backwards.file_read_backwards import FileReadBackwardsIterator
 
-from casanova.exceptions import Py310NullByteWriteError
+from casanova.exceptions import Py310NullByteWriteError, LtPy311ByteReadError
 
 PY_310 = python_version_tuple()[:2] == ("3", "10")
+LT_PY311 = python_version_tuple()[:2] <= ("3", "10")
 
 
 def py310_wrap_csv_writerow(writer):
@@ -32,6 +33,27 @@ def py310_wrap_csv_writerow(writer):
             raise
 
     return wrapped
+
+
+def ltpy311_csv_reader(input_file, **kwargs):
+    reader = csv.reader(input_file, **kwargs)
+
+    if not LT_PY311:
+        return reader
+
+    def wrapped():
+        try:
+            for item in reader:
+                yield item
+        except csv.Error as e:
+            if "line contains nul" in str(e).lower():
+                raise LtPy311ByteReadError(
+                    "python < 3.11 cannot read CSV files containing null bytes. Consider using the strip_null_bytes_on_read=True kwarg or upgrade your python version."
+                )
+
+            raise
+
+    return wrapped()
 
 
 def ensure_open(p, encoding="utf-8", mode="r"):

@@ -4,16 +4,12 @@
 import gzip
 import casanova
 import pytest
-import csv
 from io import StringIO
-from platform import python_version_tuple
 
 from casanova.defaults import set_defaults
 from casanova.headers import DictLikeRow, Headers
-from casanova.exceptions import MissingColumnError
-
-PYTHON_MAJOR, PYTHON_MINOR, _ = python_version_tuple()
-GTE_PY311 = int(PYTHON_MAJOR) >= 3 and int(PYTHON_MINOR) >= 11
+from casanova.exceptions import MissingColumnError, LtPy311ByteReadError
+from casanova.utils import LT_PY311
 
 
 class TestReader(object):
@@ -311,16 +307,16 @@ class TestReader(object):
         assert rows == [["John"], ["Mary"]]
 
         # Null byte issues are solved in csv readers from py3.11
-        if GTE_PY311:
+        if not LT_PY311:
             return
 
         with open("./test/resources/with_null_bytes.csv") as f:
-            with pytest.raises(csv.Error, match="NUL"):
+            with pytest.raises(LtPy311ByteReadError):
                 reader = casanova.reader(f, strip_null_bytes_on_read=False)
                 rows = list(reader)
 
         with open("./test/resources/with_null_bytes.csv") as f:
-            with pytest.raises(csv.Error, match="NUL"):
+            with pytest.raises(LtPy311ByteReadError):
                 reader = casanova.reader(f)
                 rows = list(reader)
 

@@ -20,6 +20,7 @@ from casanova.utils import (
     lines_without_null_bytes,
     rows_without_null_bytes,
     create_csv_aware_backwards_lines_iterator,
+    ltpy311_csv_reader,
 )
 from casanova.exceptions import MissingColumnError, NoHeadersError
 
@@ -108,7 +109,7 @@ class Reader(object):
                     lines_without_null_bytes(self.input_file), **reader_kwargs
                 )
             else:
-                self.reader = csv.reader(self.input_file, **reader_kwargs)
+                self.reader = ltpy311_csv_reader(self.input_file, **reader_kwargs)
 
         self.buffered_rows = []
         self.was_completely_buffered = False
@@ -159,7 +160,9 @@ class Reader(object):
                 strip_null_bytes_on_read=strip_null_bytes_on_read,
             )
 
-            self.reader = csv.reader(backwards_lines_iterator, **reader_kwargs)
+            self.reader = (
+                ltpy311_csv_reader if not strip_null_bytes_on_read else csv.reader
+            )(backwards_lines_iterator, **reader_kwargs)
 
             if not no_headers:
                 self.reader = without_last(self.reader)
