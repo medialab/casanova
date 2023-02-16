@@ -466,3 +466,32 @@ class TestEnricher(object):
             enricher.writerow(row)
 
         assert output.getvalue().strip() == "name,name,surname\nJohn,Mary,Matthews"
+
+    def test_prebuffer_bytes_and_resuming(self, tmpdir):
+        output_path = str(tmpdir.join("./enriched_resumable.csv"))
+
+        resumer = RowCountResumer(output_path)
+
+        with open("./test/resources/people.csv") as f, resumer:
+            enricher = casanova.enricher(
+                f, resumer, add=("x2",), select=("name",), prebuffer_bytes=1024
+            )
+            row = next(iter(enricher))
+            enricher.writerow(row, [2])
+
+        assert collect_csv(output_path) == [["name", "x2"], ["John", "2"]]
+
+        with open("./test/resources/people.csv") as f, resumer:
+            enricher = casanova.enricher(
+                f, resumer, add=("x2",), select=("name",), prebuffer_bytes=1024
+            )
+
+            for i, row in enumerate(enricher):
+                enricher.writerow(row, [(i + 2) * 2])
+
+        assert collect_csv(output_path) == [
+            ["name", "x2"],
+            ["John", "2"],
+            ["Mary", "4"],
+            ["Julia", "6"],
+        ]

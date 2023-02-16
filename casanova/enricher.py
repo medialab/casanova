@@ -108,7 +108,7 @@ class Enricher(Reader):
             escapechar=writer_escapechar,
             quoting=writer_quoting,
             lineterminator=writer_lineterminator,
-            write_header=not can_resume,
+            write_header=not can_resume and write_header,
         )
 
     def __repr__(self):
