@@ -7,6 +7,7 @@
 import re
 from ebbe import with_next
 from collections import namedtuple, defaultdict
+from collections.abc import Iterable
 
 from casanova.exceptions import InvalidSelectionError
 
@@ -123,7 +124,7 @@ def parse_selection(string):
 
             if not init and inverted:
                 raise InvalidSelectionError(
-                    "negative selection can only have one selection group",
+                    reason=TypeError("invalid-inverted-selection"),
                     selection=string,
                 )
 
@@ -138,7 +139,7 @@ def parse_selection(string):
 
                 if end_key is not None and type(key) is not type(end_key):
                     raise InvalidSelectionError(
-                        "range selection should not be mixed", selection=string
+                        reason=TypeError("mixed-range"), selection=string
                     )
 
                 # NOTE: ranges are 1-based in xsv
@@ -149,7 +150,9 @@ def parse_selection(string):
                         end_key -= 1
 
                     if key < 0 or (end_key is not None and end_key < 0):
-                        raise InvalidSelectionError("range has negative index")
+                        raise InvalidSelectionError(
+                            reason=TypeError("negative-index"), selection=string
+                        )
 
                 if end_key is not None and key == end_key:
                     yield SingleColumn(key=key)
@@ -163,7 +166,7 @@ def parse_selection(string):
             if index_match:
                 if isinstance(key, int):
                     raise InvalidSelectionError(
-                        "indexed selection cannot be numerical", selection=string
+                        reason=TypeError("invalid-indexation"), selection=string
                     )
 
                 yield IndexedColumn(key=key, index=int(index_match.group(1)))
@@ -217,6 +220,12 @@ class Headers(object):
         return len(self.fieldnames)
 
     def __getitem__(self, key):
+        if isinstance(key, int):
+            if key >= len(self):
+                raise IndexError(key)
+
+            return key
+
         indices = self.__mapping.get(key)
 
         if indices is None:
@@ -239,6 +248,13 @@ class Headers(object):
         return self.fieldnames[index]
 
     def get(self, key, default=None, index=None):
+        if isinstance(key, int):
+            if index is not None:
+                raise TypeError("it does not make sense to get an nth index")
+
+            if key >= len(self):
+                return default
+
         indices = self.__mapping.get(key)
 
         if indices is None:
@@ -254,80 +270,87 @@ class Headers(object):
     def select(self, selection):
         # TODO: all this should be wrapped to catch IndexError and KeyError to have
         # a selection error
-
         indices = []
 
-        selection = parse_selection(selection)
+        if not isinstance(selection, str):
+            if not isinstance(selection, Iterable):
+                raise TypeError("invalid selection. expecting str or iterable")
 
-        for group in selection:
-            if selection.inverted:
-                if isinstance(group, SingleColumn):
-                    key = group.key
+            for key in selection:
+                indices.append(self[key])
 
-                    if isinstance(key, int):
-                        if key >= len(self):
-                            raise IndexError(key)
+            return indices
+
+        try:
+            parsed_selection = parse_selection(selection)
+
+            for group in parsed_selection:
+                if parsed_selection.inverted:
+                    if isinstance(group, SingleColumn):
+                        key = group.key
+
+                        if isinstance(key, int):
+                            if key >= len(self):
+                                raise IndexError(key)
+                        else:
+                            key = self[key]
+
+                        for i in range(len(self)):
+                            if i == key:
+                                continue
+
+                            indices.append(i)
                     else:
-                        key = self[key]
+                        raise NotImplementedError
 
-                    for i in range(len(self)):
-                        if i == key:
-                            continue
+                    continue
 
-                        indices.append(i)
-                else:
-                    raise NotImplementedError
+                if isinstance(group, SingleColumn):
+                    if isinstance(group.key, int):
+                        if group.key >= len(self):
+                            raise IndexError(group.key)
 
-                continue
+                        indices.append(group.key)
+                    else:
+                        indices.append(self[group.key])
 
-            if isinstance(group, SingleColumn):
-                if isinstance(group.key, int):
-                    if group.key >= len(self):
-                        raise IndexError(group.key)
+                elif isinstance(group, ColumnRange):
+                    start = group.start
+                    end = group.end
 
-                    indices.append(group.key)
-                else:
-                    indices.append(self[group.key])
+                    if not isinstance(start, int):
+                        start = self[start]
 
-            elif isinstance(group, ColumnRange):
-                start = group.start
-                end = group.end
+                        if end is not None:
+                            end = self[end]
+                    else:
+                        if start >= len(self):
+                            raise IndexError(start)
 
-                if not isinstance(start, int):
-                    start = self[start]
+                        if end is not None and end >= len(self):
+                            raise IndexError(end)
 
                     if end is not None:
-                        end = self[end]
-                else:
-                    if start >= len(self):
-                        raise IndexError(start)
+                        # NOTE: ranges are all inclusive
+                        if start > end:
+                            indices.extend(list(range(start, end - 1, -1)))
+                        else:
+                            indices.extend(list(range(start, end + 1)))
 
-                    if end is not None and end >= len(self):
-                        raise IndexError(end)
-
-                if end is not None:
-                    # NOTE: ranges are all inclusive
-                    if start > end:
-                        indices.extend(list(range(start, end - 1, -1)))
                     else:
-                        indices.extend(list(range(start, end + 1)))
-
+                        indices.extend(list(range(start, len(self))))
                 else:
-                    indices.extend(list(range(start, len(self))))
-            else:
-                idx = self.get(group.key, index=group.index)
+                    idx = self.get(group.key, index=group.index)
 
-                if idx is None:
-                    raise KeyError("%s[%i]" % group)
+                    if idx is None:
+                        raise KeyError("%s[%i]" % group)
 
-                indices.append(idx)
+                    indices.append(idx)
+
+        except (IndexError, KeyError) as e:
+            raise InvalidSelectionError(reason=e, selection=selection)
 
         return indices
-
-    def collect(self, keys):
-        # NOTE: collect could work with arbitrary indices mixed with names
-        # This is also the case for getters
-        return [self[k] for k in keys]
 
     def wrap(self, row):
         if len(row) != len(self.fieldnames):

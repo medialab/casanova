@@ -52,7 +52,7 @@ class Enricher(Reader):
 
         if keep is not None:
             try:
-                self.keep_indices = self.headers.collect(keep)
+                self.keep_indices = self.headers.select(keep)
             except KeyError:
                 raise MissingColumnError
 

@@ -37,6 +37,7 @@ class LtPy311ByteReadError(CasanovaError):
 
 
 class InvalidSelectionError(CasanovaError):
-    def __init__(self, msg=None, selection=None):
+    def __init__(self, msg=None, selection=None, reason=None):
         super().__init__(msg)
         self.selection = selection
+        self.reason = reason
