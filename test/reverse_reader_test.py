@@ -1,11 +1,8 @@
 # =============================================================================
 # Casanova Reverse Reader Unit Tests
 # =============================================================================
-import pytest
-
 import casanova
 from casanova import Batch
-from casanova.exceptions import EmptyFileError
 
 
 class TestReverseReader(object):
@@ -49,20 +46,24 @@ class TestReverseReader(object):
 
         assert last_cell == "Julia"
 
-        with pytest.raises(EmptyFileError):
-            last_cell = casanova.reverse_reader.last_cell(
-                "./test/resources/empty.csv", "name"
-            )
+        assert (
+            casanova.reverse_reader.last_cell("./test/resources/empty.csv", "name")
+            is None
+        )
 
-        with pytest.raises(EmptyFileError):
-            last_cell = casanova.reverse_reader.last_cell(
+        assert (
+            casanova.reverse_reader.last_cell(
                 "./test/resources/empty.csv", "name", no_headers=True
             )
+            is None
+        )
 
-        with pytest.raises(EmptyFileError):
-            last_cell = casanova.reverse_reader.last_cell(
+        assert (
+            casanova.reverse_reader.last_cell(
                 "./test/resources/empty_with_headers.csv", "name"
             )
+            is None
+        )
 
     def test_last_batch(self):
         tests = [
@@ -107,23 +108,27 @@ class TestReverseReader(object):
 
             assert batch == expected
 
-        with pytest.raises(EmptyFileError):
+        assert (
             casanova.reverse_reader.last_batch(
                 "./test/resources/empty.csv",
                 batch_value="name",
                 batch_cursor="cursor",
                 end_symbol="end",
             )
+            is None
+        )
 
-        with pytest.raises(EmptyFileError):
+        assert (
             casanova.reverse_reader.last_batch(
                 "./test/resources/empty.csv",
                 batch_value="name",
                 batch_cursor="cursor",
                 end_symbol="end",
             )
+            is None
+        )
 
-        with pytest.raises(EmptyFileError):
+        assert (
             casanova.reverse_reader.last_batch(
                 "./test/resources/empty.csv",
                 no_headers=True,
@@ -131,14 +136,18 @@ class TestReverseReader(object):
                 batch_cursor="cursor",
                 end_symbol="end",
             )
+            is None
+        )
 
-        with pytest.raises(EmptyFileError):
+        assert (
             casanova.reverse_reader.last_batch(
                 "./test/resources/empty_with_headers.csv",
                 batch_value="name",
                 batch_cursor="surname",
                 end_symbol="end",
             )
+            is None
+        )
 
     def test_strip_null_bytes_on_read(self):
         with open("./test/resources/with_null_bytes.csv") as f:

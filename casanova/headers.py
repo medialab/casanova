@@ -210,14 +210,6 @@ class Headers(object):
         return len(self.fieldnames)
 
     def __getitem__(self, key):
-        # NOTE: for numeric keys (i.e. no headers), this function
-        # is identity
-        if isinstance(key, int):
-            if key >= len(self.fieldnames):
-                raise IndexError(key)
-
-            return key
-
         indices = self.__mapping.get(key)
 
         if indices is None:

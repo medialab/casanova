@@ -1,4 +1,4 @@
-ebbe==1.10.0
+ebbe==1.11.0
 file-read-backwards==2.0.0
 
 # Dev Dependenciesy

@@ -7,8 +7,9 @@
 import re
 import csv
 import gzip
-from io import StringIO
+from io import StringIO, DEFAULT_BUFFER_SIZE
 from platform import python_version_tuple
+from file_read_backwards.file_read_backwards import FileReadBackwardsIterator
 
 from casanova.exceptions import Py310NullByteWriteError
 
@@ -185,3 +186,37 @@ class CsvIO(CsvIOBase):
             self.writer.writerow(row)
 
         self.seek(0)
+
+
+def create_csv_aware_backwards_lines_iterator(
+    input_file, quotechar=None, strip_null_bytes_on_read=False
+):
+    encoding = input_file.encoding if hasattr(input_file, "encoding") else "utf-8"
+    quotechar = quotechar if quotechar is not None else '"'
+
+    backwards_file = ensure_open(input_file.name, mode="rb")
+
+    backwards_iterator = FileReadBackwardsIterator(
+        backwards_file, encoding, DEFAULT_BUFFER_SIZE
+    )
+
+    def correctly_escaped_backwards_iterator():
+        acc = None
+
+        for line in backwards_iterator:
+            if strip_null_bytes_on_read:
+                line = strip_null_bytes(line)
+
+            if acc is not None:
+                acc = line + "\n" + acc
+            else:
+                acc = line
+
+            if acc.count(quotechar) % 2 == 0:
+                yield acc
+                acc = None
+
+        if acc is not None:
+            yield acc
+
+    return backwards_file, correctly_escaped_backwards_iterator()

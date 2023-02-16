@@ -9,6 +9,7 @@ import csv
 from collections.abc import Iterable
 from itertools import chain
 from io import IOBase
+from ebbe import without_last
 
 from casanova.defaults import DEFAULTS
 from casanova.headers import Headers
@@ -18,8 +19,9 @@ from casanova.utils import (
     size_of_row_in_file,
     lines_without_null_bytes,
     rows_without_null_bytes,
+    create_csv_aware_backwards_lines_iterator,
 )
-from casanova.exceptions import EmptyFileError, MissingColumnError, NoHeadersError
+from casanova.exceptions import MissingColumnError, NoHeadersError
 
 
 def validate_multiplex_tuple(multiplex):
@@ -45,6 +47,7 @@ class Reader(object):
         total=None,
         multiplex=None,
         strip_null_bytes_on_read=None,
+        reverse=False,
     ):
         # Resolving global defaults
         if prebuffer_bytes is None:
@@ -89,6 +92,7 @@ class Reader(object):
 
         self.input_type = input_type
         self.input_file = None
+        self.backward_file = None
 
         if self.input_type == "iterable":
             if strip_null_bytes_on_read:
@@ -111,6 +115,7 @@ class Reader(object):
         self.total = total
         self.headers = None
         self.empty = False
+        self.reverse = reverse
 
         self.__no_headers_row_len = None
 
@@ -138,6 +143,26 @@ class Reader(object):
                     self.buffered_rows.append(next(self.reader))
                 except StopIteration:
                     self.empty = True
+
+        # Reversing
+        if reverse and not self.empty:
+            if self.input_file is None:
+                raise NotImplementedError
+
+            self.buffered_rows.clear()
+            (
+                self.backward_file,
+                backwards_lines_iterator,
+            ) = create_csv_aware_backwards_lines_iterator(
+                self.input_file,
+                quotechar=quotechar,
+                strip_null_bytes_on_read=strip_null_bytes_on_read,
+            )
+
+            self.reader = csv.reader(backwards_lines_iterator, **reader_kwargs)
+
+            if not no_headers:
+                self.reader = without_last(self.reader)
 
         # Multiplexing
         if multiplex is not None:
@@ -298,8 +323,11 @@ class Reader(object):
         return self.__cells(column, with_rows=with_rows)
 
     def close(self):
-        if self.input_type == "file":
+        if self.input_file is not None:
             self.input_file.close()
+
+        if self.backward_file is not None:
+            self.backward_file.close()
 
     def __enter__(self):
         return self
