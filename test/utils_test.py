@@ -6,7 +6,6 @@ from casanova.utils import (
     size_of_row_in_file,
     CsvCellIO,
     CsvRowIO,
-    CsvDictRowIO,
     CsvIO,
 )
 
@@ -23,21 +22,32 @@ class TestUtils(object):
         assert size_of_row_in_file(["hello", "world"]) == 11
 
     def test_csv_cell_io(self):
-        assert CsvCellIO("name", "Yomgui").getvalue().strip() == "name\nYomgui"
+        assert CsvCellIO("Yomgui", "name").getvalue().strip() == "name\nYomgui"
         assert (
-            CsvCellIO("name", "Yomgui, the real").getvalue().strip()
+            CsvCellIO("Yomgui, the real", "name").getvalue().strip()
             == 'name\n"Yomgui, the real"'
         )
 
     def test_io(self):
         assert (
-            CsvRowIO(["tweet_id", "user_id"], ["7274", "971"]).getvalue().strip()
+            CsvRowIO(["7274", "971"], fieldnames=["tweet_id", "user_id"])
+            .getvalue()
+            .strip()
             == "tweet_id,user_id\n7274,971"
         )
 
+        assert CsvRowIO(["7274", "971"]).getvalue().strip() == "7274,971"
+
         assert (
-            CsvDictRowIO({"name": "John", "surname": "Michael"}).getvalue().strip()
+            CsvRowIO({"name": "John", "surname": "Michael"}).getvalue().strip()
             == "name,surname\nJohn,Michael"
+        )
+
+        assert (
+            CsvRowIO({"name": "John", "surname": "Michael"}, fieldnames=["name", "age"])
+            .getvalue()
+            .strip()
+            == "name,age\nJohn,"
         )
 
         assert (
@@ -48,4 +58,13 @@ class TestUtils(object):
             .getvalue()
             .strip()
             == "name,surname\nJohn,Matthews\nLisa,Orange"
+        )
+
+        assert (
+            CsvIO(
+                [["John", "Matthews"], ["Lisa", "Orange"]],
+            )
+            .getvalue()
+            .strip()
+            == "John,Matthews\nLisa,Orange"
         )

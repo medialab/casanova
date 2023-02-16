@@ -10,6 +10,7 @@ import gzip
 from io import StringIO, DEFAULT_BUFFER_SIZE
 from platform import python_version_tuple
 from file_read_backwards.file_read_backwards import FileReadBackwardsIterator
+from collections.abc import Mapping
 
 from casanova.exceptions import Py310NullByteWriteError, LtPy311ByteReadError
 
@@ -146,50 +147,41 @@ def normalized_csv_writer(f):
     return csv.writer(f, dialect=csv.unix_dialect, quoting=csv.QUOTE_MINIMAL)
 
 
-def normalized_csv_dict_writer(f, fieldnames):
-    return csv.DictWriter(
-        f, fieldnames=fieldnames, dialect=csv.unix_dialect, quoting=csv.QUOTE_MINIMAL
-    )
-
-
 class CsvIOBase(StringIO):
     ...
 
 
 class CsvCellIO(CsvIOBase):
-    def __init__(self, column, value):
+    def __init__(self, value, column=None):
         super().__init__()
 
         self.writer = normalized_csv_writer(self)
-        self.fieldnames = [column]
 
-        self.writer.writerow(self.fieldnames)
+        if column is not None:
+            self.fieldnames = [column]
+            self.writer.writerow(self.fieldnames)
+
         self.writer.writerow([value])
 
         self.seek(0)
 
 
 class CsvRowIO(CsvIOBase):
-    def __init__(self, fieldnames, row):
+    def __init__(self, row, fieldnames=None):
         super().__init__()
 
         self.writer = normalized_csv_writer(self)
         self.fieldnames = fieldnames
 
-        self.writer.writerow(self.fieldnames)
-        self.writer.writerow(row)
+        if isinstance(row, Mapping):
+            if self.fieldnames is None:
+                self.fieldnames = list(row.keys())
 
-        self.seek(0)
+            row = [row.get(f) for f in self.fieldnames]
 
+        if self.fieldnames is not None:
+            self.writer.writerow(self.fieldnames)
 
-class CsvDictRowIO(CsvIOBase):
-    def __init__(self, row):
-        super().__init__()
-
-        self.fieldnames = list(row.keys())
-        self.writer = normalized_csv_dict_writer(self, self.fieldnames)
-
-        self.writer.writeheader()
         self.writer.writerow(row)
 
         self.seek(0)
