@@ -112,6 +112,7 @@ class Reader(object):
         self.headers = None
         self.empty = False
         self.reverse = reverse
+        self.no_headers = no_headers
 
         self.__no_headers_row_len = None
 

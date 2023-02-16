@@ -8,7 +8,7 @@
 import csv
 
 from casanova.defaults import DEFAULTS
-from casanova.resuming import Resumer, LastCellResumer
+from casanova.resumers import Resumer, LastCellResumer
 from casanova.reader import Headers
 from casanova.utils import py310_wrap_csv_writerow, strip_null_bytes_from_row
 
@@ -39,6 +39,7 @@ class Writer(object):
 
         self.fieldnames = fieldnames
         self.headers = Headers(fieldnames) if fieldnames is not None else None
+        self.no_headers = fieldnames is None
 
         can_resume = False
 
@@ -57,11 +58,25 @@ class Writer(object):
             can_resume = resumer.can_resume()
 
             if can_resume:
-                resumer.get_insights_from_output(self)
+                # NOTE: how about null bytes
+                resumer.get_insights_from_output(
+                    self,
+                    no_headers=self.no_headers,
+                    dialect=dialect,
+                    quotechar=quotechar,
+                    delimiter=delimiter,
+                )
 
             output_file = resumer.open_output_file()
 
         # Instantiating writer
+        self.dialect = dialect
+        self.delimiter = delimiter
+        self.quotechar = quotechar
+        self.escapechar = escapechar
+        self.quoting = quoting
+        self.lineterminator = lineterminator
+
         writer_kwargs = {}
 
         if dialect is not None:

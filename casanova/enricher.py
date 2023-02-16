@@ -7,7 +7,7 @@
 #
 from ebbe import with_is_last
 
-from casanova.resuming import (
+from casanova.resumers import (
     LastCellComparisonResumer,
     Resumer,
     RowCountResumer,
@@ -94,7 +94,14 @@ class Enricher(Reader):
             can_resume = self.resumer.can_resume()
 
             if can_resume:
-                self.resumer.get_insights_from_output(self)
+                # NOTE: how about null bytes
+                self.resumer.get_insights_from_output(
+                    self,
+                    no_headers=no_headers,
+                    dialect=writer_dialect,
+                    quotechar=writer_quotechar,
+                    delimiter=writer_delimiter,
+                )
 
                 if hasattr(self.resumer, "resume"):
                     self.resumer.resume(self)

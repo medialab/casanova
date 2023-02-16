@@ -7,7 +7,7 @@ from casanova.enricher import Enricher, ThreadSafeEnricher, BatchEnricher
 from casanova.headers import Headers, DictLikeRow
 from casanova.namedrecord import namedrecord
 from casanova.reader import Reader, Multiplexer
-from casanova.resuming import (
+from casanova.resumers import (
     Resumer,
     RowCountResumer,
     ThreadSafeResumer,

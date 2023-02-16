@@ -13,7 +13,7 @@ from quenouille import imap_unordered
 
 from test.utils import collect_csv
 
-from casanova.resuming import (
+from casanova.resumers import (
     LastCellComparisonResumer,
     RowCountResumer,
     ThreadSafeResumer,

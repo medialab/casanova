@@ -52,7 +52,7 @@ class Resumer(object):
         with self.lock:
             self.listener(event, payload)
 
-    def get_insights_from_output(self, enricher):
+    def get_insights_from_output(self, _):
         raise NotImplementedError
 
     def filter_row(self, i, row):
@@ -105,11 +105,11 @@ class RowCountResumer(Resumer):
         super().__init__(*args, **kwargs)
         self.row_count = 0
 
-    def get_insights_from_output(self, enricher):
+    def get_insights_from_output(self, _, **reader_kwargs):
         self.row_count = 0
 
         with self.open(mode="r") as f:
-            reader = Reader(f)
+            reader = Reader(f, **reader_kwargs)
 
             count = 0
 
@@ -137,11 +137,11 @@ class ThreadSafeResumer(Resumer):
         super().__init__(*args, **kwargs)
         self.already_done = ContiguousRangeSet()
 
-    def get_insights_from_output(self, enricher):
+    def get_insights_from_output(self, enricher, **reader_kwarg):
         self.already_done = ContiguousRangeSet()
 
         with self.open(mode="r") as f:
-            reader = Reader(f)
+            reader = Reader(f, **reader_kwarg)
 
             pos = reader.headers.get(enricher.index_column)
 
@@ -179,12 +179,13 @@ class BatchResumer(Resumer):
         self.last_cursor = None
         self.values_to_skip = None
 
-    def get_insights_from_output(self, enricher):
+    def get_insights_from_output(self, enricher, **reader_kwargs):
         self.last_batch = ReverseReader.last_batch(
             self.path,
             batch_value=self.value_column,
             batch_cursor=enricher.cursor_column,
             end_symbol=enricher.end_symbol,
+            **reader_kwargs
         )
         self.value_pos = enricher.output_headers[self.value_column]
         self.last_cursor = None
@@ -233,8 +234,10 @@ class LastCellResumer(Resumer):
         self.last_cell = None
         self.value_column = value_column
 
-    def get_insights_from_output(self, enricher):
-        self.last_cell = ReverseReader.last_cell(self.path, column=self.value_column)
+    def get_insights_from_output(self, _, **reader_kwargs):
+        self.last_cell = ReverseReader.last_cell(
+            self.path, column=self.value_column, **reader_kwargs
+        )
 
     def get_state(self):
         return self.last_cell

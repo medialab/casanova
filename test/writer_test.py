@@ -8,7 +8,7 @@ from test.utils import collect_csv
 
 from casanova.utils import PY_310
 from casanova.writer import Writer
-from casanova.resuming import LastCellResumer
+from casanova.resumers import LastCellResumer
 from casanova.exceptions import Py310NullByteWriteError
 
 
