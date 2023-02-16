@@ -51,7 +51,7 @@ class TestHeaders(object):
             SingleColumn(key="Header, Whatever"),
             ColumnRange(start=0, end=3),
             ColumnRange(start=2, end=None),
-            SingleColumn(key=2),
+            SingleColumn(key=1),
             ColumnRange(start=8, end=4),
         ]
 

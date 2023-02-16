@@ -519,3 +519,19 @@ class TestEnricher(object):
                 ["Mary", "Sue", "1"],
                 ["Julia", "Stone", "2"],
             ]
+
+        with open("./test/resources/no_headers.csv") as f:
+            buf = StringIO()
+
+            enricher = casanova.enricher(
+                f, buf, writer_lineterminator="\n", select="1", add=1, no_headers=True
+            )
+
+            for i, row in enumerate(enricher):
+                enricher.writerow(row, [i])
+
+            assert collect_csv(buf) == [
+                ["John", "0"],
+                ["Mary", "1"],
+                ["Julia", "2"],
+            ]

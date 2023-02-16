@@ -14,7 +14,7 @@ from casanova.resuming import (
     ThreadSafeResumer,
     BatchResumer,
 )
-from casanova.exceptions import MissingColumnError
+from casanova.headers import Headers
 from casanova.reader import Reader
 from casanova.writer import Writer
 from casanova.defaults import DEFAULTS
@@ -57,12 +57,12 @@ class Enricher(Reader):
         self.padding = None
 
         if select is not None:
-            try:
+            if no_headers:
+                self.selected_indices = Headers.select_no_headers(self.row_len, select)
+                print(self.selected_indices)
+            else:
                 self.selected_indices = self.headers.select(select)
-            except KeyError:
-                raise MissingColumnError
-
-            self.output_fieldnames = self.filterrow(self.output_fieldnames)
+                self.output_fieldnames = self.filterrow(self.output_fieldnames)
 
         if add is not None:
             if no_headers:
@@ -148,9 +148,9 @@ class Enricher(Reader):
 
                 if len(add) != self.added_count:
                     raise TypeError(
-                    "casanova.enricher.writerow: expected %i additional cells but got %i."
-                    % (self.added_count, len(add))
-                )
+                        "casanova.enricher.writerow: expected %i additional cells but got %i."
+                        % (self.added_count, len(add))
+                    )
 
             row = self.filterrow(row) + add
 
