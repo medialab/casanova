@@ -142,7 +142,7 @@ with open('./people.csv') as f, \
     enricher.writerow(row, ['34', 'blond'])
 
   # Want to keep only some columns from input?
-  enricher = casanova.enricher(f, of, add=['age'], keep=['surname'])
+  enricher = casanova.enricher(f, of, add=['age'], select=['surname'])
 
   for row in enricher:
     enricher.writerow(row, ['45'])
@@ -158,7 +158,7 @@ with open('./people.csv') as f, \
 * **output_file** *file|Resumer*: file object to write.
 * **no_headers** *?bool* [`False`]: whether your CSV file is headless.
 * **add** *?iterable<str|int>*: names of columns to add to output.
-* **keep** *?iterable<str|int>*: names of colums to keep from input.
+* **select** *?iterable<str|int>|str*: names of colums to keep from input.
 
 *Resuming an enricher*
 

@@ -29,7 +29,7 @@ class Enricher(Reader):
         input_file,
         output_file,
         no_headers=False,
-        keep=None,
+        select=None,
         add=None,
         strip_null_bytes_on_write=None,
         **kwargs
@@ -45,14 +45,14 @@ class Enricher(Reader):
 
         self.strip_null_bytes_on_write = strip_null_bytes_on_write
 
-        self.keep_indices = None
+        self.selected_indices = None
         self.output_fieldnames = self.fieldnames
         self.added_count = 0
         self.padding = None
 
-        if keep is not None:
+        if select is not None:
             try:
-                self.keep_indices = self.headers.select(keep)
+                self.selected_indices = self.headers.select(select)
             except KeyError:
                 raise MissingColumnError
 
@@ -115,8 +115,8 @@ class Enricher(Reader):
         return "<%s>" % self.__class__.__name__
 
     def filterrow(self, row):
-        if self.keep_indices is not None:
-            row = [row[i] for i in self.keep_indices]
+        if self.selected_indices is not None:
+            row = [row[i] for i in self.selected_indices]
 
         return row
 

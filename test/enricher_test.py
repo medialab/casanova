@@ -111,12 +111,12 @@ class TestEnricher(object):
             ["Julia", "Stone", "2"],
         ]
 
-    def test_keep(self, tmpdir):
-        output_path = str(tmpdir.join("./enriched_keep.csv"))
+    def test_select(self, tmpdir):
+        output_path = str(tmpdir.join("./enriched_select.csv"))
         with open("./test/resources/people.csv") as f, open(
             output_path, "w", newline=""
         ) as of:
-            enricher = casanova.enricher(f, of, keep=("name",), add=("line",))
+            enricher = casanova.enricher(f, of, select=("name",), add=("line",))
 
             for i, row in enumerate(enricher):
                 enricher.writerow(row, [i])
@@ -133,7 +133,7 @@ class TestEnricher(object):
         with open("./test/resources/people.csv") as f, open(
             output_path, "w", newline=""
         ) as of:
-            enricher = casanova.enricher(f, of, keep=("name",), add=("line",))
+            enricher = casanova.enricher(f, of, select=("name",), add=("line",))
 
             for i, row in enumerate(enricher):
                 enricher.writerow(row)
@@ -156,7 +156,7 @@ class TestEnricher(object):
         resumer = RowCountResumer(output_path, listener=listener)
 
         with open("./test/resources/people.csv") as f, resumer:
-            enricher = casanova.enricher(f, resumer, add=("x2",), keep=("name",))
+            enricher = casanova.enricher(f, resumer, add=("x2",), select=("name",))
 
             row = next(iter(enricher))
             enricher.writerow(row, [2])
@@ -164,7 +164,7 @@ class TestEnricher(object):
         assert collect_csv(output_path) == [["name", "x2"], ["John", "2"]]
 
         with open("./test/resources/people.csv") as f, resumer:
-            enricher = casanova.enricher(f, resumer, add=("x2",), keep=("name",))
+            enricher = casanova.enricher(f, resumer, add=("x2",), select=("name",))
 
             for i, row in enumerate(enricher):
                 enricher.writerow(row, [(i + 2) * 2])
@@ -194,7 +194,7 @@ class TestEnricher(object):
         )
 
         with open("./test/resources/people.csv") as f, resumer:
-            enricher = casanova.enricher(f, resumer, add=("x2",), keep=("name",))
+            enricher = casanova.enricher(f, resumer, add=("x2",), select=("name",))
 
             row = next(iter(enricher))
             enricher.writerow(row, [2])
@@ -202,7 +202,7 @@ class TestEnricher(object):
         assert collect_csv(output_path) == [["name", "x2"], ["John", "2"]]
 
         with open("./test/resources/people.csv") as f, resumer:
-            enricher = casanova.enricher(f, resumer, add=("x2",), keep=("name",))
+            enricher = casanova.enricher(f, resumer, add=("x2",), select=("name",))
 
             for i, row in enumerate(enricher):
                 enricher.writerow(row, [(i + 2) * 2])
@@ -228,7 +228,7 @@ class TestEnricher(object):
         with open("./test/resources/people_unordered.csv") as f, open(
             output_path, "w", newline=""
         ) as of:
-            enricher = casanova.threadsafe_enricher(f, of, add=("x2",), keep=("name",))
+            enricher = casanova.threadsafe_enricher(f, of, add=("x2",), select=("name",))
 
             for i, row in imap_unordered(enricher, job, 3):
                 enricher.writerow(i, row, [(i + 1) * 2])
@@ -250,7 +250,7 @@ class TestEnricher(object):
         with open("./test/resources/people_unordered.csv") as f, open(
             output_path, "a+"
         ) as of:
-            enricher = casanova.threadsafe_enricher(f, of, add=("x2",), keep=("name",))
+            enricher = casanova.threadsafe_enricher(f, of, add=("x2",), select=("name",))
 
             names = [t for t in enricher.cells("name")]
 
@@ -259,7 +259,7 @@ class TestEnricher(object):
         with open("./test/resources/people_unordered.csv") as f, open(
             output_path, "a+"
         ) as of:
-            enricher = casanova.threadsafe_enricher(f, of, add=("x2",), keep=("name",))
+            enricher = casanova.threadsafe_enricher(f, of, add=("x2",), select=("name",))
 
             names = [(i, v) for i, row, v in enricher.cells("name", with_rows=True)]
 
@@ -284,7 +284,7 @@ class TestEnricher(object):
 
         with open("./test/resources/people_unordered.csv") as f, resumer:
             enricher = casanova.threadsafe_enricher(
-                f, resumer, add=("x2",), keep=("name",)
+                f, resumer, add=("x2",), select=("name",)
             )
 
             for j, (i, row) in enumerate(imap_unordered(enricher, job, 3)):
@@ -302,7 +302,7 @@ class TestEnricher(object):
 
         with open("./test/resources/people_unordered.csv") as f, resumer:
             enricher = casanova.threadsafe_enricher(
-                f, resumer, add=("x2",), keep=("name",)
+                f, resumer, add=("x2",), select=("name",)
             )
 
             for j, (i, row) in enumerate(imap_unordered(enricher, job, 3)):
@@ -377,7 +377,7 @@ class TestEnricher(object):
         with open("./test/resources/people.csv") as f, open(
             output_path, "w", newline=""
         ) as of:
-            enricher = casanova.enricher(f, of, add=("line",), keep=("surname",))
+            enricher = casanova.enricher(f, of, add=("line",), select=("surname",))
 
             assert len(enricher.output_headers) == 2
             assert enricher.output_headers.surname == 0
@@ -388,7 +388,7 @@ class TestEnricher(object):
         with open("./test/resources/people.csv") as f, open(
             output_path, "w", newline=""
         ) as of:
-            enricher = casanova.batch_enricher(f, of, add=("color",), keep=("surname",))
+            enricher = casanova.batch_enricher(f, of, add=("color",), select=("surname",))
 
             for row in enricher:
                 enricher.writebatch(row, [["blue"], ["red"]], cursor="next")
