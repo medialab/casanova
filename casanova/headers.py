@@ -268,8 +268,6 @@ class Headers(object):
         return indices[0]
 
     def select(self, selection):
-        # TODO: all this should be wrapped to catch IndexError and KeyError to have
-        # a selection error
         indices = []
 
         if not isinstance(selection, str):
@@ -285,67 +283,61 @@ class Headers(object):
             parsed_selection = parse_selection(selection)
 
             for group in parsed_selection:
-                if parsed_selection.inverted:
-                    if isinstance(group, SingleColumn):
-                        key = group.key
+                if isinstance(group, SingleColumn):
+                    key = self[group.key]
 
-                        if isinstance(key, int):
-                            if key >= len(self):
-                                raise IndexError(key)
-                        else:
-                            key = self[key]
-
+                    if parsed_selection.inverted:
                         for i in range(len(self)):
                             if i == key:
                                 continue
 
                             indices.append(i)
                     else:
-                        raise NotImplementedError
+                        indices.append(key)
 
-                    continue
+                elif isinstance(group, IndexedColumn):
+                    key = self.get(group.key, index=group.index)
 
-                if isinstance(group, SingleColumn):
-                    if isinstance(group.key, int):
-                        if group.key >= len(self):
-                            raise IndexError(group.key)
-
-                        indices.append(group.key)
-                    else:
-                        indices.append(self[group.key])
-
-                elif isinstance(group, ColumnRange):
-                    start = group.start
-                    end = group.end
-
-                    if not isinstance(start, int):
-                        start = self[start]
-
-                        if end is not None:
-                            end = self[end]
-                    else:
-                        if start >= len(self):
-                            raise IndexError(start)
-
-                        if end is not None and end >= len(self):
-                            raise IndexError(end)
-
-                    if end is not None:
-                        # NOTE: ranges are all inclusive
-                        if start > end:
-                            indices.extend(list(range(start, end - 1, -1)))
-                        else:
-                            indices.extend(list(range(start, end + 1)))
-
-                    else:
-                        indices.extend(list(range(start, len(self))))
-                else:
-                    idx = self.get(group.key, index=group.index)
-
-                    if idx is None:
+                    if key is None:
                         raise KeyError("%s[%i]" % group)
 
-                    indices.append(idx)
+                    if parsed_selection.inverted:
+                        for i in range(len(self)):
+                            if i == key:
+                                continue
+
+                            indices.append(i)
+                    else:
+                        indices.append(key)
+
+                elif isinstance(group, ColumnRange):
+                    # NOTE: ranges are all inclusive in xsv dsl
+                    start = self[group.start]
+                    end = self[group.end] if group.end is not None else None
+
+                    target_range: range
+
+                    if end is not None:
+                        if start > end:
+                            target_range = range(start, end - 1, -1)
+                        else:
+                            target_range = range(start, end + 1)
+                    else:
+                        target_range = range(start, len(self))
+
+                    if parsed_selection.inverted:
+                        for i in range(len(self)):
+                            if i in target_range:
+                                continue
+
+                            indices.append(i)
+                    else:
+                        indices.extend(list(target_range))
+
+                else:
+                    raise NotImplementedError(
+                        "selection implementation is erroneously not exhaustive"
+                    )
 
         except (IndexError, KeyError) as e:
             raise InvalidSelectionError(reason=e, selection=selection)

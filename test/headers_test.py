@@ -68,3 +68,13 @@ class TestHeaders(object):
         indices = headers.select("!Header2")
 
         assert indices == [0, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+        indices = headers.select("!Foo[1]")
+
+        assert headers.select("Foo[1]") == [5]
+        assert indices == [0, 1, 2, 3, 4, 6, 7, 8, 9, 10]
+
+        indices = headers.select("!2-6")
+
+        assert headers.select("2-6") == [1, 2, 3, 4, 5]
+        assert indices == [0, 6, 7, 8, 9, 10]
