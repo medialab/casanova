@@ -4,7 +4,7 @@
 import pytest
 from collections import OrderedDict
 
-from casanova import namedrecord
+from casanova import namedrecord, temporary_defaults
 
 
 class TestNamedRecord(object):
@@ -99,3 +99,65 @@ class TestNamedRecord(object):
         }
 
         assert Video.fieldnames == ["title", "has_captions", "tags"]
+
+    def test_formatting_options(self):
+        Video = namedrecord(
+            "Video",
+            ["title", "has_captions", "has_info", "tags", "category"],
+            boolean=["has_captions", "has_info"],
+            plural=["tags"],
+            defaults=[None],
+        )
+
+        v = Video("Title", False, True, ["film", "pop"])
+
+        assert v.as_csv_row(
+            plural_separator="#", none_value="none", true_value="yes", false_value="no"
+        ) == ["Title", "no", "yes", "film#pop", "none"]
+
+        assert v.as_csv_row(
+            plural_separator="#", none_value="none", true_value="yes", ignore_false=True
+        ) == ["Title", "", "yes", "film#pop", "none"]
+
+    def test_formatting_options_constructor(self):
+        Video = namedrecord(
+            "Video",
+            ["title", "has_captions", "has_info", "tags", "category"],
+            boolean=["has_captions", "has_info"],
+            plural=["tags"],
+            defaults=[None],
+            plural_separator="#",
+            none_value="none",
+            true_value="yes",
+            false_value="no",
+        )
+
+        v = Video("Title", False, True, ["film", "pop"])
+
+        assert v.as_csv_row(
+            plural_separator="#", none_value="none", true_value="yes", false_value="no"
+        ) == ["Title", "no", "yes", "film#pop", "none"]
+
+        Video = namedrecord("Video", ["toggle"], boolean=["toggle"], ignore_false=True)
+
+        v = Video(False)
+
+        assert v.as_csv_row() == [""]
+
+    def test_formatting_defaults(self):
+        Video = namedrecord(
+            "Video",
+            ["title", "has_captions", "has_info", "tags", "category"],
+            boolean=["has_captions", "has_info"],
+            plural=["tags"],
+            defaults=[None],
+        )
+
+        v = Video("Title", False, True, ["film", "pop"])
+
+        with temporary_defaults(
+            plural_separator="#", none_value="none", true_value="yes", false_value="no"
+        ):
+            assert v.as_csv_row() == ["Title", "no", "yes", "film#pop", "none"]
+
+        assert v.as_csv_row() == ['Title', 'false', 'true', 'film|pop', '']

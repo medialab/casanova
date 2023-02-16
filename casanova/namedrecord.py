@@ -8,7 +8,7 @@ from json import dumps
 from collections import OrderedDict, namedtuple
 from collections.abc import Iterable
 
-# from casanova.defaults import DEFAULTS
+from casanova.defaults import DEFAULTS
 
 STRING = 0
 BOOL = 1
@@ -17,40 +17,61 @@ JSON = 3
 
 
 def cast_for_csv(
-    m: int,
-    v: str,
-    p: str = "|",
-    n: str = "",
-    t: str = "true",
-    f: str = "false",
-    i: bool = False,
+    mask: int,
+    value: str,
+    plural_separator: str,
+    none_value: str,
+    true_value: str,
+    false_value: str,
+    ignore_false: bool,
 ):
-    if v is None:
-        return n
+    if value is None:
+        none_value = none_value if none_value is not None else DEFAULTS.none_value
 
-    if m == STRING:
-        return v
+        return none_value
 
-    if m == BOOL:
-        if v:
-            return t
+    if mask == STRING:
+        return value
 
-        if i:
+    if mask == BOOL:
+        if value:
+            return true_value if true_value is not None else DEFAULTS.true_value
+
+        ignore_false = (
+            ignore_false if ignore_false is not None else DEFAULTS.ignore_false
+        )
+
+        if ignore_false:
             return ""
 
-        return f
+        return false_value if false_value is not None else DEFAULTS.false_value
 
-    if m == PLURAL:
-        assert isinstance(v, Iterable)
-        return p.join(str(i) for i in v)
+    if mask == PLURAL:
+        assert isinstance(value, Iterable)
+        plural_separator = (
+            plural_separator
+            if plural_separator is not None
+            else DEFAULTS.plural_separator
+        )
+        return plural_separator.join(str(i) for i in value)
 
-    if m == JSON:
-        return dumps(v, ensure_ascii=False)
-
-    raise TypeError
+    else:
+        return dumps(value, ensure_ascii=False)
 
 
-def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=None):
+def namedrecord(
+    name,
+    fields,
+    boolean=None,
+    plural=None,
+    json=None,
+    defaults=None,
+    plural_separator=None,
+    none_value=None,
+    true_value=None,
+    false_value=None,
+    ignore_false=None,
+):
     mapping = {k: i for i, k in enumerate(fields)}
     mask = []
 
@@ -82,16 +103,52 @@ def namedrecord(name, fields, boolean=None, plural=None, json=None, defaults=Non
             except (IndexError, KeyError):
                 return default
 
-        def as_csv_row(self, plural_separator="|"):
+        # NOTE: mind shadowing
+        def as_csv_row(
+            self,
+            plural_separator=plural_separator,
+            none_value=none_value,
+            true_value=true_value,
+            false_value=false_value,
+            ignore_false=ignore_false,
+        ):
             row = list(
-                cast_for_csv(mask[i], v, p=plural_separator) for i, v in enumerate(self)
+                cast_for_csv(
+                    mask[i],
+                    v,
+                    plural_separator=plural_separator,
+                    none_value=none_value,
+                    true_value=true_value,
+                    false_value=false_value,
+                    ignore_false=ignore_false,
+                )
+                for i, v in enumerate(self)
             )
 
             return row
 
-        def as_csv_dict_row(self, plural_separator="|"):
+        # NOTE: mind shadowing
+        def as_csv_dict_row(
+            self,
+            plural_separator=plural_separator,
+            none_value=none_value,
+            true_value=true_value,
+            false_value=false_value,
+            ignore_false=ignore_false,
+        ):
             row = OrderedDict(
-                (fields[i], cast_for_csv(mask[i], v, p=plural_separator))
+                (
+                    fields[i],
+                    cast_for_csv(
+                        mask[i],
+                        v,
+                        plural_separator=plural_separator,
+                        none_value=none_value,
+                        true_value=true_value,
+                        false_value=false_value,
+                        ignore_false=ignore_false,
+                    ),
+                )
                 for i, v in enumerate(self)
             )
 

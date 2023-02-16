@@ -4,6 +4,9 @@
 #
 # Global mutable defaults used by casanova classes.
 #
+from contextlib import contextmanager
+
+
 class CasanovaDefaults(object):
     __slots__ = [
         "prebuffer_bytes",
@@ -25,6 +28,13 @@ class CasanovaDefaults(object):
         self.true_value = "true"
         self.false_value = "false"
         self.ignore_false = False
+
+    def save(self):
+        return {n: getattr(self, n) for n in self.__slots__}
+
+    def load(self, o):
+        for n, v in o.items():
+            setattr(self, n, v)
 
 
 DEFAULTS = CasanovaDefaults()
@@ -92,3 +102,13 @@ def set_defaults(
             raise TypeError("ignore_false should be a boolean")
 
         DEFAULTS.ignore_false = false_value
+
+
+@contextmanager
+def temporary_defaults(**kwargs):
+    try:
+        original = DEFAULTS.save()
+        set_defaults(**kwargs)
+        yield
+    finally:
+        DEFAULTS.load(original)
