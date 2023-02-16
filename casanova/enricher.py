@@ -102,7 +102,10 @@ class Enricher(Reader):
 
         # Instantiating writer
         self.writer = csv.writer(output_file)
-        self._writerow = py310_wrap_csv_writerow(self.writer)
+        self._writerow = self.writer.writerow
+
+        if not strip_null_bytes_on_write:
+            self._writerow = py310_wrap_csv_writerow(self.writer)
 
         # Need to write headers?
         if self.output_fieldnames and not no_headers and not can_resume:
