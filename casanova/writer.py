@@ -30,7 +30,7 @@ class Writer(object):
         write_header=True,
     ):
         if strip_null_bytes_on_write is None:
-            strip_null_bytes_on_write = DEFAULTS["strip_null_bytes_on_write"]
+            strip_null_bytes_on_write = DEFAULTS.strip_null_bytes_on_write
 
         if not isinstance(strip_null_bytes_on_write, bool):
             raise TypeError('expecting a boolean as "strip_null_bytes_on_write" kwarg')

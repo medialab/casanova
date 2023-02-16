@@ -44,7 +44,7 @@ class Enricher(Reader):
         super().__init__(input_file, no_headers=no_headers, **kwargs)
 
         if strip_null_bytes_on_write is None:
-            strip_null_bytes_on_write = DEFAULTS["strip_null_bytes_on_write"]
+            strip_null_bytes_on_write = DEFAULTS.strip_null_bytes_on_write
 
         if not isinstance(strip_null_bytes_on_write, bool):
             raise TypeError('expecting a boolean as "strip_null_bytes_on_write" kwarg')
@@ -59,7 +59,6 @@ class Enricher(Reader):
         if select is not None:
             if no_headers:
                 self.selected_indices = Headers.select_no_headers(self.row_len, select)
-                print(self.selected_indices)
             else:
                 self.selected_indices = self.headers.select(select)
                 self.output_fieldnames = self.filterrow(self.output_fieldnames)

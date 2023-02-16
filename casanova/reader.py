@@ -49,10 +49,10 @@ class Reader(object):
     ):
         # Resolving global defaults
         if prebuffer_bytes is None:
-            prebuffer_bytes = DEFAULTS["prebuffer_bytes"]
+            prebuffer_bytes = DEFAULTS.prebuffer_bytes
 
         if strip_null_bytes_on_read is None:
-            strip_null_bytes_on_read = DEFAULTS["strip_null_bytes_on_read"]
+            strip_null_bytes_on_read = DEFAULTS.strip_null_bytes_on_read
 
         if not isinstance(strip_null_bytes_on_read, bool):
             raise TypeError('expecting a boolean as "strip_null_bytes_on_read" kwarg')

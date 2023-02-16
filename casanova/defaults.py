@@ -4,16 +4,30 @@
 #
 # Global mutable defaults used by casanova classes.
 #
-DEFAULTS = {
-    "prebuffer_bytes": None,
-    "strip_null_bytes_on_read": False,
-    "strip_null_bytes_on_write": False,
-    "plural_separator": "|",
-    "none_value": "",
-    "true_value": "true",
-    "false_value": "false",
-    "ignore_false": False,
-}
+class CasanovaDefaults(object):
+    __slots__ = [
+        "prebuffer_bytes",
+        "strip_null_bytes_on_read",
+        "strip_null_bytes_on_write",
+        "plural_separator",
+        "none_value",
+        "true_value",
+        "false_value",
+        "ignore_false",
+    ]
+
+    def __init__(self):
+        self.prebuffer_bytes = None
+        self.strip_null_bytes_on_read = False
+        self.strip_null_bytes_on_write = False
+        self.plural_separator = "|"
+        self.none_value = ""
+        self.true_value = "true"
+        self.false_value = "false"
+        self.ignore_false = False
+
+
+DEFAULTS = CasanovaDefaults()
 NOT_GIVEN = object()
 
 
@@ -35,46 +49,46 @@ def set_defaults(
         ):
             raise TypeError("prebuffer_bytes should be None or a positive integer")
 
-        DEFAULTS["prebuffer_bytes"] = prebuffer_bytes
+        DEFAULTS.prebuffer_bytes = prebuffer_bytes
 
     if strip_null_bytes_on_read is not NOT_GIVEN:
         if not isinstance(strip_null_bytes_on_read, bool):
             raise TypeError("strip_null_bytes_on_read should be a boolean")
 
-        DEFAULTS["strip_null_bytes_on_read"] = strip_null_bytes_on_read
+        DEFAULTS.strip_null_bytes_on_read = strip_null_bytes_on_read
 
     if strip_null_bytes_on_write is not NOT_GIVEN:
         if not isinstance(strip_null_bytes_on_write, bool):
             raise TypeError("strip_null_bytes_on_write should be a boolean")
 
-        DEFAULTS["strip_null_bytes_on_write"] = strip_null_bytes_on_write
+        DEFAULTS.strip_null_bytes_on_write = strip_null_bytes_on_write
 
     if plural_separator is not NOT_GIVEN:
         if not isinstance(plural_separator, str):
             raise TypeError("plural_separator should be a string")
 
-        DEFAULTS["plural_separator"] = plural_separator
+        DEFAULTS.plural_separator = plural_separator
 
     if none_value is not NOT_GIVEN:
         if not isinstance(none_value, str):
             raise TypeError("none_value should be a string")
 
-        DEFAULTS["none_value"] = none_value
+        DEFAULTS.none_value = none_value
 
     if true_value is not NOT_GIVEN:
         if not isinstance(true_value, str):
             raise TypeError("true_value should be a string")
 
-        DEFAULTS["true_value"] = true_value
+        DEFAULTS.true_value = true_value
 
     if false_value is not NOT_GIVEN:
         if not isinstance(false_value, str):
             raise TypeError("false_value should be a string")
 
-        DEFAULTS["false_value"] = false_value
+        DEFAULTS.false_value = false_value
 
     if ignore_false is not NOT_GIVEN:
         if not isinstance(ignore_false, bool):
             raise TypeError("ignore_false should be a boolean")
 
-        DEFAULTS["ignore_false"] = false_value
+        DEFAULTS.ignore_false = false_value
