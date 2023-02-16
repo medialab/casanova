@@ -198,7 +198,7 @@ class Headers(object):
     def __init__(self, fieldnames):
         self.__mapping = defaultdict(list)
         self.__flat_mapping = {}
-        self.fieldnames = fieldnames
+        self.fieldnames = list(fieldnames)
 
         for i, h in enumerate(fieldnames):
             self.__mapping[h].append(i)
