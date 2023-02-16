@@ -151,23 +151,23 @@ class TestReader(object):
             assert list(reader.cells("Person's name")) == ["John", "Mary", "Julia"]
 
     def test_static_count(self):
-        count = casanova.reader.count(StringIO())
+        count = casanova.count(StringIO())
 
         assert count == 0
 
-        count = casanova.reader.count("./test/resources/people.csv")
+        count = casanova.count("./test/resources/people.csv")
 
         assert count == 3
 
-        count = casanova.reader.count("./test/resources/people.csv", max_rows=10)
+        count = casanova.count("./test/resources/people.csv", max_rows=10)
 
         assert count == 3
 
-        count = casanova.reader.count("./test/resources/people.csv", max_rows=1)
+        count = casanova.count("./test/resources/people.csv", max_rows=1)
 
         assert count is None
 
-        count = casanova.reader.count("./test/resources/people.csv.gz")
+        count = casanova.count("./test/resources/people.csv.gz")
 
         assert count == 3
 

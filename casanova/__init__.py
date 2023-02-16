@@ -20,9 +20,15 @@ from casanova.writer import Writer
 from casanova.utils import CsvCellIO, CsvRowIO, CsvDictRowIO, CsvIO
 from casanova.defaults import set_defaults
 
+headers = Headers
 reader = Reader
 enricher = Enricher
 threadsafe_enricher = ThreadSafeEnricher
 batch_enricher = BatchEnricher
 reverse_reader = ReverseReader
 writer = Writer
+
+# Re-exporting statics
+count = reader.count
+last_cell = reverse_reader.last_cell
+last_batch = reverse_reader.last_batch
