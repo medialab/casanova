@@ -39,6 +39,7 @@ pip install casanova
 - [threadsafe_enricher](#threadsafe_enricher)
 - [reverse_reader](#reverse_reader)
 - [namedrecord](#namedrecord)
+- [xsv selection mini DSL](#xsv-selection-mini-dsl)
 
 ## reader
 
@@ -127,6 +128,7 @@ _Methods_
 - **rows**: returns an iterator over the reader rows. Same as iterating over the reader directly.
 - **cells**: take the name of a column or its position and returns an iterator over values of the given column. Can be given `with_rows=True` if you want to iterate over a `value, row` tuple instead if required.
 - **enumerate**: resuming-safe enumeration over the rows yielding `index, row` tuples.
+- **wrap**: method taking a list row and returning a `DictLikeRow` object to wrap it.
 - **close**: cleans up the reader resources manually when not using the dedicated context manager. It is usually only useful when the reader was given a path and not an already opened file handle.
 
 _Multiplexing_
@@ -163,7 +165,72 @@ reader = casanova.reader(
 
 A class representing the headers of a CSV file. It is useful to find the row position of some columns and perform complex selection.
 
-TODO...
+```python
+import casanova
+
+# Headers can be instantiated thusly
+headers = casanova.headers(['name', 'surname', 'age'])
+
+# But you will usually use a reader or an enricher's one:
+headers = casanova.reader(input_file).headers
+
+# Accessing a column through attributes
+headers.surname
+>>> 1
+
+# Accessing a column by indexing:
+headers['surname']
+>>> 1
+
+# Getting a column
+headers.get('surname')
+>>> 1
+headers.get('not-found')
+>>> None
+
+# Getting a duplicated column name
+casanova.headers(['surname', 'name', 'name']).get('name', index=1)
+>>> 2
+
+# Asking if a column exists:
+'name' in headers:
+>>> True
+
+# Retrieving fieldnames:
+headers.fieldnames
+>>> ['name', 'surname', 'age']
+
+# Iterating over headers
+for col in headers:
+    print(col)
+
+# Renaming a column:
+headers.rename('name', 'first_name')
+
+# Couting columns:
+len(headers)
+>>> 3
+
+# Retrieving the nth header:
+headers.nth(1)
+>>> 'surname'
+
+# Wraping a row
+headers.wrap(['John', 'Matthews', '45'])
+>>> DictLikeRow(name='John', surname='Matthews', age='45')
+
+# Selecting some columns (by name and/or index)):
+headers.select(['name', 2])
+>>> [0, 2]
+
+# Selecting using xsv mini DSL:
+headers.select('name,age')
+>>> [0, 2]
+headers.select('!name')
+>>> [1, 2]
+```
+
+For more info about xsv mini DSL, check [this](#xsv-selection-mini-dsl) part of the documentation.
 
 ## count
 
@@ -403,4 +470,40 @@ example = Record('With JSON', {'hello': 'world'})
 
 example.as_csv_row()
 >>> ['With JSON', '{"hello": "world"}']
+```
+
+## xsv selection mini DSL
+
+[xsv](https://github.com/BurntSushi/xsv), a command line tool written in Rust to handle csv files, uses a clever mini DSL to let users specify column selections.
+
+`casanova` has a working python implementation of this mini DSL that can be used by the `headers.select` method and the enrichers `select` kwargs.
+
+Here is the gist of it (copied right from xsv documentation itself):
+
+```
+Select one column by name:
+    * name
+
+Select one column by index (1-based):
+    * 2
+
+Select the first and fourth columns:
+    * 1,4
+
+Select the first 4 columns (by index and by name):
+    * 1-4
+    * Header1-Header4
+
+Ignore the first 2 columns (by range and by omission):
+    * 3-
+    * '!1-2'
+
+Select the third column named 'Foo':
+    * 'Foo[2]'
+
+Re-order and duplicate columns arbitrarily:
+    * 3-1,Header3-Header1,Header1,Foo[2],Header1
+
+Quote column names that conflict with selector syntax:
+    * '"Date - Opening","Date - Actual Closing"'
 ```
