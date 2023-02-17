@@ -73,6 +73,15 @@ class TestWriter(object):
 
         assert "\0" not in result
 
+        # Testing non string values
+        output = StringIO()
+
+        writer = Writer(output, strip_null_bytes_on_write=True, lineterminator="\n")
+
+        writer.writerow(["John", None, "Davis"])
+
+        assert output.getvalue().strip() == "John,,Davis"
+
     def test_py310_wrapper(self):
         if not PY_310:
             return
