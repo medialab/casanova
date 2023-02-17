@@ -394,26 +394,77 @@ todo...
 
 Through handy `Resumer` classes, `casanova` lets its enrichers and writers resume an aborted process.
 
+Those classes must be used as a wrapper to open the output file and can assess whether resuming is actually useful or not for you.
+
+All resumers act like file handles, can be used as a context manager using the `with` keyword and can be manually closed using the `close` method if required.
+
+<!--
+They also all accept a `listener` kwarg taking a function that will receive an event name and an event payload and that can be useful to update progress bars and such correctly when actually resuming. -->
+
 ### RowCountResumer
 
 The `RowCountResumer` works by counting the number of line of the output and skipping that many lines from the input.
 
 It can only work in 1-to-1 scenarios where you only emit a single row per input row.
 
-It works in `O(2n) => O(n)`, `n` being the number of lines already written in the output.
+It works in `O(2n) => O(n)` time and `O(1)` memory, `n` being the number of already processed rows.
 
-It is supported by `casanova.enricher` only.
+It is supported by [`casanova.enricher`](#enricher) only.
 
 ```python
 import casanova
 
 with open('input.csv') as input_file, \
-     casanova.RowCountResumer('output.csv') as output_file:
+     casanova.RowCountResumer('output.csv') as resumer:
 
-    enricher = casanova.enricher(input_file, output_file)
+    # Want to know if we can resume?
+    resumer.can_resume()
+
+    # Want to know how many rows were already done?
+    resumer.already_done_count()
+
+    # Giving the resumer to an enricher as if it was the output file
+    enricher = casanova.enricher(input_file, resumer)
 ```
 
 ### ThreadSafeResumer
+
+`casanova` exports a threadsafe resumer that allows row to be processed concurrently and emitted in a different order.
+
+In this precise case, couting the rows is not enough and we need to be smarter.
+
+One way to proceed is to leverage the index column added by the threadsafe enricher to compute a set of already processed row while reading the output. Then we can just skip the input rows whose indices are in this set.
+
+The issue here is that this consumes up to `O(n)` memory, which is prohibitive in some use cases.
+
+To make sure this still can be done while consuming very little memory, `casanova` uses an exotic data structure we named a "contiguous range set".
+
+This means we can resume operation in `O(n + log(h) * n)) => O(log(h) * n)` time and `O(log(h))` memory, `n` being the number of already processed rows and `h` being the size of the largest hole in the sorted indices of those same rows. Note that most of the time `h << n` since the output is mostly sorted (albeit not at a local level).
+
+You can read more about this data structure in [this](http://yomguithereal.github.io/posts/contiguous-range-set) blog post.
+
+Note finally this resumer can only work in 1-to-1 scenarios where you only emit a single row per input row.
+
+It is supported by [`casanova.threadsafe_enricher`](#threadsafe_enricher) only.
+
+```python
+import casanova
+
+with open('input.csv') as input_file, \
+     casanova.ThreadSafeResumer('output.csv') as resumer:
+
+    # Want to know if we can resume?
+    resumer.can_resume()
+
+    # Want to know how many rows were already done?
+    resumer.already_done_count()
+
+    # Giving the resumer to an enricher as if it was the output file
+    enricher = casanova.threadsafe_enricher(input_file, resumer)
+
+# If you want to use casanova ContiguousRangeSet for whatever reason
+from casanova import ContiguousRangeSet
+```
 
 ### BatchResumer
 
