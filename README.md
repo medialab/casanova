@@ -127,7 +127,7 @@ _Arguments_
 _Properties_
 
 - **total** _int, optional_: total number of lines in the file, if known through prebuffering or through the `total` kwarg.
-- **headers** _casanova.Headers_, optional: CSV file headers if `no_headers=False`.
+- **headers** _casanova.Headers, optional_, optional: CSV file headers if `no_headers=False`.
 - **empty** _bool_: whether the given file was empty.
 - **fieldnames** _list[str], optional_: list representing the CSV file headers if `no_headers=False`.
 - **row_len** _int_: expected number of items per row.
@@ -268,9 +268,47 @@ For more info about xsv mini DSL, check [this](#xsv-selection-mini-dsl) part of 
 
 ## writer
 
-todo...
+`casanova` also exports a csv writer. It can automatically write headers when needed and is able to resume some tasks.
+
+```python
+import casanova
+
+with open('output.csv') as f:
+    writer = casanova.writer(f, fieldnames=['name', 'surname'])
+
+    writer.writerow(['John', 'Davis'])
+
+    # If you want to write headers yourself:
+    writer = casanova.writer(f, fieldnames=['name', 'surname'], write_header=False)
+
+    writer.writeheader()
+```
+
+_Arguments_
+
+- **output_file** _file or casanova.Resumer_: target file.
+- **fieldnames** _Iterable[str], optional_: column names.
+- **strip_null_bytes_on_write** _bool, optional_ [`False`]: whether to strip null bytes when writing rows. Note that on python 3.10, there is a bug that prevents a `csv.writer` will raise an error when attempting to write a row containing a null byte.
+- **dialect** _csv.Dialect or str, optional_: dialect to use to write CSV.
+- **delimiter** _str, optional_: CSV delimiter.
+- **quotechar** _str, optional_: CSV quoting character.
+- **quoting** _csv.QUOTE\_\*, optional_: CSV quoting strategy.
+- **escapechar** _str, optional_: CSV escaping character.
+- **lineterminator** _str, optional_: CSV line terminator.
+- **write_header** _bool, optional_ [`True`]: whether to automatically write header if required (takes resuming into account).
+
+_Properties_
+
+- **headers** _casanova.Headers, optional_, optional: CSV file headers if fieldnames were provided
+- **fieldnames** _list[str], optional_: provided fieldnames.
+
+_Resuming_
+
+A `casanova` writer is able to resume through a [`LastCellResumer`](#lastcellresumer).
 
 ## enricher
+
+todo: resumer support
 
 The enricher is basically a smart combination of a `csv.reader` and a `csv.writer`. It can be used to transform a given CSV file. You can then edit existing cells, add new ones and select which one from the input to keep in the output very easily, while remaining as performant as possible.
 
@@ -319,42 +357,15 @@ with open('./people.csv') as f, \
 
 _Arguments_
 
-- **input_file** _file|str_: file object to read or path to open.
-- **output_file** _file|Resumer_: file object to write.
-- **no_headers** _?bool_ [`False`]: whether your CSV file is headless.
-- **add** _?iterable<str|int>_: names of columns to add to output.
-- **select** _?iterable<str|int>|str_: names of colums to keep from input.
-
-_Resuming an enricher_
-
-```python
-import casanova
-from casanova import RowCountResumer
-
-with open('./people.csv') as f, \
-     RowCountResumer('./enriched-people.csv') as resumer:
-
-    # This will automatically start where it stopped last time
-    enricher = casanova.enricher(f, resumer)
-
-    for row in enricher:
-        row[1] = 'John'
-        enricher.writerow(row)
-
-# You can also listen to events if you need to advance loading bars etc.
-def listener(event, row):
-    print(event, row)
-
-resumer = RowCountResumer('./enriched-people.csv', listener=listener)
-
-# You can check if the process was already started and can resume:
-resumer.can_resume()
-
-# You can check how many lines were already processed:
-resumer.already_done_count()
-```
+- **input_file** _file or str_: file object to read or path to open.
+- **output_file** _file or Resumer_: file object to write.
+- **no_headers** _bool, optional_ [`False`]: whether your CSV file is headless.
+- **add** _Iterable[str|int], optional_: names of columns to add to output.
+- **select** _Iterable[str|int]|str, optional_: selection of columns to keep from input. Can be an iterable of column names and/or column positions or a selection string writting in [xsv mini DSL](#xsv-selection-mini-dsl).
 
 ## threadsafe_enricher
+
+Sometimes, you might want to process input rows unordered
 
 To safely resume, the threadsafe version needs you to add an index column to the output so we can make sense of what was already done. Therefore, its `writerow` method is a bit different because it takes an additional argument being the original index of the row you need to enrich.
 
@@ -382,13 +393,13 @@ with open('./people.csv') as f, \
     enricher = casanova.threadsafe_enricher(f, resumer, add=['age', 'hair'])
 ```
 
-_Threadsafe arguments_
-
-- **index_column** _str, optional_ [`index`]: name of the index column.
+todo: resumer support
 
 ## batch_enricher
 
 todo...
+
+todo: resumer support
 
 ## resumers
 
