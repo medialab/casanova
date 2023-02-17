@@ -415,6 +415,8 @@ with open('./people.csv') as f, \
 
 _Arguments_
 
+Everything from [`casanova.enricher`](#enricher) plus:
+
 - **index_column** _str, optional_ [`index`]: name of the automatically added index column.
 
 _Resuming_
@@ -423,7 +425,33 @@ A `casanova.threadsafe_enricher` is able to resume through a [`ThreadSafeResumer
 
 ## batch_enricher
 
-todo...
+Sometimes, you might want to process a CSV file and paginate API calls per row. This means that each row of your input file should produce multiple new lines, which will be written in batch each time one call from the API returns.
+
+Sometimes, the pagination might be quite long (think collecting the Twitter followers of a very popular account), and it would not be a good idea to accumulate all the results for a single row before flushing them to file atomically because if something goes wrong, you will lose a lot of work.
+
+But if you still want to be able to resume if process is aborted, you will need to add some things to your output. Namely, a column containing optional "cursor" data to resume your API calls and an "end" symbol indicating we finished the current input row.
+
+```python
+import casanova
+
+with open('./twitter-users.csv') as input_file, \
+     casanova.BatchResumer('./output.csv') as output_file:
+
+    enricher = casanova.batch_resumer(input_file, output_file)
+
+    for row in enricher:
+        for results, next_cursor in paginate_api_calls(row):
+
+            # NOTE: if we reached the end, next_cursor is None
+            enricher.writebatch(row, results, next_cursor)
+```
+
+_Arguments_
+
+Everything from [`casanova.enricher`](#enricher) plus:
+
+- **cursor_column** _str, optional_ [`cursor`]: name of the cursor column to add.
+- **end_symbol** _str, optional_ [`end`]: unambiguous (from cursor) end symbol to mark end of input row processing.
 
 _Resuming_
 
