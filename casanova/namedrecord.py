@@ -23,7 +23,6 @@ def cast_for_csv(
     none_value: str,
     true_value: str,
     false_value: str,
-    ignore_false: bool,
 ):
     if value is None:
         none_value = none_value if none_value is not None else DEFAULTS.none_value
@@ -36,13 +35,6 @@ def cast_for_csv(
     if mask == BOOL:
         if value:
             return true_value if true_value is not None else DEFAULTS.true_value
-
-        ignore_false = (
-            ignore_false if ignore_false is not None else DEFAULTS.ignore_false
-        )
-
-        if ignore_false:
-            return ""
 
         return false_value if false_value is not None else DEFAULTS.false_value
 
@@ -70,7 +62,6 @@ def namedrecord(
     none_value=None,
     true_value=None,
     false_value=None,
-    ignore_false=None,
 ):
     mapping = {k: i for i, k in enumerate(fields)}
     mask = []
@@ -110,7 +101,6 @@ def namedrecord(
             none_value=none_value,
             true_value=true_value,
             false_value=false_value,
-            ignore_false=ignore_false,
         ):
             row = list(
                 cast_for_csv(
@@ -120,7 +110,6 @@ def namedrecord(
                     none_value=none_value,
                     true_value=true_value,
                     false_value=false_value,
-                    ignore_false=ignore_false,
                 )
                 for i, v in enumerate(self)
             )
@@ -134,7 +123,6 @@ def namedrecord(
             none_value=none_value,
             true_value=true_value,
             false_value=false_value,
-            ignore_false=ignore_false,
         ):
             row = OrderedDict(
                 (
@@ -146,7 +134,6 @@ def namedrecord(
                         none_value=none_value,
                         true_value=true_value,
                         false_value=false_value,
-                        ignore_false=ignore_false,
                     ),
                 )
                 for i, v in enumerate(self)

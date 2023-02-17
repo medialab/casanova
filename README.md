@@ -15,10 +15,10 @@ Casanova is therefore an attempt to stick to `csv.reader` performance while stil
 
 Casanova is thus a good fit for you if you need to:
 
-* Stream large CSV files without running out of memory
-* Enrich the same CSV files by outputing a similar file, all while adding, filtering and editing cells.
-* Have the possibility to resume said enrichment if your process exited
-* Do so in a threadsafe fashion, and be able to resume even if your output does not have the same order as the input
+- Stream large CSV files without running out of memory
+- Enrich the same CSV files by outputing a similar file, all while adding, filtering and editing cells.
+- Have the possibility to resume said enrichment if your process exited
+- Do so in a threadsafe fashion, and be able to resume even if your output does not have the same order as the input
 
 Casanova also packs exotic utilities able to read csv files in reverse (in constant time), so you can fetch useful information to restart some aborted process.
 
@@ -32,11 +32,11 @@ pip install casanova
 
 ## Usage
 
-* [reader](#reader)
-* [enricher](#enricher)
-* [threadsafe_enricher](#threadsafe_enricher)
-* [reverse_reader](#reverse_reader)
-* [namedrecord](#namedrecord)
+- [reader](#reader)
+- [enricher](#enricher)
+- [threadsafe_enricher](#threadsafe_enricher)
+- [reverse_reader](#reverse_reader)
+- [namedrecord](#namedrecord)
 
 ## reader
 
@@ -98,7 +98,7 @@ reader = casanova.reader('./french-semicolons.csv', delimiter=';')
 reader.close()
 ```
 
-*Counting number of rows in a CSV file*
+_Counting number of rows in a CSV file_
 
 To do so quickly you can use `casanova.reader` static `count` method.
 
@@ -159,15 +159,15 @@ with open('./people.csv') as f, \
     print(row, name)
 ```
 
-*Arguments*
+_Arguments_
 
-* **input_file** *file|str*: file object to read or path to open.
-* **output_file** *file|Resumer*: file object to write.
-* **no_headers** *?bool* [`False`]: whether your CSV file is headless.
-* **add** *?iterable<str|int>*: names of columns to add to output.
-* **select** *?iterable<str|int>|str*: names of colums to keep from input.
+- **input_file** _file|str_: file object to read or path to open.
+- **output_file** _file|Resumer_: file object to write.
+- **no_headers** _?bool_ [`False`]: whether your CSV file is headless.
+- **add** _?iterable<str|int>_: names of columns to add to output.
+- **select** _?iterable<str|int>|str_: names of colums to keep from input.
 
-*Resuming an enricher*
+_Resuming an enricher_
 
 ```python
 import casanova
@@ -224,9 +224,9 @@ with open('./people.csv') as f, \
   enricher = casanova.threadsafe_enricher(f, resumer, add=['age', 'hair'])
 ```
 
-*Threadsafe arguments*
+_Threadsafe arguments_
 
-* **index_column** *?str* [`index`]: name of the index column.
+- **index_column** _?str_ [`index`]: name of the index column.
 
 ## reverse_reader
 
@@ -298,6 +298,23 @@ example.as_dict()
 # You can format it as a CSV row:
 example.as_csv_row():
 >>> ['Le Monde', 'https://lemonde.fr|https://www.lemonde.fr', 'true']
+
+# You can tweak formatting if needed:
+example.as_csv_row(
+  plural_separator='$',
+  none_value='null',
+  true_value='yes',
+  false_value='',
+)
+>>> ['Le Monde', 'https://lemonde.fr$https://www.lemonde.fr', 'yes']
+
+# You can also set default formatting options at the record level
+Record = namedrecord(
+  'Record',
+  ['title'],
+  plural_separator='$',
+  ...
+)
 
 # You can format as a CSV dict row (suitable for csv.DictWriter, if required):
 example.as_csv_dict_row():

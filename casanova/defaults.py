@@ -16,7 +16,6 @@ class CasanovaDefaults(object):
         "none_value",
         "true_value",
         "false_value",
-        "ignore_false",
     ]
 
     def __init__(self):
@@ -27,7 +26,6 @@ class CasanovaDefaults(object):
         self.none_value = ""
         self.true_value = "true"
         self.false_value = "false"
-        self.ignore_false = False
 
     def save(self):
         return {n: getattr(self, n) for n in self.__slots__}
@@ -49,7 +47,6 @@ def set_defaults(
     none_value=NOT_GIVEN,
     true_value=NOT_GIVEN,
     false_value=NOT_GIVEN,
-    ignore_false=NOT_GIVEN,
 ):
     global DEFAULTS
 
@@ -96,12 +93,6 @@ def set_defaults(
             raise TypeError("false_value should be a string")
 
         DEFAULTS.false_value = false_value
-
-    if ignore_false is not NOT_GIVEN:
-        if not isinstance(ignore_false, bool):
-            raise TypeError("ignore_false should be a boolean")
-
-        DEFAULTS.ignore_false = false_value
 
 
 @contextmanager
