@@ -23,12 +23,22 @@ from casanova.contiguous_range_set import ContiguousRangeSet
 class Resumer(object):
     def __init__(self, path, listener=None, encoding="utf-8"):
         self.path = path
-        self.listener = listener
         self.encoding = encoding
         self.output_file = None
         self.lock = Lock()
         self.popped = False
         self.buffer = deque()
+
+        self.listener = None
+
+        if listener is not None:
+            self.set_listener(listener)
+
+    def set_listener(self, listener):
+        if not callable(listener):
+            raise TypeError("listener should be callable")
+
+        self.listener = listener
 
     def can_resume(self):
         return isfile(self.path) and getsize(self.path) > 0
