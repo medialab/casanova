@@ -1,6 +1,6 @@
 [![Build Status](https://github.com/medialab/casanova/workflows/Tests/badge.svg)](https://github.com/medialab/casanova/actions)
 
-# Casanova
+# casanova
 
 If you often find yourself processing CSV files using python, you will quickly notice that, while being more comfortable, `csv.DictReader` remains way slower than `csv.reader`:
 
@@ -11,16 +11,16 @@ csv.DictReader: 84s
 casanova.reader: 25s
 ```
 
-Casanova is therefore an attempt to stick to `csv.reader` performance while still keeping a comfortable interface, still able to consider headers (even duplicate ones also, something that `csv.DictReader` is incapable of) etc.
+`casanova` is therefore an attempt to stick to `csv.reader` performance while still keeping a comfortable interface, still able to consider headers (even duplicate ones also, something that `csv.DictReader` is incapable of) etc.
 
-Casanova is thus a good fit for you if you need to:
+`casanova` is thus a good fit for you if you need to:
 
 - Stream large CSV files without running out of memory
 - Enrich the same CSV files by outputing a similar file, all while adding, filtering and editing cells.
 - Have the possibility to resume said enrichment if your process exited
 - Do so in a threadsafe fashion, and be able to resume even if your output does not have the same order as the input
 
-Casanova also packs exotic utilities able to read csv files in reverse (in constant time), so you can fetch useful information to restart some aborted process.
+`casanova` also packs exotic utilities able to read csv files in reverse (in constant time), so you can fetch useful information to restart some aborted process.
 
 ## Installation
 
@@ -33,6 +33,8 @@ pip install casanova
 ## Usage
 
 - [reader](#reader)
+- [headers](#headers)
+- [count](#count)
 - [enricher](#enricher)
 - [threadsafe_enricher](#threadsafe_enricher)
 - [reverse_reader](#reverse_reader)
@@ -40,44 +42,44 @@ pip install casanova
 
 ## reader
 
-Straightforward CSV reader exposing some information and indices about the given file's headers.
+Straightforward CSV reader yielding list rows but giving some information about potential headers and their ipositions.
 
 ```python
 import casanova
 
 with open('./people.csv') as f:
 
-  # Creating a reader
-  reader = casanova.reader(f)
+    # Creating a reader
+    reader = casanova.reader(f)
 
-  # Getting header information
-  reader.fieldnames
-  >>> ['name', 'surname']
+    # Getting header information
+    reader.fieldnames
+    >>> ['name', 'surname']
 
-  reader.headers
-  >>> Headers(name=0, surname=1)
+    reader.headers
+    >>> Headers(name=0, surname=1)
 
-  name_pos = reader.headers.name
-  name_pos = reader.headers['name']
+    name_pos = reader.headers.name
+    name_pos = reader.headers['name']
 
-  'name' in reader.headers
-  >>> True
+    'name' in reader.headers
+    >>> True
 
-  # Iterating over the rows
-  for row in reader:
-    name = row[name_pos] # it's better to cache your pos outside the loop
-    name = row[reader.headers.name] # this works, but is slower
+    # Iterating over the rows
+    for row in reader:
+        name = row[name_pos] # it's better to cache your pos outside the loop
+        name = row[reader.headers.name] # this works, but is slower
 
-  # Interested in a single column?
-  for name in reader.cells('name'):
-    print(name)
+    # Interested in a single column?
+    for name in reader.cells('name'):
+        print(name)
 
-  # Need also the current row when iterating on cells?
-  for row, name in reader.cells('name', with_rows=True):
-    print(row, name, surname)
+    # Need also the current row when iterating on cells?
+    for row, name in reader.cells('name', with_rows=True):
+        print(row, name, surname)
 
-  # No headers? No problem.
-  reader = casanova.reader(f, no_headers=True)
+    # No headers? No problem.
+    reader = casanova.reader(f, no_headers=True)
 
 # Note that you can also create a reader from a path
 with casanova.reader('./people.csv') as reader:
@@ -98,17 +100,82 @@ reader = casanova.reader('./french-semicolons.csv', delimiter=';')
 reader.close()
 ```
 
-_Counting number of rows in a CSV file_
+_Arguments_
 
-To do so quickly you can use `casanova.reader` static `count` method.
+- **input_file** _str or Path or file or Iterable[list[str]]_: input file given to the reader. Can be a path that will be opened for you by the reader, a file handle or even an arbitrary iterable of list rows.
+- **no_headers** _bool, optional_ [`False`]: set to `True` if `input_file` has no headers.
+- **encoding** _str, optional_ [`utf-8`]: encoding to use to open the file if `input_file` is a path.
+- **dialect** _str or csv.Dialect, optional_: CSV dialect for the reader to use. Check python standard [csv](https://docs.python.org/3/library/csv.html) module documentation for more info.
+- **quotechar** _str, optional_: quote character used by CSV parser.
+- **delimiter** _str, optional_: delimiter characted used by CSV parser.
+- **prebuffer_bytes** _int, optional_: number of bytes of input file to prebuffer in attempt to get a total number of lines ahead of time.
+- **total** _int, optional_: total number of lines to expect in file, if you already know it ahead of time. If given, the reader won't prebuffer data even if `prebuffer_bytes` was set.
+- **multiplex** _casanova.Multiplexer, optional_: multiplexer to use. See relevant documentation hereafter for more information.
+- **strip_null_bytes_on_read** _bool, optional_ [`False`]: before python 3.11, the `csv` module will raise when attempting to read a CSV file containing null bytes. If set to `True`, the reader will strip null bytes on the fly while parsing rows.
+- **reverse** _bool, optional_ [`False`]: whether to read the file in reverse (except for the header of course).
+
+_Properties_
+
+- **total** _int, optional_: total number of lines in the file, if known through prebuffering or through the `total` kwarg.
+- **headers** _casanova.Headers_, optional: CSV file headers if `no_headers=False`.
+- **empty** _bool_: whether the given file was empty.
+- **fieldnames** _list[str], optional_: list representing the CSV file headers if `no_headers=False`.
+- **row_len** _int_: expected number of items per row.
+
+_Methods_
+
+- **rows**: returns an iterator over the reader rows. Same as iterating over the reader directly.
+- **cells**: take the name of a column or its position and returns an iterator over values of the given column. Can be given `with_rows=True` if you want to iterate over a `value, row` tuple instead if required.
+- **enumerate**: resuming-safe enumeration over the rows yielding `index, row` tuples.
+- **close**: cleans up the reader resources manually when not using the dedicated context manager. It is usually only useful when the reader was given a path and not an already opened file handle.
+
+_Multiplexing_
+
+Sometimes, one column of your CSV file might contain multiple values, separated by an arbitrary separator character such as `|`.
+
+In this case, it might be desirable to "multiplex" the file by making a reader emit one copy of the line with each of the values contained by a cell.
+
+To do so, `casanova` exposes a special `Multiplexer` object you can give to any reader like so:
 
 ```python
 import casanova
 
-count = casanova.reader.count('./people.csv')
+# Most simple case: a column named "colors", separated by "|"
+reader = casanova.reader(
+    input_file,
+    multiplex=casanova.Multiplexer('colors')
+)
+
+# Customizing the separator:
+reader = casanova.reader(
+    input_file,
+    multiplex=casanova.Multiplexer('colors', separator='$')
+)
+
+# Renaming the column on the fly:
+reader = casanova.reader(
+    input_file,
+    multiplex=casanova.Multiplexer('colors', new_column='color')
+)
+```
+
+## headers
+
+A class representing the headers of a CSV file. It is useful to find the row position of some columns and perform complex selection.
+
+TODO...
+
+## count
+
+`casanova` exposes a helper function that one can use to quickly count the number of lines in a CSV file.
+
+```python
+import casanova
+
+count = casanova.count('./people.csv')
 
 # You can also stop reading the file if you go beyond a number of rows
-count = casanova.reader.count('./people.csv', max_rows=100)
+count = casanova.count('./people.csv', max_rows=100)
 >>> None # if the file has more than 100 rows
 >>> 34   # else the actual count
 ```
@@ -128,35 +195,36 @@ import casanova
 
 with open('./people.csv') as f, \
      open('./enriched-people.csv', 'w') as of:
-  enricher = casanova.enricher(f, of)
 
-  # The enricher inherits from casanova.reader
-  enricher.headers
-  >>> Headers(name=0, surname=1)
+    enricher = casanova.enricher(f, of)
 
-  # You can iterate over its rows
-  name_pos = enricher.headers.name
-  for row in enricher:
+    # The enricher inherits from casanova.reader
+    enricher.headers
+    >>> Headers(name=0, surname=1)
 
-    # Editing a cell, so that everyone is called John
-    row[name_pos] = 'John'
-    enricher.writerow(row)
+    # You can iterate over its rows
+    name_pos = enricher.headers.name
+    for row in enricher:
 
-  # Want to add columns?
-  enricher = casanova.enricher(f, of, add=['age', 'hair'])
+        # Editing a cell, so that everyone is called John
+        row[name_pos] = 'John'
+        enricher.writerow(row)
 
-  for row in enricher:
-    enricher.writerow(row, ['34', 'blond'])
+    # Want to add columns?
+    enricher = casanova.enricher(f, of, add=['age', 'hair'])
 
-  # Want to keep only some columns from input?
-  enricher = casanova.enricher(f, of, add=['age'], select=['surname'])
+    for row in enricher:
+        enricher.writerow(row, ['34', 'blond'])
 
-  for row in enricher:
-    enricher.writerow(row, ['45'])
+    # Want to keep only some columns from input?
+    enricher = casanova.enricher(f, of, add=['age'], select=['surname'])
 
-  # You can of course still use #.cells
-  for row, name in enricher.cells('name', with_rows=True):
-    print(row, name)
+    for row in enricher:
+        enricher.writerow(row, ['45'])
+
+    # You can of course still use #.cells
+    for row, name in enricher.cells('name', with_rows=True):
+        print(row, name)
 ```
 
 _Arguments_
@@ -176,16 +244,16 @@ from casanova import RowCountResumer
 with open('./people.csv') as f, \
      RowCountResumer('./enriched-people.csv') as resumer:
 
-  # This will automatically start where it stopped last time
-  enricher = casanova.enricher(f, resumer)
+    # This will automatically start where it stopped last time
+    enricher = casanova.enricher(f, resumer)
 
-  for row in enricher:
-    row[1] = 'John'
-    enricher.writerow(row)
+    for row in enricher:
+        row[1] = 'John'
+        enricher.writerow(row)
 
 # You can also listen to events if you need to advance loading bars etc.
 def listener(event, row):
-  print(event, row)
+    print(event, row)
 
 resumer = RowCountResumer('./enriched-people.csv', listener=listener)
 
@@ -210,10 +278,10 @@ import casanova
 with open('./people.csv') as f, \
      open('./enriched-people.csv', 'w') as of:
 
-  enricher = casanova.threadsafe_enricher(f, of, add=['age', 'hair'])
+    enricher = casanova.threadsafe_enricher(f, of, add=['age', 'hair'])
 
-  for index, row in enricher:
-    enricher.writerow(index, row, ['67', 'blond'])
+    for index, row in enricher:
+        enricher.writerow(index, row, ['67', 'blond'])
 
 # With resuming:
 from casanova import ThreadSafeResumer
@@ -221,12 +289,12 @@ from casanova import ThreadSafeResumer
 with open('./people.csv') as f, \
      ThreadSafeResumer('./enriched-people.csv') as resumer:
 
-  enricher = casanova.threadsafe_enricher(f, resumer, add=['age', 'hair'])
+    enricher = casanova.threadsafe_enricher(f, resumer, add=['age', 'hair'])
 ```
 
 _Threadsafe arguments_
 
-- **index_column** _?str_ [`index`]: name of the index column.
+- **index_column** _str, optional_ [`index`]: name of the index column.
 
 ## reverse_reader
 
@@ -238,10 +306,10 @@ It is basically identical to `casanova.reader` except lines will be yielded in r
 import casanova
 
 with open('./people.csv', 'rb') as f:
-  reader = casanova.reverse_reader(f)
+    reader = casanova.reverse_reader(f)
 
-  next(reader)
-  >>> ['Mr. Last', 'Line']
+    next(reader)
+    >>> ['Mr. Last', 'Line']
 
 # It also comes with a static helper if you only need to read last cell
 last_surname = casanova.reverse_reader.last_cell('./people.csv', 'surname')
@@ -256,11 +324,11 @@ casanova's `namedrecord` is basically an enhanced & CSV-aware version of python 
 from casanova import namedrecord
 
 Record = namedrecord(
-  'Record',
-  ['title', 'urls', 'is_accessible', 'data'],
-  defaults=[True, None],
-  boolean=['is_accessible'],
-  plural=['urls']
+    'Record',
+    ['title', 'urls', 'is_accessible', 'data'],
+    defaults=[True, None],
+    boolean=['is_accessible'],
+    plural=['urls']
 )
 
 Record.fieldnames
@@ -291,8 +359,8 @@ example.get('what?')
 # You can return it as a plain dict:
 example.as_dict()
 >>> {
-  'title': 'Le Monde',
-  ...
+    'title': 'Le Monde',
+    ...
 }
 
 # You can format it as a CSV row:
@@ -301,34 +369,34 @@ example.as_csv_row():
 
 # You can tweak formatting if needed:
 example.as_csv_row(
-  plural_separator='$',
-  none_value='null',
-  true_value='yes',
-  false_value='',
+    plural_separator='$',
+    none_value='null',
+    true_value='yes',
+    false_value='',
 )
 >>> ['Le Monde', 'https://lemonde.fr$https://www.lemonde.fr', 'yes']
 
 # You can also set default formatting options at the record level
 Record = namedrecord(
-  'Record',
-  ['title'],
-  plural_separator='$',
-  ...
+    'Record',
+    ['title'],
+    plural_separator='$',
+    ...
 )
 
 # You can format as a CSV dict row (suitable for csv.DictWriter, if required):
 example.as_csv_dict_row():
 >>> {
-  'title': 'Le Monde',
-  'urls': 'https://lemonde.fr|https://www.lemonde.fr',
-  'is_accessible': 'true'
+    'title': 'Le Monde',
+    'urls': 'https://lemonde.fr|https://www.lemonde.fr',
+    'is_accessible': 'true'
 }
 
 # You can also embed json data if you feel crazy:
 Record = namedrecord(
-  'Record',
-  ['title', 'data'],
-  json=['data']
+    'Record',
+    ['title', 'data'],
+    json=['data']
 )
 
 example = Record('With JSON', {'hello': 'world'})
