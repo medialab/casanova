@@ -20,7 +20,7 @@ casanova.reader: 25s
 - Have the possibility to resume said enrichment if your process exited
 - Do so in a threadsafe fashion, and be able to resume even if your output does not have the same order as the input
 
-`casanova` also packs exotic utilities able to read csv files in reverse (in constant time), so you can fetch useful information to restart some aborted process.
+`casanova` also packs exotic utilities able to read csv files in reverse (without loading the whole file into memory and in regular `O(n)` time), so you can fetch useful information to restart some aborted process.
 
 ## Installation
 
