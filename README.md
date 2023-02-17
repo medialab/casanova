@@ -382,6 +382,17 @@ _Arguments_
 - **write_header** _bool, optional_ [`True`]: whether to automatically write
   header if required (takes resuming into account).
 
+_Properties_
+
+- **total** _int, optional_: total number of lines in the file, if known through prebuffering or through the `total` kwarg.
+- **headers** _casanova.Headers, optional_, optional: CSV file headers if `no_headers=False`.
+- **empty** _bool_: whether the given file was empty.
+- **fieldnames** _list[str], optional_: list representing the CSV file headers if `no_headers=False`.
+- **row_len** _int_: expected number of items per row.
+- **output_headers** _casanova.Headers, optional_, optional: output CSV headers if `no_headers=False`.
+- **output_fieldnames** _list[str], optional_: list representing the output CSV headers if `no_headers=False`.
+- **added_count** _int_: number of columns added to the output.
+
 _Resuming_
 
 A `casanova.enricher` is able to resume through a [`RowCountResumer`](#rowcountresumer) or a [`LastCellComparisonResumer`](#lastcellcomparisonresumer).
