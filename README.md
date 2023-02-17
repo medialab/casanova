@@ -35,9 +35,16 @@ pip install casanova
 - [reader](#reader)
 - [headers](#headers)
 - [count](#count)
+- [writer](#writer)
 - [enricher](#enricher)
 - [threadsafe_enricher](#threadsafe_enricher)
 - [reverse_reader](#reverse_reader)
+- [resuming](#resuming)
+  - [RowCountResumer]()
+  - [ThreadSafeResumer]()
+  - [BatchResumer]()
+  - [LastCellResumer]()
+  - [LastCellComparisonResumer]()
 - [namedrecord](#namedrecord)
 - [xsv selection mini DSL](#xsv-selection-mini-dsl)
 
@@ -247,6 +254,10 @@ count = casanova.count('./people.csv', max_rows=100)
 >>> 34   # else the actual count
 ```
 
+## writer
+
+todo...
+
 ## enricher
 
 The enricher is basically a smart combination of a `csv.reader` and a `csv.writer`. It can be used to transform a given CSV file. You can then edit existing cells, add new ones and select which one from the input to keep in the output very easily, while remaining as performant as possible.
@@ -382,6 +393,37 @@ with open('./people.csv', 'rb') as f:
 last_surname = casanova.reverse_reader.last_cell('./people.csv', 'surname')
 >>> 'Mr. Last'
 ```
+
+## resuming
+
+Through handy `Resumer` classes, `casanova` lets its enrichers and writers resume an aborted process.
+
+### RowCountResumer
+
+The `RowCountResumer` works by counting the number of line of the output and skipping that many lines from the input.
+
+It can only work in 1-to-1 scenarios where you only emit a single row per input row.
+
+It works in `O(2n) => O(n)`, `n` being the number of lines already written in the output.
+
+It is supported by `casanova.enricher` only.
+
+```python
+import casanova
+
+with open('input.csv') as input_file, \
+     casanova.RowCountResumer('output.csv') as output_file:
+
+    enricher = casanova.enricher(input_file, output_file)
+```
+
+### ThreadSafeResumer
+
+### BatchResumer
+
+### LastCellResumer
+
+### LastCellComparisonResumer
 
 ## namedrecord
 
