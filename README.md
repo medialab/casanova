@@ -48,6 +48,7 @@ pip install casanova
 - [count](#count)
 - [last_cell](#last_cell)
 - [namedrecord](#namedrecord)
+- [set_defaults](#set_defaults)
 - [xsv selection mini DSL](#xsv-selection-mini-dsl)
 
 ## reader
@@ -665,6 +666,30 @@ example = Record('With JSON', {'hello': 'world'})
 example.as_csv_row()
 >>> ['With JSON', '{"hello": "world"}']
 ```
+
+## set_defaults
+
+`casanova.set_defaults` lets you edit global defaults for `casanova`:
+
+```python
+import casanova
+
+casanova.set_defaults(strip_null_bytes_on_read=True)
+
+# As a context manager:
+with casanova.temporary_defaults(strip_null_bytes_on_read=True):
+    ...
+```
+
+_Arguments_
+
+- **strip_null_bytes_on_read** _bool, optional_ [`False`]: should readers and enrichers strip null bytes on read?
+- **strip_null_bytes_on_write** _bool, optional_ [`False`]: should writers and enrichers strip null bytes on write?
+- **prebuffer_bytes** _int, optional_: default prebuffer bytes for readers and enrichers.
+- **plural_separator** _str, optional_ [`|`]: default plural separator for named records.
+- **none_value** _str, optional_ [`""`]: default formatted `None` value for named records.
+- **true_value** _str, optional_ [`true`]: default formatted `True` value for named records.
+- **false_value** _str, optional_ [`false`]: default formatted `False` value for named records.
 
 ## xsv selection mini DSL
 
