@@ -120,7 +120,7 @@ _Arguments_
 - **delimiter** _str, optional_: delimiter characted used by CSV parser.
 - **prebuffer_bytes** _int, optional_: number of bytes of input file to prebuffer in attempt to get a total number of lines ahead of time.
 - **total** _int, optional_: total number of lines to expect in file, if you already know it ahead of time. If given, the reader won't prebuffer data even if `prebuffer_bytes` was set.
-- **multiplex** _casanova.Multiplexer, optional_: multiplexer to use. See relevant documentation hereafter for more information.
+- **multiplex** _casanova.Multiplexer, optional_: multiplexer to use. Read [this](#multiplexing) for more information.
 - **strip_null_bytes_on_read** _bool, optional_ [`False`]: before python 3.11, the `csv` module will raise when attempting to read a CSV file containing null bytes. If set to `True`, the reader will strip null bytes on the fly while parsing rows.
 - **reverse** _bool, optional_ [`False`]: whether to read the file in reverse (except for the header of course).
 
@@ -140,7 +140,7 @@ _Methods_
 - **wrap**: method taking a list row and returning a `DictLikeRow` object to wrap it.
 - **close**: cleans up the reader resources manually when not using the dedicated context manager. It is usually only useful when the reader was given a path and not an already opened file handle.
 
-_Multiplexing_
+<em id="multiplexing">Multiplexing</em>
 
 Sometimes, one column of your CSV file might contain multiple values, separated by an arbitrary separator character such as `|`.
 
@@ -400,6 +400,8 @@ All resumers act like file handles, can be used as a context manager using the `
 
 <!--
 They also all accept a `listener` kwarg taking a function that will receive an event name and an event payload and that can be useful to update progress bars and such correctly when actually resuming. -->
+
+Finally know that resumers should work perfectly well with [multiplexing](#multiplexing)
 
 ### RowCountResumer
 
