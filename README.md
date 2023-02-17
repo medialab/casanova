@@ -313,7 +313,7 @@ A `casanova.writer` is able to resume through a [`LastCellResumer`](#lastcellres
 
 It can be used to transform a given CSV file. This means you can transform its values on the fly, select some columns to keep from input and add new ones very easily.
 
-Note that enrichers inherits from both [`casanova.reader`](#reader) and [`casanova.writer`] and therefore keep both their properties and methods.
+Note that enrichers inherits from both [`casanova.reader`](#reader) and [`casanova.writer`](#writer) and therefore keep both their properties and methods.
 
 ```python
 import casanova
