@@ -490,7 +490,7 @@ It can only work in 1-to-1 scenarios where you only emit a single row per input 
 
 It works in `O(2n) => O(n)` time and `O(1)` memory, `n` being the number of already processed rows.
 
-It is supported by [`casanova.enricher`](#enricher) only.
+It is only supported by [`casanova.enricher`](#enricher).
 
 ```python
 import casanova
@@ -549,9 +549,49 @@ from casanova import ContiguousRangeSet
 
 ### BatchResumer
 
+todo...
+
 ### LastCellResumer
 
+Sometimes you might write an output CSV file while performing some paginated action. Said action could be aborted and you might want to resume it where you left it.
+
+The `LastCellResumer` therefore enables you to resume writing a CSV file by reading its output's last row using a [`casanova.reverse_reader`](#reverse_reader) and extracting the value you need to resume in constant time and memory.
+
+It is only supported by [`casanova.writer`](#writer).
+
+```python
+import casanova
+
+with casanova.LastCellResumer('output.csv', value_column='user_id') as resumer:
+
+    # Giving the resumer to a writer as if it was the output file
+    writer = casanova.writer(resumer)
+
+    # Extracting last relevant value if any, so we can properly resume
+    last_value = resumer.get_state()
+```
+
 ### LastCellComparisonResumer
+
+In some scenarios, it is possible to resume the operation of an enricher if you can know what was the last value of some column emitted in the output.
+
+Fortunately, using [`casanova.reverse_reader`](#reverse_reader), one can read the last line of a CSV file in constant time.
+
+As such the `LastCellComparisonResumer` enables you to resume the work of an enricher in `O(n)` time and `O(1)` memory, with `n` being the number of already done lines that you must quickly skip when repositioning yourself in the input.
+
+Note that it only works when the enricher emits a single line per line in the input and when the considered column value is unique across the input file.
+
+It is only supported by [`casanova.enricher`](#enricher).
+
+```python
+import casanova
+
+with open('input.csv') as input_file, \
+     casanova.LastCellComparisonResumer('output.csv', value_colum='user_id') as resumer:
+
+    # Giving the resumer to an enricher as if it was the output file
+    enricher = casanova.enricher(input_file, resumer)
+```
 
 ## count
 
