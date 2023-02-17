@@ -177,8 +177,8 @@ class TestEnricher(object):
         ]
 
         assert log == {
-            "output.row": [["John", "2"]],
-            "input.row": [["John", "Matthews"]],
+            "output.row.read": [["John", "2"]],
+            "input.row.filter": [["John", "Matthews"]],
         }
 
     def test_resumable_last_cell_comparison(self, tmpdir):
@@ -214,7 +214,7 @@ class TestEnricher(object):
             ["Julia", "6"],
         ]
 
-        assert log == {"input.row": [["John", "Matthews"]]}
+        assert log == {"input.row.filter": [["John", "Matthews"]]}
 
     def test_threadsafe(self, tmpdir):
         def job(payload):
@@ -323,11 +323,11 @@ class TestEnricher(object):
             ]
         )
 
-        assert sort_output(log["output.row"]) == sort_output(
+        assert sort_output(log["output.row.read"]) == sort_output(
             [["Mary", "1", "4"], ["Julia", "2", "6"]]
         )
-        assert sort_output(log["filter.row"]) == sort_output(
-            [[1, ["Mary", "Sue", "1"]], [2, ["Julia", "Stone", "2"]]]
+        assert sort_output(log["input.row.filter"]) == sort_output(
+            [["Mary", "Sue", "1"], ["Julia", "Stone", "2"]]
         )
 
     def test_threadsafe_resuming_soundness(self, tmpdir):

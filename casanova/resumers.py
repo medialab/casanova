@@ -69,7 +69,7 @@ class Resumer(object):
         result = self.filter(i, row)
 
         if not result:
-            self.emit("filter.row", (i, row))
+            self.emit("input.row.filter", row)
 
         return result
 
@@ -124,7 +124,7 @@ class RowCountResumer(Resumer):
             count = 0
 
             for row in reader:
-                self.emit("output.row", row)
+                self.emit("output.row.read", row)
                 count += 1
 
         self.row_count = count
@@ -135,7 +135,7 @@ class RowCountResumer(Resumer):
 
         while i < self.row_count:
             row = next(iterator)
-            self.emit("input.row", row)
+            self.emit("input.row.filter", row)
             i += 1
 
     def already_done_count(self):
@@ -159,7 +159,7 @@ class ThreadSafeResumer(Resumer):
                 raise MissingColumnError(enricher.index_column)
 
             for row in reader:
-                self.emit("output.row", row)
+                self.emit("output.row.read", row)
 
                 try:
                     current_index = int(row[pos])
@@ -218,7 +218,7 @@ class BatchResumer(Resumer):
             if row is None:
                 raise NotResumableError
 
-            self.emit("input.row", row)
+            self.emit("input.row.filter", row)
 
             value = row[self.value_pos]
 
@@ -260,7 +260,7 @@ class LastCellComparisonResumer(LastCellResumer):
 
     def resume(self, enricher):
         for row in enricher:
-            self.emit("input.row", row)
+            self.emit("input.row.filter", row)
 
             if row[self.value_column] == self.last_cell:
                 break
