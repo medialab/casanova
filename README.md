@@ -304,37 +304,34 @@ _Properties_
 
 _Resuming_
 
-A `casanova` writer is able to resume through a [`LastCellResumer`](#lastcellresumer).
+A `casanova.writer` is able to resume through a [`LastCellResumer`](#lastcellresumer).
 
 ## enricher
 
-todo: resumer support
+`casanova` enrichers are basically a smart combination of both a reader and a writer.
 
-The enricher is basically a smart combination of a `csv.reader` and a `csv.writer`. It can be used to transform a given CSV file. You can then edit existing cells, add new ones and select which one from the input to keep in the output very easily, while remaining as performant as possible.
+It can be used to transform a given CSV file. This means you can transform its values on the fly, select some columns to keep from input and add new ones very easily.
 
-What's more, casanova's enrichers are automatically resumable, meaning that if your process exits for whatever reason, it will be easy to restart where you left last time.
-
-Also, if you need to output lines in an arbitrary order, typically when performing tasks in a multithreaded fashion (e.g. when fetching a large numbers of web pages), casanova exports a threadsafe version of its enricher. This enricher is also resumable thanks to a data structure you can read about in this blog [post](https://yomguithereal.github.io/posts/contiguous-range-set).
-
-Resuming typically requires `O(n)` time (sometime constant time when able to use a reverse reader), `n` being the number of lines already done but only consumes amortized `O(1)` memory.
+Note that enrichers inherits from both [`casanova.reader`](#reader) and [`casanova.writer`] and therefore keep both their properties and methods.
 
 ```python
 import casanova
 
-with open('./people.csv') as f, \
-     open('./enriched-people.csv', 'w') as of:
+with open('./people.csv') as input_file, \
+     open('./enriched-people.csv', 'w') as output_file:
 
-    enricher = casanova.enricher(f, of)
+    enricher = casanova.enricher(input_file, output_file)
 
     # The enricher inherits from casanova.reader
-    enricher.headers
-    >>> Headers(name=0, surname=1)
+    enricher.fieldnames
+    >>> ['name', 'surname']
 
     # You can iterate over its rows
     name_pos = enricher.headers.name
+
     for row in enricher:
 
-        # Editing a cell, so that everyone is called John
+        # Editing a cell, so that everyone is called John now
         row[name_pos] = 'John'
         enricher.writerow(row)
 
@@ -350,7 +347,10 @@ with open('./people.csv') as f, \
     for row in enricher:
         enricher.writerow(row, ['45'])
 
-    # You can of course still use #.cells
+    # Want to select columns to keep using xsv mini dsl?
+    enricher = casanova.enricher(f, of, select='!1-4')
+
+    # You can of course still use #.cells etc.
     for row, name in enricher.cells('name', with_rows=True):
         print(row, name)
 ```
@@ -359,19 +359,41 @@ _Arguments_
 
 - **input_file** _file or str_: file object to read or path to open.
 - **output_file** _file or Resumer_: file object to write.
-- **no_headers** _bool, optional_ [`False`]: whether your CSV file is headless.
+- **no_headers** _bool, optional_ [`False`]: set to `True` if `input_file` has no headers.
+- **encoding** _str, optional_ [`utf-8`]: encoding to use to open the file if `input_file` is a path.
 - **add** _Iterable[str|int], optional_: names of columns to add to output.
 - **select** _Iterable[str|int]|str, optional_: selection of columns to keep from input. Can be an iterable of column names and/or column positions or a selection string writting in [xsv mini DSL](#xsv-selection-mini-dsl).
+- **dialect** _str or csv.Dialect, optional_: CSV dialect for the reader to use. Check python standard [csv](https://docs.python.org/3/library/csv.html) module documentation for more info.
+- **quotechar** _str, optional_: quote character used by CSV parser.
+- **delimiter** _str, optional_: delimiter characted used by CSV parser.
+- **prebuffer_bytes** _int, optional_: number of bytes of input file to prebuffer in attempt to get a total number of lines ahead of time.
+- **total** _int, optional_: total number of lines to expect in file, if you already know it ahead of time. If given, the reader won't prebuffer data even if `prebuffer_bytes` was set.
+- **multiplex** _casanova.Multiplexer, optional_: multiplexer to use. Read [this](#multiplexing) for more information.
+- **reverse** _bool, optional_ [`False`]: whether to read the file in reverse (except for the header of course).
+- **strip_null_bytes_on_read** _bool, optional_ [`False`]: before python 3.11, the `csv` module will raise when attempting to read a CSV file containing null bytes. If set to `True`, the reader will strip null bytes on the fly while parsing rows.
+- **strip_null_bytes_on_write** _bool, optional_ [`False`]: whether to strip null bytes when writing rows. Note that on python 3.10, there is a bug that prevents a `csv.writer` will raise an error when attempting to write a row containing a null byte.
+- **writer_dialect** _csv.Dialect or str, optional_: dialect to use to write CSV.
+- **writer_delimiter** _str, optional_: CSV delimiter for writer.
+- **writer_quotechar** _str, optional_: CSV quoting character for writer.
+- **writer_quoting** _csv.QUOTE\_\*, optional_: CSV quoting strategy for writer.
+- **writer_escapechar** _str, optional_: CSV escaping character for writer.
+- **writer_lineterminator** _str, optional_: CSV line terminator for writer.
+- **write_header** _bool, optional_ [`True`]: whether to automatically write
+  header if required (takes resuming into account).
+
+_Resuming_
+
+A `casanova.enricher` is able to resume through a [`RowCountResumer`](#rowcountresumer) or a [`LastCellComparisonResumer`](#lastcellcomparisonresumer).
 
 ## threadsafe_enricher
 
-Sometimes, you might want to process input rows unordered
+Sometimes, you might want to process multiple input rows concurrently. This can mean that you will emit rows in an arbitrary order, different from the input one.
 
-To safely resume, the threadsafe version needs you to add an index column to the output so we can make sense of what was already done. Therefore, its `writerow` method is a bit different because it takes an additional argument being the original index of the row you need to enrich.
+This is fine, of course, but if you still want to be able to resume an aborted process efficiently (using the [`ThreadSafeResumer](#threadsaferesumer)), your output will need specific additions for it to work, namely a column containing the index of an output row in the original input.
 
-To help you doing so, all the enricher's iteration methods therefore yield the index alongside the row.
+`casanova.threadsafe_enricher` makes it simpler by providing a tailored `writerow` method and iterators always provided the index of a row safely.
 
-Note finally that resuming is only possible if one line in the input is meant to produce exactly one line in the output.
+Note that such resuming is only possible if one row in the input will produce exactly one row in the output.
 
 ```python
 import casanova
@@ -384,22 +406,28 @@ with open('./people.csv') as f, \
     for index, row in enricher:
         enricher.writerow(index, row, ['67', 'blond'])
 
-# With resuming:
-from casanova import ThreadSafeResumer
+    for index, value in enricher.cells('name'):
+        ...
 
-with open('./people.csv') as f, \
-     ThreadSafeResumer('./enriched-people.csv') as resumer:
-
-    enricher = casanova.threadsafe_enricher(f, resumer, add=['age', 'hair'])
+    for index, row, value in enricher.cells('name', with_rows=True):
+        ...
 ```
 
-todo: resumer support
+_Arguments_
+
+- **index_column** _str, optional_ [`index`]: name of the automatically added index column.
+
+_Resuming_
+
+A `casanova.threadsafe_enricher` is able to resume through a [`ThreadSafeResumer`](#threadsaferesumer).
 
 ## batch_enricher
 
 todo...
 
-todo: resumer support
+_Resuming_
+
+A `casanova.batch_enricher` is able to resume through a [`BatchResumer`](#batchresumer).
 
 ## resumers
 
