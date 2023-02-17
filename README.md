@@ -33,18 +33,20 @@ pip install casanova
 ## Usage
 
 - [reader](#reader)
+- [reverse_reader](#reverse_reader)
 - [headers](#headers)
-- [count](#count)
 - [writer](#writer)
 - [enricher](#enricher)
 - [threadsafe_enricher](#threadsafe_enricher)
-- [reverse_reader](#reverse_reader)
-- [resuming](#resuming)
-  - [RowCountResumer]()
-  - [ThreadSafeResumer]()
-  - [BatchResumer]()
-  - [LastCellResumer]()
-  - [LastCellComparisonResumer]()
+- [batch_enricher](#batch_enricher)
+- [resumers](#resumers)
+  - [RowCountResumer](#rowcountresumer)
+  - [ThreadSafeResumer](#threadsaferesumer)
+  - [BatchResumer](#batchresumer)
+  - [LastCellResumer](#lastcellresumer)
+  - [LastCellComparisonResumer](#lastcellcomparisonresumer)
+- [count](#count)
+- [last_cell](#last_cell)
 - [namedrecord](#namedrecord)
 - [xsv selection mini DSL](#xsv-selection-mini-dsl)
 
@@ -168,6 +170,31 @@ reader = casanova.reader(
 )
 ```
 
+## reverse_reader
+
+A reverse CSV reader might sound silly, but it can be useful in some scenarios. Especially when you need to read the last line from an output file without reading the whole thing first, in constant time.
+
+It is mostly used by `casanova` [resumers](#resumers) and it is unlikely you will need to use them on your own.
+
+```python
+import casanova
+
+# people.csv looks like this
+# name,surname
+# John,Doe,
+# Mary,Albert
+# Quentin,Gold
+
+with open('./people.csv', 'rb') as f:
+    reader = casanova.reverse_reader(f)
+
+    reader.fieldnames
+    >>> ['name', 'surname']
+
+    next(reader)
+    >>> ['Quentin', 'Gold']
+```
+
 ## headers
 
 A class representing the headers of a CSV file. It is useful to find the row position of some columns and perform complex selection.
@@ -238,21 +265,6 @@ headers.select('!name')
 ```
 
 For more info about xsv mini DSL, check [this](#xsv-selection-mini-dsl) part of the documentation.
-
-## count
-
-`casanova` exposes a helper function that one can use to quickly count the number of lines in a CSV file.
-
-```python
-import casanova
-
-count = casanova.count('./people.csv')
-
-# You can also stop reading the file if you go beyond a number of rows
-count = casanova.count('./people.csv', max_rows=100)
->>> None # if the file has more than 100 rows
->>> 34   # else the actual count
-```
 
 ## writer
 
@@ -374,27 +386,11 @@ _Threadsafe arguments_
 
 - **index_column** _str, optional_ [`index`]: name of the index column.
 
-## reverse_reader
+## batch_enricher
 
-casanova's reverse reader lets you read a CSV file backwards while still parsing its headers first. It looks silly but it is very useful if you need to read the last lines of a CSV file in constant time & memory when resuming some process.
+todo...
 
-It is basically identical to `casanova.reader` except lines will be yielded in reverse.
-
-```python
-import casanova
-
-with open('./people.csv', 'rb') as f:
-    reader = casanova.reverse_reader(f)
-
-    next(reader)
-    >>> ['Mr. Last', 'Line']
-
-# It also comes with a static helper if you only need to read last cell
-last_surname = casanova.reverse_reader.last_cell('./people.csv', 'surname')
->>> 'Mr. Last'
-```
-
-## resuming
+## resumers
 
 Through handy `Resumer` classes, `casanova` lets its enrichers and writers resume an aborted process.
 
@@ -424,6 +420,42 @@ with open('input.csv') as input_file, \
 ### LastCellResumer
 
 ### LastCellComparisonResumer
+
+## count
+
+`casanova` exposes a helper function that one can use to quickly count the number of lines in a CSV file.
+
+```python
+import casanova
+
+count = casanova.count('./people.csv')
+
+# You can also stop reading the file if you go beyond a number of rows
+count = casanova.count('./people.csv', max_rows=100)
+>>> None # if the file has more than 100 rows
+>>> 34   # else the actual count
+
+# Any additional kwarg will be passed to the underlying reader as-is
+count = casanova.count('./people.csv', delimiter=';')
+```
+
+## last_cell
+
+`casanova` exposes a helper function using a [reverse_reader](#reverse_reader) to read only the last cell value from a given column of a CSV file.
+
+```python
+import casanova
+
+last_cell = casanova.last_cell('./people.csv', column='name')
+>>> 'Quentin'
+
+# Will return None if the file is empty
+last_cell = casanova.last_cell('./empty.csv', column='name')
+>>> None
+
+# Any additional kwarg will be passed to the underlying reader as-is
+last_cell = casanova.last_cell('./people.csv', column='name', delimiter=';')
+```
 
 ## namedrecord
 
