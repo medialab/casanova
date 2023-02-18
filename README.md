@@ -101,8 +101,12 @@ with casanova.reader('./people.csv', encoding='latin1') as reader:
   ...
 
 # The reader will also handle gzipped files out of the box
-with casanove.reader('./people.csv.gz') as reader:
+with casanova.reader('./people.csv.gz') as reader:
   ...
+
+# The reader will also accept iterables of rows
+rows = [['name', 'surname'], ['John', 'Moran']]
+reader = casanova.reader(rows)
 
 # And you can of course use the typical dialect-related kwargs
 reader = casanova.reader('./french-semicolons.csv', delimiter=';')
