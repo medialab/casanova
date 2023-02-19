@@ -143,19 +143,17 @@ def size_of_row_in_file(row):
     return a
 
 
-def normalized_csv_writer(f):
-    return csv.writer(f, dialect=csv.unix_dialect, quoting=csv.QUOTE_MINIMAL)
-
-
 class CsvIOBase(StringIO):
-    ...
+    def __init__(self):
+        super().__init__()
+        self.writer = csv.writer(
+            self, dialect=csv.unix_dialect, quoting=csv.QUOTE_MINIMAL
+        )
 
 
 class CsvCellIO(CsvIOBase):
     def __init__(self, value, column=None):
         super().__init__()
-
-        self.writer = normalized_csv_writer(self)
 
         if column is not None:
             self.fieldnames = [column]
@@ -170,7 +168,6 @@ class CsvRowIO(CsvIOBase):
     def __init__(self, row, fieldnames=None):
         super().__init__()
 
-        self.writer = normalized_csv_writer(self)
         self.fieldnames = fieldnames
 
         if isinstance(row, Mapping):
@@ -192,7 +189,6 @@ class CsvIO(CsvIOBase):
         super().__init__()
 
         self.fieldnames = fieldnames
-        self.writer = normalized_csv_writer(self)
 
         if fieldnames is not None:
             self.writer.writerow(fieldnames)
