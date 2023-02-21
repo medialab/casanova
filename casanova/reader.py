@@ -291,7 +291,14 @@ class Reader(object):
     def wrap(self, row):
         return self.headers.wrap(row)
 
+    # NOTE: the underlying cell iterator is protected so
+    # it remains easy to override it and reimplement it
+    # when inheriting (check the threadsafe_enricher)
+    # for such an example.
     def __cells(self, column, with_rows=False):
+        if not isinstance(column, (str, int)):
+            raise TypeError("target column should be given as a name or a position")
+
         if not isinstance(column, int):
             if self.headers is None:
                 raise NoHeadersError
@@ -321,9 +328,6 @@ class Reader(object):
         return iterator()
 
     def cells(self, column, *, with_rows=False):
-        if not isinstance(column, (str, int)):
-            raise TypeError
-
         return self.__cells(column, with_rows=with_rows)
 
     def enumerate_cells(self, column, start=0, *, with_rows=False):
