@@ -141,7 +141,8 @@ _Methods_
 
 - **rows**: returns an iterator over the reader rows. Same as iterating over the reader directly.
 - **cells**: take the name of a column or its position and returns an iterator over values of the given column. Can be given `with_rows=True` if you want to iterate over a `value, row` tuple instead if required.
-- **enumerate**: resuming-safe enumeration over the rows yielding `index, row` tuples. Takes an optional `start` kwarg like builtin `enumerate`.
+- **enumerate**: resuming-safe enumeration over rows yielding `index, row` tuples. Takes an optional `start` kwarg like builtin `enumerate`.
+- **enumerate_cells**: resuming-safe enumeration over cells yielding `index, cell` or `index, row, cell` if given `with_rows=True`. Takes an optional `start` kwarg like builtin `enumerate`.
 - **wrap**: method taking a list row and returning a `DictLikeRow` object to wrap it.
 - **close**: cleans up the reader resources manually when not using the dedicated context manager. It is usually only useful when the reader was given a path and not an already opened file handle.
 

@@ -193,12 +193,7 @@ class ThreadSafeEnricher(Enricher):
         return self.enumerate()
 
     def cells(self, column, with_rows=False):
-        if with_rows:
-            for row, value in super().cells(column, with_rows=True):
-                yield self.current_row_index, row, value
-        else:
-            for value in super().cells(column):
-                yield self.current_row_index, value
+        return self.enumerate_cells(column, with_rows=with_rows)
 
     def writerow(self, index, row, add=None):
         super().writerow(row, add=[index] + (add or []))

@@ -122,6 +122,24 @@ class TestReader(object):
 
             assert indices == list(range(10, 13))
 
+        with open("./test/resources/people.csv") as f:
+            reader = casanova.reader(f)
+
+            items = list(reader.enumerate_cells("name", 10))
+
+            assert items == [(10, "John"), (11, "Mary"), (12, "Julia")]
+
+        with open("./test/resources/people.csv") as f:
+            reader = casanova.reader(f)
+
+            items = list(reader.enumerate_cells("name", 10, with_rows=True))
+
+            assert items == [
+                (10, ["John", "Matthews"], "John"),
+                (11, ["Mary", "Sue"], "Mary"),
+                (12, ["Julia", "Stone"], "Julia"),
+            ]
+
     def test_no_headers(self):
         with open("./test/resources/no_headers.csv") as f:
             reader = casanova.reader(f, no_headers=True)

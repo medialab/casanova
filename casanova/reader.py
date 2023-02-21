@@ -320,11 +320,19 @@ class Reader(object):
 
         return iterator()
 
-    def cells(self, column, with_rows=False):
+    def cells(self, column, *, with_rows=False):
         if not isinstance(column, (str, int)):
             raise TypeError
 
         return self.__cells(column, with_rows=with_rows)
+
+    def enumerate_cells(self, column, start=0, *, with_rows=False):
+        if with_rows:
+            for row, value in self.__cells(column, with_rows=True):
+                yield self.current_row_index + start, row, value
+        else:
+            for value in self.__cells(column):
+                yield self.current_row_index + start, value
 
     def close(self):
         if self.input_file is not None:
