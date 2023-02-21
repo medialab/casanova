@@ -111,9 +111,16 @@ class TestReader(object):
         with open("./test/resources/people.csv") as f:
             reader = casanova.reader(f)
 
-            indices = [i for i, row in reader.enumerate()]
+            indices = [i for i, _ in reader.enumerate()]
 
             assert indices == list(range(3))
+
+        with open("./test/resources/people.csv") as f:
+            reader = casanova.reader(f)
+
+            indices = [i for i, _ in reader.enumerate(10)]
+
+            assert indices == list(range(10, 13))
 
     def test_no_headers(self):
         with open("./test/resources/no_headers.csv") as f:

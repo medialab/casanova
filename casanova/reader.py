@@ -284,9 +284,9 @@ class Reader(object):
     # NOTE: this function exists because it takes into
     # account rows skipped by resumers, which is
     # essential for threadsafe operations etc.
-    def enumerate(self):
+    def enumerate(self, start=0):
         for row in self.rows():
-            yield self.current_row_index, row
+            yield self.current_row_index + start, row
 
     def wrap(self, row):
         return self.headers.wrap(row)
