@@ -89,6 +89,10 @@ class Resumer(object):
     def __exit__(self, *args):
         self.close()
 
+    def flush(self) -> None:
+        if self.output_file is not None:
+            self.output_file.flush()
+
     def close(self):
         if self.output_file is not None:
             self.output_file.close()
