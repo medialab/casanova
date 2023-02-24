@@ -107,6 +107,21 @@ class TestReader(object):
 
             assert names == [("Matthews", "John"), ("Sue", "Mary"), ("Stone", "Julia")]
 
+    def test_records(self):
+        with open("./test/resources/people.csv") as f:
+            reader = casanova.reader(f)
+
+            names = list(reader.records("name"))
+
+            assert names == ["John", "Mary", "Julia"]
+
+        with open("./test/resources/people.csv") as f:
+            reader = casanova.reader(f)
+
+            names = list(reader.records("surname", "name"))
+
+            assert names == [("Matthews", "John"), ("Sue", "Mary"), ("Stone", "Julia")]
+
     def test_enumerate(self):
         with open("./test/resources/people.csv") as f:
             reader = casanova.reader(f)

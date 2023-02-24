@@ -99,6 +99,17 @@ with open('./people.csv') as f:
     for row, name in reader.cells('name', with_rows=True):
         print(row, name, surname)
 
+    # Want to iterate over records
+    # NOTE: this has a performance cost
+    for name, surname in reader.records('name', 'surname'):
+        print(name, surname)
+
+    for record in reader.records(['name', 'age']):
+        print(record[0])
+
+    for record in reader.records({'name': 'name', 'age': 1}):
+        print(record['age'])
+
     # No headers? No problem.
     reader = casanova.reader(f, no_headers=True)
 

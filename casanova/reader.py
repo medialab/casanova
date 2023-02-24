@@ -341,8 +341,32 @@ class Reader(object):
     def cells(self, column, *, with_rows=False):
         return self.__cells(column, with_rows=with_rows)
 
-    def __records(self, selection, *, with_rows=False):
-        pass
+    # NOTE: the underlying records iterator is protected so
+    # it remains easy to override it and reimplement it
+    # when inheriting (check the threadsafe_enricher)
+    # for such an example.
+    def __records(self, *shape, with_rows=False):
+        if self.no_headers:
+            project = Headers.flat_project_no_headers(self.row_len, *shape)
+        else:
+            project = self.headers.flat_project(*shape)
+
+        if with_rows:
+
+            def iterator():
+                for row in self.rows():
+                    yield row, project(row)
+
+        else:
+
+            def iterator():
+                for row in self.rows():
+                    yield project(row)
+
+        return iterator()
+
+    def records(self, *shape, with_rows=False):
+        return self.__records(*shape, with_rows=with_rows)
 
     def enumerate_cells(self, column, start=0, *, with_rows=False):
         if with_rows:

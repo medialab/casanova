@@ -544,3 +544,9 @@ class Headers(object):
         headers = cls(range(count))
 
         return headers.select(selection)
+
+    @classmethod
+    def flat_project_no_headers(cls, count, *shape):
+        headers = cls(range(count))
+
+        return headers.flat_project(*shape)
