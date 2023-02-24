@@ -12,6 +12,8 @@ from functools import wraps
 
 from casanova.exceptions import InvalidSelectionError
 
+PROJECTION_SHAPE_TYPES = (int, str, tuple, list, dict)
+
 
 class Selection(object):
     def __init__(self, inverted=False):
@@ -441,6 +443,9 @@ class Headers(object):
         return indices
 
     def project(self, shape):
+        if not isinstance(shape, PROJECTION_SHAPE_TYPES):
+            raise TypeError("invalid projection shape")
+
         indexed_shape = walk_shape(shape, self)
 
         def projection(row):

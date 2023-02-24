@@ -118,3 +118,7 @@ class TestHeaders(object):
         p = headers.project(["age", ("name", "surname")])
 
         assert p(row) == ["45", ("John", "Williams")]
+
+        p = headers.project("age")
+
+        assert p(row) == "45"
