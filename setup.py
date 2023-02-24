@@ -18,5 +18,6 @@ setup(
     packages=find_packages(exclude=["benchmark", "test"]),
     package_data={"docs": ["README.md"]},
     install_requires=["ebbe>=1.11.0,<2", "file-read-backwards>=2.0.0,<3"],
+    extras_require={"http": ["urllib3", "certifi"]},
     zip_safe=True,
 )

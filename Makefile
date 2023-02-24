@@ -35,7 +35,7 @@ format:
 
 unit:
 	@echo Running unit tests...
-	pytest -svvv
+	pytest -svvv test
 	@echo
 
 upload:

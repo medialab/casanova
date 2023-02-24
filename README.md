@@ -20,7 +20,7 @@ casanova.reader: 25s
 - Have the possibility to resume said enrichment if your process exited
 - Do so in a threadsafe fashion, and be able to resume even if your output does not have the same order as the input
 
-`casanova` also packs exotic utilities able to read csv files in reverse (without loading the whole file into memory and in regular `O(n)` time), so you can fetch useful information to restart some aborted process.
+`casanova` also packs exotic utilities able to read csv files in reverse (without loading the whole file into memory and in regular `O(n)` time), so you can, for instance, fetch useful information to restart some aborted process.
 
 ## Installation
 
@@ -28,6 +28,16 @@ You can install `casanova` with pip with the following command:
 
 ```
 pip install casanova
+```
+
+If you want to be able to feed CSV files from the web to `casanova` readers & enrichers you will also need to install at least `urllib3` and optionally `certifi` (if you want secure SSL). Nnote that a lot of python packages, including the popular `requests` library, already depend on those two, so it is likely you already have them installed anyway:
+
+```
+# Installing them explicitly
+pip install urllib3 certifi
+
+# Installing casanova with those implicitly
+pip install casanova[http]
 ```
 
 ## Usage
@@ -103,6 +113,11 @@ with casanova.reader('./people.csv', encoding='latin1') as reader:
 # The reader will also handle gzipped files out of the box
 with casanova.reader('./people.csv.gz') as reader:
   ...
+
+# If you have `urllib3` installed, casanova is also able to stream
+# remote CSV file out of the box
+with casanova.reader('https://mydomain.fr/some-file.csv') as reader:
+    ...
 
 # The reader will also accept iterables of rows
 rows = [['name', 'surname'], ['John', 'Moran']]

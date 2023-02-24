@@ -114,6 +114,10 @@ def rows_without_null_bytes(iterable):
         yield strip_null_bytes_from_row(row)
 
 
+def looks_like_url(value: str) -> bool:
+    return value.startswith("http://") or value.startswith("https://")
+
+
 def size_of_row_in_memory(row):
     """
     Returns the approximate amount of bytes needed to represent the given row into

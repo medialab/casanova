@@ -49,3 +49,7 @@ class InvalidSelectionError(CasanovaError):
         super().__init__(msg or str(reason))
         self.selection = selection
         self.reason = reason
+
+
+class NoHTTPSupport(CasanovaError):
+    pass

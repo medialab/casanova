@@ -9,7 +9,7 @@ import csv
 from collections import namedtuple
 from collections.abc import Iterable
 from itertools import chain
-from io import IOBase
+from io import IOBase, TextIOWrapper
 from ebbe import without_last
 
 from casanova.defaults import DEFAULTS
@@ -22,7 +22,9 @@ from casanova.utils import (
     rows_without_null_bytes,
     create_csv_aware_backwards_lines_iterator,
     ltpy311_csv_reader,
+    looks_like_url,
 )
+from casanova.http import request
 from casanova.exceptions import MissingColumnError, NoHeadersError
 
 Multiplexer = namedtuple(
@@ -64,8 +66,12 @@ class Reader(object):
             input_type = "file"
 
         elif isinstance(input_file, str):
-            input_type = "path"
-            input_file = ensure_open(input_file, encoding=encoding)
+            if looks_like_url(input_file):
+                input_type = "url"
+                input_file = request(input_file)
+            else:
+                input_type = "path"
+                input_file = ensure_open(input_file, encoding=encoding)
 
         elif isinstance(input_file, Iterable):
             input_type = "iterable"
@@ -99,12 +105,17 @@ class Reader(object):
         else:
             self.input_file = input_file
 
+            if self.input_type == "url":
+                input_file = TextIOWrapper(
+                    self.input_file, encoding=encoding, newline="", write_through=True
+                )
+
             if strip_null_bytes_on_read:
                 self.reader = csv.reader(
-                    lines_without_null_bytes(self.input_file), **reader_kwargs
+                    lines_without_null_bytes(input_file), **reader_kwargs
                 )
             else:
-                self.reader = ltpy311_csv_reader(self.input_file, **reader_kwargs)
+                self.reader = ltpy311_csv_reader(input_file, **reader_kwargs)
 
         self.__buffered_rows = []
         self.was_completely_buffered = False
@@ -143,7 +154,7 @@ class Reader(object):
 
         # Reversing
         if reverse and not self.empty:
-            if self.input_file is None:
+            if self.input_file is None or self.input_type == "url":
                 raise NotImplementedError
 
             self.__buffered_rows.clear()
@@ -339,7 +350,10 @@ class Reader(object):
                 yield self.current_row_index + start, value
 
     def close(self):
-        if self.input_file is not None:
+        if self.input_type == "url":
+            self.input_file.release_conn()
+
+        if self.input_file is not None and hasattr(self.input_file, "close"):
             self.input_file.close()
 
         if self.backward_file is not None:

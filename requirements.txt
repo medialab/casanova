@@ -3,10 +3,12 @@ file-read-backwards==2.0.0
 
 # Dev Dependenciesy
 black==23.1.0
+certifi
 click
 importchecker==2.0
 pytest==7.2.1
 quenouille==1.4.2
+urllib3==1.26.14
 tox==4.4.5
 tqdm==4.31.1
 twine==4.0.2
