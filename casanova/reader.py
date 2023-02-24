@@ -341,6 +341,14 @@ class Reader(object):
     def cells(self, column, *, with_rows=False):
         return self.__cells(column, with_rows=with_rows)
 
+    def enumerate_cells(self, column, start=0, *, with_rows=False):
+        if with_rows:
+            for row, value in self.__cells(column, with_rows=True):
+                yield self.current_row_index + start, row, value
+        else:
+            for value in self.__cells(column):
+                yield self.current_row_index + start, value
+
     # NOTE: the underlying records iterator is protected so
     # it remains easy to override it and reimplement it
     # when inheriting (check the threadsafe_enricher)
@@ -367,14 +375,6 @@ class Reader(object):
 
     def records(self, *shape, with_rows=False):
         return self.__records(*shape, with_rows=with_rows)
-
-    def enumerate_cells(self, column, start=0, *, with_rows=False):
-        if with_rows:
-            for row, value in self.__cells(column, with_rows=True):
-                yield self.current_row_index + start, row, value
-        else:
-            for value in self.__cells(column):
-                yield self.current_row_index + start, value
 
     def close(self):
         if self.input_type == "url":
