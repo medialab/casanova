@@ -4,16 +4,15 @@
 #
 # CSV-aware improvement over python's namedtuple.
 #
+from typing import Optional, Iterable
+
 from json import dumps
 from collections import OrderedDict, namedtuple
-from collections.abc import Iterable
 
 from casanova.defaults import DEFAULTS
 
-STRING = 0
-BOOL = 1
-PLURAL = 2
-JSON = 3
+DEFAULT = 0
+JSON = 1
 
 
 def cast_for_csv(
@@ -24,22 +23,24 @@ def cast_for_csv(
     true_value: str,
     false_value: str,
 ):
+    if mask == JSON:
+        return dumps(value, ensure_ascii=False)
+
     if value is None:
         none_value = none_value if none_value is not None else DEFAULTS.none_value
 
         return none_value
 
-    if mask == STRING:
+    if isinstance(value, str):
         return value
 
-    if mask == BOOL:
+    if isinstance(value, bool):
         if value:
             return true_value if true_value is not None else DEFAULTS.true_value
 
         return false_value if false_value is not None else DEFAULTS.false_value
 
-    if mask == PLURAL:
-        assert isinstance(value, Iterable)
+    if isinstance(value, Iterable):
         plural_separator = (
             plural_separator
             if plural_separator is not None
@@ -47,34 +48,29 @@ def cast_for_csv(
         )
         return plural_separator.join(str(i) for i in value)
 
-    else:
-        return dumps(value, ensure_ascii=False)
+    raise NotImplementedError
 
 
 def namedrecord(
-    name,
-    fields,
+    name: str,
+    fields: Iterable[str],
     boolean=None,
     plural=None,
-    json=None,
-    defaults=None,
-    plural_separator=None,
-    none_value=None,
-    true_value=None,
-    false_value=None,
+    json: Optional[Iterable[str]] = None,
+    defaults: Optional[Iterable] = None,
+    plural_separator: Optional[str] = None,
+    none_value: Optional[str] = None,
+    true_value: Optional[str] = None,
+    false_value: Optional[str] = None,
 ):
     mapping = {k: i for i, k in enumerate(fields)}
     mask = []
 
     for k in fields:
-        if boolean and k in boolean:
-            mask.append(BOOL)
-        elif plural and k in plural:
-            mask.append(PLURAL)
-        elif json and k in json:
+        if json and k in json:
             mask.append(JSON)
         else:
-            mask.append(STRING)
+            mask.append(DEFAULT)
 
     class Record(namedtuple(name, fields, defaults=defaults)):
         def __getitem__(self, key):
