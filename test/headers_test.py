@@ -122,3 +122,27 @@ class TestHeaders(object):
         p = headers.project("age")
 
         assert p(row) == "45"
+
+    def test_flat_projection(self):
+        headers = Headers(["name", "surname", "age", "height", "surname"])
+        row = ["John", "Williams", "45", "190", "Garou"]
+
+        p = headers.flat_project(["name", "surname[1]"])
+
+        assert p(row) == ["John", "Garou"]
+
+        p = headers.flat_project("age")
+
+        assert p(row) == "45"
+
+        p = headers.flat_project("name", "height")
+
+        assert p(row) == ("John", "190")
+
+        p = headers.flat_project(("surname", "age"))
+
+        assert p(row) == ("Williams", "45")
+
+        p = headers.flat_project({"NOM": "name", "AGE": 2})
+
+        assert p(row) == {"NOM": "John", "AGE": "45"}

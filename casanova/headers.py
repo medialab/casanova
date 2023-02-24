@@ -249,7 +249,7 @@ def walk_shape(node, headers):
 
         return o
 
-    raise TypeError
+    raise NotImplementedError
 
 
 def walk_row(node, row):
@@ -270,7 +270,7 @@ def walk_row(node, row):
 
         return o
 
-    raise TypeError
+    raise NotImplementedError
 
 
 class DictLikeRow(object):
@@ -450,6 +450,60 @@ class Headers(object):
 
         def projection(row):
             return walk_row(indexed_shape, row)
+
+        return projection
+
+    def flat_project(self, *args):
+        if len(args) < 1:
+            raise TypeError("not enough arguments")
+
+        if len(args) > 1:
+            shape = tuple(args)
+        else:
+            shape = args[0]
+
+        if not isinstance(shape, PROJECTION_SHAPE_TYPES):
+            raise TypeError("invalid projection shape")
+
+        def select_one(target):
+            if isinstance(target, int):
+                return target
+
+            result = self.select(target)
+
+            if len(result) > 1:
+                raise TypeError(
+                    "projection shape includes a selection returning more than one column"
+                )
+
+            return result[0]
+
+        if isinstance(shape, (int, str)):
+            idx = select_one(shape)
+
+            def projection(row):
+                return row[idx]
+
+        elif isinstance(shape, tuple):
+            indices = [select_one(item) for item in shape]
+
+            def projection(row):
+                return tuple(row[i] for i in indices)
+
+        elif isinstance(shape, list):
+            indices = [select_one(item) for item in shape]
+
+            def projection(row):
+                return [row[i] for i in indices]
+
+        elif isinstance(shape, dict):
+            indices = {k: select_one(v) for k, v in shape.items()}
+
+            def projection(row):
+                return {k: row[v] for k, v in indices.items()}
+
+        else:
+            raise NotImplementedError
 
         return projection
 
