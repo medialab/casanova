@@ -670,9 +670,7 @@ from casanova import namedrecord
 Record = namedrecord(
     'Record',
     ['title', 'urls', 'is_accessible', 'data'],
-    defaults=[True, None],
-    boolean=['is_accessible'],
-    plural=['urls']
+    defaults=[True, None]
 )
 
 Record.fieldnames
@@ -707,7 +705,7 @@ example.as_dict()
     ...
 }
 
-# You can format it as a CSV row:
+# You can format it as a CSV row (notice the list serialization):
 example.as_csv_row():
 >>> ['Le Monde', 'https://lemonde.fr|https://www.lemonde.fr', 'true']
 

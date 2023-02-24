@@ -27,12 +27,7 @@ class TestNamedRecord(object):
         assert r.get(54) is None
         assert r.get("z") is None
 
-        Video = namedrecord(
-            "Video",
-            ["title", "has_captions", "tags"],
-            boolean=["has_captions"],
-            plural=["tags"],
-        )
+        Video = namedrecord("Video", ["title", "has_captions", "tags"])
 
         v = Video("Super video", True, ["film", "pop"])
 

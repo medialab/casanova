@@ -51,6 +51,9 @@ def cast_for_csv(
     raise NotImplementedError
 
 
+# NOTE: boolean & plural are just indicative and don't serve any purpose
+# anymore but to be additional metadata that could be useful later on
+# NOTE: json could also become indicative only at one point
 def namedrecord(
     name: str,
     fields: Iterable[str],
@@ -63,8 +66,12 @@ def namedrecord(
     true_value: Optional[str] = None,
     false_value: Optional[str] = None,
 ):
+    fields = list(fields)
+
     mapping = {k: i for i, k in enumerate(fields)}
     mask = []
+
+    json = list(json) if json is not None else None
 
     for k in fields:
         if json and k in json:
@@ -141,6 +148,9 @@ def namedrecord(
             return {fields[i]: v for i, v in enumerate(self)}
 
     Record.__name__ = name
-    Record.fieldnames = list(fields)
+    Record.fieldnames = fields.copy()
+    Record.boolean = list(boolean) if boolean is not None else None
+    Record.plural = list(plural) if plural is not None else None
+    Record.json = json
 
     return Record
