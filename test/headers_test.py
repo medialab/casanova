@@ -100,3 +100,21 @@ class TestHeaders(object):
             Headers.select_no_headers(2, "6")
 
         assert Headers.select_no_headers(5, "1-4") == [0, 1, 2, 3]
+
+    def test_projection(self):
+        headers = Headers(["name", "surname", "age", "height"])
+        row = ["John", "Williams", "45", "190"]
+
+        p = headers.project(
+            {"name": "name", "surname": 1, "numbers": ["age", "height"]}
+        )
+
+        assert p(row) == {
+            "name": "John",
+            "surname": "Williams",
+            "numbers": ["45", "190"],
+        }
+
+        p = headers.project(["age", ("name", "surname")])
+
+        assert p(row) == ["45", ("John", "Williams")]

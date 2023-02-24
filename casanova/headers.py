@@ -229,6 +229,48 @@ def parse_selection(string):
     return selection
 
 
+def walk_shape(node, headers):
+    if isinstance(node, (int, str)):
+        return headers[node]
+
+    if isinstance(node, list):
+        return [walk_shape(n, headers) for n in node]
+
+    if isinstance(node, tuple):
+        return tuple(walk_shape(n, headers) for n in node)
+
+    if isinstance(node, dict):
+        o = {}
+
+        for k, v in node.items():
+            o[k] = walk_shape(v, headers)
+
+        return o
+
+    raise TypeError
+
+
+def walk_row(node, row):
+    if isinstance(node, (int)):
+        return row[node]
+
+    if isinstance(node, list):
+        return [walk_row(n, row) for n in node]
+
+    if isinstance(node, tuple):
+        return tuple(walk_row(n, row) for n in node)
+
+    if isinstance(node, dict):
+        o = {}
+
+        for k, v in node.items():
+            o[k] = walk_row(v, row)
+
+        return o
+
+    raise TypeError
+
+
 class DictLikeRow(object):
     __slots__ = ("__mapping", "__row")
 
@@ -397,6 +439,14 @@ class Headers(object):
                 )
 
         return indices
+
+    def project(self, shape):
+        indexed_shape = walk_shape(shape, self)
+
+        def projection(row):
+            return walk_row(indexed_shape, row)
+
+        return projection
 
     def wrap(self, row):
         if len(row) != len(self.fieldnames):

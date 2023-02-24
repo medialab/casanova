@@ -341,6 +341,9 @@ class Reader(object):
     def cells(self, column, *, with_rows=False):
         return self.__cells(column, with_rows=with_rows)
 
+    def __records(self, selection, *, with_rows=False):
+        pass
+
     def enumerate_cells(self, column, start=0, *, with_rows=False):
         if with_rows:
             for row, value in self.__cells(column, with_rows=True):
