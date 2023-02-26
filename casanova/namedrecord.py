@@ -18,10 +18,10 @@ JSON = 1
 def cast_for_csv(
     mask: int,
     value: str,
-    plural_separator: str,
-    none_value: str,
-    true_value: str,
-    false_value: str,
+    plural_separator: Optional[str],
+    none_value: Optional[str],
+    true_value: Optional[str],
+    false_value: Optional[str],
 ):
     if mask == JSON:
         return dumps(value, ensure_ascii=False)
@@ -80,6 +80,8 @@ def namedrecord(
             mask.append(DEFAULT)
 
     class Record(namedtuple(name, fields, defaults=defaults)):
+        _is_namedrecord = True
+
         def __getitem__(self, key):
             if isinstance(key, str):
                 idx = mapping.get(key)
