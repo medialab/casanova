@@ -76,7 +76,7 @@ class Enricher(Reader):
                 self.output_fieldnames += add
                 self.added_count = len(add)
 
-            self.padding = [""] * self.added_count
+        self.padding = [""] * self.added_count
 
         # Resuming?
         self.resumer = None
@@ -139,19 +139,29 @@ class Enricher(Reader):
         return self.writer.should_write_header
 
     def filterrow(self, row):
+        row = coerce_row(row)
+
         if self.selected_indices is not None:
             row = [row[i] for i in self.selected_indices]
 
         return row
 
-    def formatrow(self, row, add=None):
-        # Additions
+    def formatrow(self, row, *addenda):
+        # We expect additions
         if self.added_count > 0:
-            if add is None:
+            if not addenda:
                 add = self.padding
             else:
-                if not isinstance(add, list):
-                    add = list(add)
+                # NOTE: this condition is just a memory optimization for the
+                # most frequent case.
+                if len(addenda) == 1:
+                    add = coerce_row(addenda[0], consume=True)
+                else:
+                    add = []
+
+                    for addition in addenda:
+                        addition = coerce_row(addition)
+                        add.extend(addition)
 
                 if len(add) != self.added_count:
                     raise TypeError(
@@ -159,24 +169,22 @@ class Enricher(Reader):
                         % (self.added_count, len(add))
                     )
 
-            row = self.filterrow(row) + add
+            formatted_row = self.filterrow(row) + add
 
-        # No additions
+        # We don't expect additions
         else:
-            if add:
+            if addenda:
                 raise TypeError("casanova.enricher.writerow: expected no additions.")
 
-            row = self.filterrow(row)
+            formatted_row = self.filterrow(row)
 
-        return row
+        return formatted_row
 
     def writeheader(self):
         self.writer.writeheader()
 
-    def writerow(self, row, add=None):
-        row = coerce_row(row)
-        add = coerce_row(add)
-        self.writer.writerow(self.formatrow(row, add))
+    def writerow(self, row, *addenda):
+        self.writer.writerow(self.formatrow(row, *addenda))
 
 
 class ThreadSafeEnricher(Enricher):
@@ -198,8 +206,8 @@ class ThreadSafeEnricher(Enricher):
     def cells(self, column, with_rows=False):
         return self.enumerate_cells(column, with_rows=with_rows)
 
-    def writerow(self, index, row, add=None):
-        super().writerow(row, add=[index] + (add or []))
+    def writerow(self, index, row, *addenda):
+        super().writerow(row, [index], *addenda)
 
 
 class BatchEnricher(Enricher):
@@ -217,14 +225,14 @@ class BatchEnricher(Enricher):
         self.cursor_column = cursor_column
         self.end_symbol = end_symbol
 
+        add = [] if add is None else list(add)
+
         # Inheritance
-        super().__init__(
-            input_file, output_file, add=[cursor_column] + list(add), **kwargs
-        )
+        super().__init__(input_file, output_file, add=[cursor_column] + add, **kwargs)
 
     def writebatch(self, row, batch, cursor=None):
         if cursor is None:
             cursor = self.end_symbol
 
         for is_last, addendum in with_is_last(batch):
-            self.writerow(row, [cursor if is_last else None] + addendum)
+            self.writerow(row, [cursor if is_last else None], addendum)

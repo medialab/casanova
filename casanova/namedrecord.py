@@ -205,13 +205,10 @@ class TabularRecord(object):
         return row
 
 
-def coerce_row(row):
-    if row is None:
-        return None
-
+def coerce_row(row, consume=False):
     as_csv_row = getattr(row, "as_csv_row", None)
 
     if callable(as_csv_row):
         row = as_csv_row()
 
-    return row
+    return list(row) if consume else row
