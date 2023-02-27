@@ -3,8 +3,9 @@
 # =============================================================================
 import pytest
 from collections import OrderedDict
+from dataclasses import dataclass
 
-from casanova import namedrecord
+from casanova.namedrecord import namedrecord, TabularRecord
 
 
 class TestNamedRecord(object):
@@ -128,3 +129,16 @@ class TestNamedRecord(object):
         assert v.as_csv_row(
             plural_separator="#", none_value="none", true_value="yes", false_value="no"
         ) == ["Title", "no", "yes", "film#pop", "none"]
+
+
+class TestTabularRecord(object):
+    def test_basics(self):
+        @dataclass
+        class Video(TabularRecord):
+            title: str
+            duration: int
+
+        video = Video(title="The Movie", duration=180)
+
+        assert video.as_csv_row() == ["The Movie", "180"]
+        assert video.as_csv_dict_row() == {"title": "The Movie", "duration": "180"}

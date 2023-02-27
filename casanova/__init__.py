@@ -6,7 +6,7 @@ from casanova.contiguous_range_set import ContiguousRangeSet
 from casanova.defaults import set_defaults, temporary_defaults
 from casanova.enricher import Enricher, ThreadSafeEnricher, BatchEnricher
 from casanova.headers import Headers, DictLikeRow
-from casanova.namedrecord import namedrecord
+from casanova.namedrecord import namedrecord, TabularRecord
 from casanova.reader import Reader, Multiplexer
 from casanova.resumers import (
     Resumer,

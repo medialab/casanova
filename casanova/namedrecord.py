@@ -7,6 +7,7 @@
 from typing import Optional, Iterable
 
 from collections import OrderedDict, namedtuple
+from dataclasses import fields
 
 from casanova.serialization import CSVSerializer
 
@@ -108,7 +109,7 @@ def namedrecord(
                         none_value=none_value,
                         true_value=true_value,
                         false_value=false_value,
-                        as_json=mask[i] == JSON
+                        as_json=mask[i] == JSON,
                     ),
                 )
                 for i, v in enumerate(self)
@@ -126,3 +127,20 @@ def namedrecord(
     Record.json = json
 
     return Record
+
+
+TABULAR_RECORD_SERIALIZER = CSVSerializer()
+
+
+class TabularRecord(object):
+    def as_csv_row(self):
+        return [
+            TABULAR_RECORD_SERIALIZER(getattr(self, field.name))
+            for field in fields(self)
+        ]
+
+    def as_csv_dict_row(self):
+        return {
+            field.name: TABULAR_RECORD_SERIALIZER(getattr(self, field.name))
+            for field in fields(self)
+        }
