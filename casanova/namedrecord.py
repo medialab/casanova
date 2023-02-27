@@ -133,14 +133,26 @@ TABULAR_RECORD_SERIALIZER = CSVSerializer()
 
 
 class TabularRecord(object):
+    _serializer_options = {
+        "plural_separator": "|",
+        "none_value": "",
+        "true_value": "true",
+        "false_value": "false",
+        "stringify_everything": True,
+    }
+
     def as_csv_row(self):
         return [
-            TABULAR_RECORD_SERIALIZER(getattr(self, field.name))
+            TABULAR_RECORD_SERIALIZER(
+                getattr(self, field.name), **self._serializer_options
+            )
             for field in fields(self)
         ]
 
     def as_csv_dict_row(self):
         return {
-            field.name: TABULAR_RECORD_SERIALIZER(getattr(self, field.name))
+            field.name: TABULAR_RECORD_SERIALIZER(
+                getattr(self, field.name), **self._serializer_options
+            )
             for field in fields(self)
         }
