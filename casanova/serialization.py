@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Iterable, Mapping, Any
 
 from json import dumps
 
@@ -17,7 +17,7 @@ class CSVSerializer(object):
         self.true_value = true_value or "true"
         self.false_value = false_value or "false"
         self.stringify_everything = (
-            stringify_everything if stringify_everything is not None else False
+            stringify_everything if stringify_everything is not None else True
         )
 
     def __call__(
@@ -27,8 +27,8 @@ class CSVSerializer(object):
         none_value: Optional[str] = None,
         true_value: Optional[str] = None,
         false_value: Optional[str] = None,
+        stringify_everything: Optional[bool] = None,
         as_json: bool = False,
-        stringify_everything: bool = False,
     ):
         if as_json:
             return dumps(value, ensure_ascii=False)
@@ -75,3 +75,11 @@ class CSVSerializer(object):
                 value.__class__.__name__
             )
         )
+
+    def serialize_row(self, row: Iterable, **kwargs):
+        return [self(value, **kwargs) for value in row]
+
+    def serialize_dict_row(
+        self, row: Mapping[str, Any], fieldnames: Iterable[str], **kwargs
+    ):
+        return [self(row.get(field), **kwargs) for field in fieldnames]
