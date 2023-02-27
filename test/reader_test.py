@@ -16,10 +16,10 @@ from casanova.utils import LT_PY311, CsvIO
 class TestReader(object):
     def test_exceptions(self):
         with pytest.raises(TypeError):
-            casanova.reader(StringIO("name\nYomgui"), buffer=4.5)
+            casanova.reader(StringIO("name\nYomgui"), prebuffer_bytes=4.5)
 
         with pytest.raises(TypeError):
-            casanova.reader(StringIO("name\nYomgui"), buffer=-456)
+            casanova.reader(StringIO("name\nYomgui"), prebuffer_bytes=-456)
 
         with pytest.raises(MissingColumnError):
             casanova.reader(
