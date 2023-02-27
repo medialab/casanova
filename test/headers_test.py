@@ -167,3 +167,9 @@ class TestHeaders(object):
         p = headers.flat_project({"NOM": "name", "AGE": 2})
 
         assert p(row) == {"NOM": "John", "AGE": "45"}
+
+    def test_rename(self):
+        headers = Headers(["Foo", "Bar", "Foo", "Test"])
+        renamed = Headers.rename(headers, "Foo", "Truc")
+
+        assert renamed.fieldnames == ["Truc", "Bar", "Truc", "Test"]

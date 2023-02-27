@@ -297,22 +297,12 @@ class Headers(object):
     def __init__(self, fieldnames):
         self.fieldnames = list(fieldnames)
 
-        self.__hydrate_mappings()
-
-    def __hydrate_mappings(self):
         self.__mapping = defaultdict(list)
         self.__flat_mapping = {}
 
         for i, h in enumerate(self.fieldnames):
             self.__mapping[h].append(i)
             self.__flat_mapping[h] = i
-
-    def rename(self, old_name, new_name):
-        for i, f in enumerate(self.fieldnames):
-            if f == old_name:
-                self.fieldnames[i] = new_name
-
-        self.__hydrate_mappings()
 
     def __eq__(self, other):
         return self.fieldnames == other.fieldnames
@@ -570,3 +560,12 @@ class Headers(object):
         headers = cls(range(count))
 
         return headers.flat_project(*shape)
+
+    @classmethod
+    def rename(cls, headers: "Headers", old_name: str, new_name: str):
+        new_fieldnames = []
+
+        for f in headers.fieldnames:
+            new_fieldnames.append(f if f != old_name else new_name)
+
+        return cls(new_fieldnames)

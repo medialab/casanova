@@ -199,7 +199,9 @@ class Reader(object):
 
             # New col
             if multiplex.new_column is not None:
-                self.headers.rename(multiplex.column, multiplex.new_column)
+                self.headers = Headers.rename(
+                    self.headers, multiplex.column, multiplex.new_column
+                )
 
             original_reader = self.reader
             already_buffered_rows = []

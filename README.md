@@ -273,9 +273,6 @@ headers.fieldnames
 for col in headers:
     print(col)
 
-# Renaming a column:
-headers.rename('name', 'first_name')
-
 # Couting columns:
 len(headers)
 >>> 3

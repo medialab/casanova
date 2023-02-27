@@ -36,7 +36,7 @@ class TestReader(object):
         assert len(headers) == 2
         assert list(headers) == ["name", "surname"]
 
-        headers.rename("name", "first_name")
+        headers = Headers.rename(headers, "name", "first_name")
 
         assert list(headers) == ["first_name", "surname"]
 
