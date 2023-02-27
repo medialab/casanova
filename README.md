@@ -255,6 +255,9 @@ headers.get('not-found')
 >>> None
 
 # Getting a duplicated column name
+casanova.headers(['surname', 'name', 'name'])['name', 1]
+>>> 2
+
 casanova.headers(['surname', 'name', 'name']).get('name', index=1)
 >>> 2
 

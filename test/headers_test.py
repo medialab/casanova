@@ -19,6 +19,7 @@ class TestHeaders(object):
 
         assert headers.get("Foo") == 0
         assert headers.get("Foo", index=2) == 3
+        assert headers["Foo", 2] == 3
 
     def test_selection_dsl(self):
         headers = Headers(

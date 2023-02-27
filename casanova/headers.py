@@ -321,6 +321,14 @@ class Headers(object):
 
             return key
 
+        if isinstance(key, tuple):
+            indices = self.__mapping.get(key[0])
+
+            if indices is None:
+                raise KeyError
+
+            return indices[key[1]]
+
         indices = self.__mapping.get(key)
 
         if indices is None:
