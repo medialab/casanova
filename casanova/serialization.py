@@ -10,11 +10,15 @@ class CSVSerializer(object):
         none_value: Optional[str] = None,
         true_value: Optional[str] = None,
         false_value: Optional[str] = None,
+        stringify_everything: Optional[bool] = None,
     ):
         self.plural_separator = plural_separator or "|"
         self.none_value = none_value or ""
         self.true_value = true_value or "true"
         self.false_value = false_value or "false"
+        self.stringify_everything = (
+            stringify_everything if stringify_everything is not None else False
+        )
 
     def __call__(
         self,
@@ -28,6 +32,12 @@ class CSVSerializer(object):
     ):
         if as_json:
             return dumps(value, ensure_ascii=False)
+
+        stringify_everything = (
+            stringify_everything
+            if stringify_everything is not None
+            else self.stringify_everything
+        )
 
         if value is None:
             none_value = none_value if none_value is not None else self.none_value

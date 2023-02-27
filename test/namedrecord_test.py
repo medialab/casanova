@@ -4,7 +4,7 @@
 import pytest
 from collections import OrderedDict
 
-from casanova import namedrecord, temporary_defaults
+from casanova import namedrecord
 
 
 class TestNamedRecord(object):
