@@ -128,21 +128,3 @@ class TestNamedRecord(object):
         assert v.as_csv_row(
             plural_separator="#", none_value="none", true_value="yes", false_value="no"
         ) == ["Title", "no", "yes", "film#pop", "none"]
-
-    def test_formatting_defaults(self):
-        Video = namedrecord(
-            "Video",
-            ["title", "has_captions", "has_info", "tags", "category"],
-            boolean=["has_captions", "has_info"],
-            plural=["tags"],
-            defaults=[None],
-        )
-
-        v = Video("Title", False, True, ["film", "pop"])
-
-        with temporary_defaults(
-            plural_separator="#", none_value="none", true_value="yes", false_value="no"
-        ):
-            assert v.as_csv_row() == ["Title", "no", "yes", "film#pop", "none"]
-
-        assert v.as_csv_row() == ["Title", "false", "true", "film|pop", ""]

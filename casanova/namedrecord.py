@@ -6,49 +6,12 @@
 #
 from typing import Optional, Iterable
 
-from json import dumps
 from collections import OrderedDict, namedtuple
 
-from casanova.defaults import DEFAULTS
+from casanova.serialization import CSVSerializer
 
 DEFAULT = 0
 JSON = 1
-
-
-def cast_for_csv(
-    mask: int,
-    value: str,
-    plural_separator: Optional[str],
-    none_value: Optional[str],
-    true_value: Optional[str],
-    false_value: Optional[str],
-):
-    if mask == JSON:
-        return dumps(value, ensure_ascii=False)
-
-    if value is None:
-        none_value = none_value if none_value is not None else DEFAULTS.none_value
-
-        return none_value
-
-    if isinstance(value, str):
-        return value
-
-    if isinstance(value, bool):
-        if value:
-            return true_value if true_value is not None else DEFAULTS.true_value
-
-        return false_value if false_value is not None else DEFAULTS.false_value
-
-    if isinstance(value, Iterable):
-        plural_separator = (
-            plural_separator
-            if plural_separator is not None
-            else DEFAULTS.plural_separator
-        )
-        return plural_separator.join(str(i) for i in value)
-
-    raise NotImplementedError
 
 
 # NOTE: boolean & plural are just indicative and don't serve any purpose
@@ -79,6 +42,13 @@ def namedrecord(
         else:
             mask.append(DEFAULT)
 
+    serializer = CSVSerializer(
+        plural_separator=plural_separator,
+        none_value=none_value,
+        true_value=true_value,
+        false_value=false_value,
+    )
+
     class Record(namedtuple(name, fields, defaults=defaults)):
         _is_namedrecord = True
 
@@ -108,13 +78,13 @@ def namedrecord(
             false_value=false_value,
         ):
             row = list(
-                cast_for_csv(
-                    mask[i],
+                serializer(
                     v,
                     plural_separator=plural_separator,
                     none_value=none_value,
                     true_value=true_value,
                     false_value=false_value,
+                    as_json=mask[i] == JSON,
                 )
                 for i, v in enumerate(self)
             )
@@ -132,13 +102,13 @@ def namedrecord(
             row = OrderedDict(
                 (
                     fields[i],
-                    cast_for_csv(
-                        mask[i],
+                    serializer(
                         v,
                         plural_separator=plural_separator,
                         none_value=none_value,
                         true_value=true_value,
                         false_value=false_value,
+                        as_json=mask[i] == JSON
                     ),
                 )
                 for i, v in enumerate(self)

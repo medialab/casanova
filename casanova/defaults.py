@@ -12,20 +12,12 @@ class CasanovaDefaults(object):
         "prebuffer_bytes",
         "strip_null_bytes_on_read",
         "strip_null_bytes_on_write",
-        "plural_separator",
-        "none_value",
-        "true_value",
-        "false_value",
     ]
 
     def __init__(self):
         self.prebuffer_bytes = None
         self.strip_null_bytes_on_read = False
         self.strip_null_bytes_on_write = False
-        self.plural_separator = "|"
-        self.none_value = ""
-        self.true_value = "true"
-        self.false_value = "false"
 
     def save(self):
         return {n: getattr(self, n) for n in self.__slots__}
@@ -69,30 +61,6 @@ def set_defaults(
             raise TypeError("strip_null_bytes_on_write should be a boolean")
 
         DEFAULTS.strip_null_bytes_on_write = strip_null_bytes_on_write
-
-    if plural_separator is not NOT_GIVEN:
-        if not isinstance(plural_separator, str):
-            raise TypeError("plural_separator should be a string")
-
-        DEFAULTS.plural_separator = plural_separator
-
-    if none_value is not NOT_GIVEN:
-        if not isinstance(none_value, str):
-            raise TypeError("none_value should be a string")
-
-        DEFAULTS.none_value = none_value
-
-    if true_value is not NOT_GIVEN:
-        if not isinstance(true_value, str):
-            raise TypeError("true_value should be a string")
-
-        DEFAULTS.true_value = true_value
-
-    if false_value is not NOT_GIVEN:
-        if not isinstance(false_value, str):
-            raise TypeError("false_value should be a string")
-
-        DEFAULTS.false_value = false_value
 
 
 @contextmanager

@@ -3,6 +3,7 @@
 # =============================================================================
 #
 from casanova.contiguous_range_set import ContiguousRangeSet
+from casanova.defaults import set_defaults, temporary_defaults
 from casanova.enricher import Enricher, ThreadSafeEnricher, BatchEnricher
 from casanova.headers import Headers, DictLikeRow
 from casanova.namedrecord import namedrecord
@@ -16,9 +17,9 @@ from casanova.resumers import (
     LastCellComparisonResumer,
 )
 from casanova.reverse_reader import ReverseReader, Batch
-from casanova.writer import Writer
+from casanova.serialization import CSVSerializer
 from casanova.utils import CsvCellIO, CsvRowIO, CsvIO
-from casanova.defaults import set_defaults, temporary_defaults
+from casanova.writer import Writer
 
 headers = Headers
 reader = Reader

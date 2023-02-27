@@ -766,10 +766,6 @@ _Arguments_
 - **strip_null_bytes_on_read** _bool, optional_ [`False`]: should readers and enrichers strip null bytes on read?
 - **strip_null_bytes_on_write** _bool, optional_ [`False`]: should writers and enrichers strip null bytes on write?
 - **prebuffer_bytes** _int, optional_: default prebuffer bytes for readers and enrichers.
-- **plural_separator** _str, optional_ [`|`]: default plural separator for named records.
-- **none_value** _str, optional_ [`""`]: default formatted `None` value for named records.
-- **true_value** _str, optional_ [`true`]: default formatted `True` value for named records.
-- **false_value** _str, optional_ [`false`]: default formatted `False` value for named records.
 
 ## xsv selection mini DSL
 
