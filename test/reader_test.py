@@ -9,7 +9,11 @@ from io import StringIO
 from casanova.defaults import set_defaults
 from casanova.headers import DictLikeRow, Headers
 from casanova.reader import Multiplexer
-from casanova.exceptions import MissingColumnError, LtPy311ByteReadError
+from casanova.exceptions import (
+    MissingColumnError,
+    LtPy311ByteReadError,
+    UnknownNamedColumnError,
+)
 from casanova.utils import LT_PY311, CsvIO
 
 
@@ -75,7 +79,7 @@ class TestReader(object):
             assert len(reader.headers) == 2
             assert reader.fieldnames == ["name", "surname"]
 
-            with pytest.raises(KeyError):
+            with pytest.raises(UnknownNamedColumnError):
                 reader.headers["whatever"]
 
             surnames = [row[reader.headers.surname] for row in reader]

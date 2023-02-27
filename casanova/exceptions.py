@@ -16,6 +16,25 @@ class MissingColumnError(CasanovaError):
     pass
 
 
+class NthNamedColumnOutOfRangeError(MissingColumnError):
+    def __init__(self, name, index):
+        super().__init__("%s, %i" % (name, index))
+        self.name = name
+        self.index = index
+
+
+class UnknownNamedColumnError(MissingColumnError):
+    def __init__(self, name):
+        super().__init__(name)
+        self.name = name
+
+
+class ColumnOutOfRangeError(MissingColumnError):
+    def __init__(self, index):
+        super().__init__(str(index))
+        self.index = index
+
+
 class NotResumableError(CasanovaError):
     pass
 

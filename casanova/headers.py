@@ -10,7 +10,13 @@ from collections import namedtuple, defaultdict
 from collections.abc import Iterable
 from functools import wraps
 
-from casanova.exceptions import InvalidSelectionError
+from casanova.exceptions import (
+    InvalidSelectionError,
+    MissingColumnError,
+    NthNamedColumnOutOfRangeError,
+    UnknownNamedColumnError,
+    ColumnOutOfRangeError,
+)
 
 PROJECTION_SHAPE_TYPES = (int, str, tuple, list, dict)
 
@@ -60,7 +66,7 @@ def redirect_errors_as_invalid_selection(fn):
     def wrapped(self, selection):
         try:
             return fn(self, selection)
-        except (IndexError, KeyError) as e:
+        except MissingColumnError as e:
             raise InvalidSelectionError(selection=selection, reason=e)
 
     return wrapped
@@ -317,22 +323,28 @@ class Headers(object):
     def __getitem__(self, key):
         if isinstance(key, int):
             if key >= len(self):
-                raise IndexError(key)
+                raise ColumnOutOfRangeError(key)
 
             return key
 
         if isinstance(key, tuple):
+            if len(key) != 2:
+                raise TypeError("expecting a str, a int or a (str, int) tuple")
+
             indices = self.__mapping.get(key[0])
 
             if indices is None:
-                raise KeyError
+                raise UnknownNamedColumnError(key[0])
 
-            return indices[key[1]]
+            try:
+                return indices[key[1]]
+            except IndexError:
+                raise NthNamedColumnOutOfRangeError(key[0], key[1])
 
         indices = self.__mapping.get(key)
 
         if indices is None:
-            raise KeyError(key)
+            raise UnknownNamedColumnError(key)
 
         assert len(indices) > 0
 
@@ -348,7 +360,10 @@ class Headers(object):
         yield from self.fieldnames
 
     def nth(self, index):
-        return self.fieldnames[index]
+        try:
+            return self.fieldnames[index]
+        except IndexError:
+            raise ColumnOutOfRangeError(index)
 
     def get(self, key, default=None, index=None):
         if isinstance(key, int):
@@ -405,10 +420,7 @@ class Headers(object):
                     indices.append(key)
 
             elif isinstance(group, IndexedColumn):
-                key = self.get(group.key, index=group.index)
-
-                if key is None:
-                    raise KeyError("%s[%i]" % group)
+                key = self[group.key, group.index]
 
                 if parsed_selection.inverted:
                     for i in range(len(self)):

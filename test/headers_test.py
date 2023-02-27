@@ -10,10 +10,30 @@ from casanova.headers import (
     IndexedColumn,
     Headers,
 )
-from casanova.exceptions import InvalidSelectionError
+from casanova.exceptions import (
+    InvalidSelectionError,
+    UnknownNamedColumnError,
+    NthNamedColumnOutOfRangeError,
+    ColumnOutOfRangeError,
+)
 
 
 class TestHeaders(object):
+    def test_exceptions(self):
+        headers = Headers(["Foo"])
+
+        with pytest.raises(UnknownNamedColumnError):
+            headers["Bar"]
+
+        with pytest.raises(NthNamedColumnOutOfRangeError):
+            headers["Foo", 1]
+
+        with pytest.raises(ColumnOutOfRangeError):
+            headers[1]
+
+        with pytest.raises(ColumnOutOfRangeError):
+            headers.nth(4)
+
     def test_duplicate_field(self):
         headers = Headers(["Foo", "Foo", "Nope", "Foo"])
 
@@ -94,10 +114,10 @@ class TestHeaders(object):
         assert parse_selection("3").is_suitable_without_headers()
         assert not parse_selection("Header1").is_suitable_without_headers()
 
-        with pytest.raises(InvalidSelectionError, match="no-headers"):
+        with pytest.raises(InvalidSelectionError) as e:
             Headers.select_no_headers(3, "Header1")
 
-        with pytest.raises(InvalidSelectionError, match="index"):
+        with pytest.raises(InvalidSelectionError) as e:
             Headers.select_no_headers(2, "6")
 
         assert Headers.select_no_headers(5, "1-4") == [0, 1, 2, 3]
