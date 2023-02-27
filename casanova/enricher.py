@@ -173,6 +173,17 @@ class Enricher(Reader):
         self.writer.writeheader()
 
     def writerow(self, row, add=None):
+        serializer = getattr(row, "as_csv_row", None)
+
+        if callable(serializer):
+            row = serializer()
+
+        if add is not None:
+            serializer = getattr(add, "as_csv_row", None)
+
+            if callable(serializer):
+                add = serializer()
+
         self.writer.writerow(self.formatrow(row, add))
 
 

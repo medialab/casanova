@@ -540,7 +540,7 @@ class TestEnricher(object):
             ]
 
     def test_write_namedrecord(self):
-        Video = namedrecord("Video", ["title"])
+        Video = namedrecord("Video", ["title", 'tags'])
         buf = StringIO()
 
         enricher = casanova.enricher(
@@ -548,6 +548,6 @@ class TestEnricher(object):
         )
 
         for row in enricher:
-            enricher.writerow(row, Video("Title"))
+            enricher.writerow(row, Video("Title", ['a', 'b']))
 
-        assert buf.getvalue().strip() == "name,title\nJohn,Title"
+        assert buf.getvalue().strip() == "name,title,tags\nJohn,Title,a|b"

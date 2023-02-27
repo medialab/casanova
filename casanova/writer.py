@@ -112,6 +112,11 @@ class Writer(object):
             self.writeheader()
 
     def writerow(self, row):
+        serializer = getattr(row, "as_csv_row", None)
+
+        if callable(serializer):
+            row = serializer()
+
         self.__writerow(row)
 
     def writeheader(self):

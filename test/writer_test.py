@@ -130,12 +130,12 @@ class TestWriter(object):
         assert buf.getvalue().strip() == "John;Dandy"
 
     def test_write_namedrecord(self):
-        Video = namedrecord("Video", ["title"])
+        Video = namedrecord("Video", ["title", "tags"])
 
         buf = StringIO()
 
         writer = Writer(buf, lineterminator="\n")
 
-        writer.writerow(Video("Title"))
+        writer.writerow(Video("Title", ["a", "b"]))
 
-        assert buf.getvalue().strip() == "Title"
+        assert buf.getvalue().strip() == "Title,a|b"
