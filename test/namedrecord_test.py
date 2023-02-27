@@ -1,11 +1,13 @@
 # =============================================================================
 # Casanova Named Record Unit Tests
 # =============================================================================
+from typing import List
+
 import pytest
 from collections import OrderedDict
 from dataclasses import dataclass
 
-from casanova.namedrecord import namedrecord, TabularRecord
+from casanova.namedrecord import namedrecord, TabularRecord, tabular_field
 
 
 class TestNamedRecord(object):
@@ -137,8 +139,13 @@ class TestTabularRecord(object):
         class Video(TabularRecord):
             title: str
             duration: int
+            tags: List[str] = tabular_field(plural_separator="&", default_factory=list)
 
-        video = Video(title="The Movie", duration=180)
+        video = Video(title="The Movie", duration=180, tags=["action", "romance"])
 
-        assert video.as_csv_row() == ["The Movie", "180"]
-        assert video.as_csv_dict_row() == {"title": "The Movie", "duration": "180"}
+        assert video.as_csv_row() == ["The Movie", "180", "action&romance"]
+        assert video.as_csv_dict_row() == {
+            "title": "The Movie",
+            "duration": "180",
+            "tags": "action&romance",
+        }

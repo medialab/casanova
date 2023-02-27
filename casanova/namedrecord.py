@@ -7,7 +7,7 @@
 from typing import Optional, Iterable
 
 from collections import OrderedDict, namedtuple
-from dataclasses import fields
+from dataclasses import fields, field
 
 from casanova.serialization import CSVSerializer
 
@@ -130,6 +130,40 @@ def namedrecord(
 
 
 TABULAR_RECORD_SERIALIZER = CSVSerializer()
+TABULAR_FIELDS = {}
+
+
+def tabular_field(
+    plural_separator: Optional[str] = None,
+    none_value: Optional[str] = None,
+    true_value: Optional[str] = None,
+    false_value: Optional[str] = None,
+    stringify_everything: Optional[bool] = None,
+    **kwargs
+):
+    f = field(**kwargs)
+
+    f_serialization_options = {}
+
+    if plural_separator is not None:
+        f_serialization_options["plural_separator"] = plural_separator
+
+    if none_value is not None:
+        f_serialization_options["none_value"] = none_value
+
+    if true_value is not None:
+        f_serialization_options["true_value"] = true_value
+
+    if false_value is not None:
+        f_serialization_options["false_value"] = false_value
+
+    if stringify_everything is not None:
+        f_serialization_options["stringify_everything"] = stringify_everything
+
+    if f_serialization_options:
+        TABULAR_FIELDS[f] = f_serialization_options
+
+    return f
 
 
 class TabularRecord(object):
@@ -142,17 +176,25 @@ class TabularRecord(object):
     }
 
     def as_csv_row(self):
-        return [
-            TABULAR_RECORD_SERIALIZER(
-                getattr(self, field.name), **self._serializer_options
-            )
-            for field in fields(self)
-        ]
+        row = []
+
+        options = self._serializer_options
+
+        for f in fields(self):
+            f_options = {**options, **TABULAR_FIELDS.get(f, {})}
+
+            row.append(TABULAR_RECORD_SERIALIZER(getattr(self, f.name), **f_options))
+
+        return row
 
     def as_csv_dict_row(self):
-        return {
-            field.name: TABULAR_RECORD_SERIALIZER(
-                getattr(self, field.name), **self._serializer_options
-            )
-            for field in fields(self)
-        }
+        row = {}
+
+        options = self._serializer_options
+
+        for f in fields(self):
+            f_options = {**options, **TABULAR_FIELDS.get(f, {})}
+
+            row[f.name] = TABULAR_RECORD_SERIALIZER(getattr(self, f.name), **f_options)
+
+        return row
