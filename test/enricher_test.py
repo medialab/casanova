@@ -18,6 +18,7 @@ from casanova.resumers import (
     RowCountResumer,
     ThreadSafeResumer,
 )
+from casanova.namedrecord import namedrecord
 from casanova.exceptions import Py310NullByteWriteError
 from casanova.utils import PY_310, CsvIO
 
@@ -537,3 +538,16 @@ class TestEnricher(object):
                 ["Mary", "1"],
                 ["Julia", "2"],
             ]
+
+    def test_write_namedrecord(self):
+        Video = namedrecord("Video", ["title"])
+        buf = StringIO()
+
+        enricher = casanova.enricher(
+            CsvIO([['John']], ['name']), buf, add=Video.fieldnames, writer_lineterminator="\n"
+        )
+
+        for row in enricher:
+            enricher.writerow(row, Video("Title"))
+
+        assert buf.getvalue().strip() == "name,title\nJohn,Title"

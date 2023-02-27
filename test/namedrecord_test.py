@@ -149,3 +149,5 @@ class TestTabularRecord(object):
             "duration": "180",
             "tags": "action&romance",
         }
+
+        assert Video.get_fieldnames() == ["title", "duration", "tags"]

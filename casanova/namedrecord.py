@@ -175,6 +175,10 @@ class TabularRecord(object):
         "stringify_everything": True,
     }
 
+    @classmethod
+    def get_fieldnames(cls):
+        return [f.name for f in fields(cls)]
+
     def as_csv_row(self):
         row = []
 

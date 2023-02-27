@@ -111,6 +111,9 @@ class Writer(object):
         if self.should_write_header and write_header:
             self.writeheader()
 
+    def writerow(self, row):
+        self.__writerow(row)
+
     def writeheader(self):
         if self.fieldnames is None:
             raise TypeError("cannot write header if fieldnames were not provided")
@@ -122,7 +125,4 @@ class Writer(object):
         if self.strip_null_bytes_on_write:
             row = strip_null_bytes_from_row(row)
 
-        self.__writerow(row)
-
-    def writerow(self, row):
-        self.__writerow(row)
+        self.writerow(row)
