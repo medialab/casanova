@@ -364,15 +364,28 @@ class Reader(object):
     # it remains easy to override it and reimplement it
     # when inheriting (check the threadsafe_enricher)
     # for such an example.
-    def __records(self, *shape, with_rows=False):
+    def __records(self, *shape, with_rows=False, ignore_headers=False):
         if len(shape) < 1:
             raise TypeError("shape of record was not given")
 
         if len(shape) == 1 and getattr(shape[0], "is_namedrecord", False):
-            # NOTE: we could account for the header names discrepancies here
-            # but do we really want to?
+            if (
+                not ignore_headers
+                and self.fieldnames is not None
+                and self.fieldnames != shape[0].fieldnames
+            ):
+                raise TypeError("file headers are not aligned with the record ones")
+
             project = lambda r: shape[0](*r)
+
         elif len(shape) == 1 and is_tabular_record_class(shape[0]):
+            if (
+                not ignore_headers
+                and self.fieldnames is not None
+                and self.fieldnames != shape[0].get_fieldnames()
+            ):
+                raise TypeError("file headers are not aligned with the record ones")
+
             project = lambda r: shape[0].parse(r)
         elif self.no_headers:
             project = Headers.flat_project_no_headers(self.row_len, *shape)
@@ -393,15 +406,19 @@ class Reader(object):
 
         return iterator()
 
-    def records(self, *shape, with_rows=False):
-        return self.__records(*shape, with_rows=with_rows)
+    def records(self, *shape, with_rows=False, ignore_headers=False):
+        return self.__records(
+            *shape, with_rows=with_rows, ignore_headers=ignore_headers
+        )
 
-    def enumerate_records(self, *shape, start=0, with_rows=False):
+    def enumerate_records(self, *shape, start=0, with_rows=False, ignore_headers=False):
         if with_rows:
-            for row, record in self.__records(*shape, with_rows=True):
+            for row, record in self.__records(
+                *shape, with_rows=True, ignore_headers=ignore_headers
+            ):
                 yield self.current_row_index + start, row, record
         else:
-            for record in self.__records(*shape):
+            for record in self.__records(*shape, ignore_headers=ignore_headers):
                 yield self.current_row_index + start, record
 
     def close(self):

@@ -142,6 +142,14 @@ class TestReader(object):
                 People("Julia", "Stone"),
             ]
 
+        with open("./test/resources/people_unordered.csv") as f:
+            reader = casanova.reader(f)
+
+            with pytest.raises(TypeError):
+                reader.records(People)
+
+            reader.records(People, ignore_headers=True)
+
     def test_tabular_records_records(self):
         @dataclass
         class People(TabularRecord):
@@ -155,6 +163,14 @@ class TestReader(object):
         records = list(reader.records(People))
 
         assert records == [People("Mary", 45)]
+
+        with open("./test/resources/people_unordered.csv") as f:
+            reader = casanova.reader(f)
+
+            with pytest.raises(TypeError):
+                reader.records(People)
+
+            reader.records(People, ignore_headers=True)
 
     def test_enumerate(self):
         with open("./test/resources/people.csv") as f:
