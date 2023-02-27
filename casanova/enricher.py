@@ -206,6 +206,9 @@ class ThreadSafeEnricher(Enricher):
     def cells(self, column, with_rows=False):
         return self.enumerate_cells(column, with_rows=with_rows)
 
+    def records(self, *shape, with_rows=False):
+        return self.enumerate_records(*shape, with_rows=with_rows)
+
     def writerow(self, index, row, *addenda):
         super().writerow(row, [index], *addenda)
 

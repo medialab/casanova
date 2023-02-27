@@ -5,10 +5,12 @@ import gzip
 import casanova
 import pytest
 from io import StringIO
+from dataclasses import dataclass
 
 from casanova.defaults import set_defaults
 from casanova.headers import DictLikeRow, Headers
 from casanova.reader import Multiplexer
+from casanova.namedrecord import namedrecord, TabularRecord
 from casanova.exceptions import (
     MissingColumnError,
     LtPy311ByteReadError,
@@ -122,9 +124,37 @@ class TestReader(object):
         with open("./test/resources/people.csv") as f:
             reader = casanova.reader(f)
 
-            names = list(reader.records("surname", "name"))
+            people = list(reader.records("surname", "name"))
 
-            assert names == [("Matthews", "John"), ("Sue", "Mary"), ("Stone", "Julia")]
+            assert people == [("Matthews", "John"), ("Sue", "Mary"), ("Stone", "Julia")]
+
+    def test_namedrecord_records(self):
+        People = namedrecord("People", ["name", "surname"])
+
+        with open("./test/resources/people.csv") as f:
+            reader = casanova.reader(f)
+
+            records = list(reader.records(People))
+
+            assert records == [
+                People("John", "Matthews"),
+                People("Mary", "Sue"),
+                People("Julia", "Stone"),
+            ]
+
+    def test_tabular_records_records(self):
+        @dataclass
+        class People(TabularRecord):
+            name: str
+            age: int
+
+        data = CsvIO([["Mary", "45"]], fieldnames=["name", "age"])
+
+        reader = casanova.reader(data)
+
+        records = list(reader.records(People))
+
+        assert records == [People("Mary", 45)]
 
     def test_enumerate(self):
         with open("./test/resources/people.csv") as f:
@@ -152,6 +182,17 @@ class TestReader(object):
             reader = casanova.reader(f)
 
             items = list(reader.enumerate_cells("name", 10, with_rows=True))
+
+            assert items == [
+                (10, ["John", "Matthews"], "John"),
+                (11, ["Mary", "Sue"], "Mary"),
+                (12, ["Julia", "Stone"], "Julia"),
+            ]
+
+        with open("./test/resources/people.csv") as f:
+            reader = casanova.reader(f)
+
+            items = list(reader.enumerate_records("name", start=10, with_rows=True))
 
             assert items == [
                 (10, ["John", "Matthews"], "John"),

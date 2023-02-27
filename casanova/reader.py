@@ -15,6 +15,7 @@ from ebbe import without_last
 
 from casanova.defaults import DEFAULTS
 from casanova.headers import Headers
+from casanova.namedrecord import is_tabular_record_class
 from casanova.utils import (
     ensure_open,
     suppress_BOM,
@@ -364,7 +365,16 @@ class Reader(object):
     # when inheriting (check the threadsafe_enricher)
     # for such an example.
     def __records(self, *shape, with_rows=False):
-        if self.no_headers:
+        if len(shape) < 1:
+            raise TypeError("shape of record was not given")
+
+        if len(shape) == 1 and getattr(shape[0], "is_namedrecord", False):
+            # NOTE: we could account for the header names discrepancies here
+            # but do we really want to?
+            project = lambda r: shape[0](*r)
+        elif len(shape) == 1 and is_tabular_record_class(shape[0]):
+            project = lambda r: shape[0].parse(r)
+        elif self.no_headers:
             project = Headers.flat_project_no_headers(self.row_len, *shape)
         else:
             project = self.headers.flat_project(*shape)
@@ -385,6 +395,14 @@ class Reader(object):
 
     def records(self, *shape, with_rows=False):
         return self.__records(*shape, with_rows=with_rows)
+
+    def enumerate_records(self, *shape, start=0, with_rows=False):
+        if with_rows:
+            for row, record in self.__records(*shape, with_rows=True):
+                yield self.current_row_index + start, row, record
+        else:
+            for record in self.__records(*shape):
+                yield self.current_row_index + start, record
 
     def close(self):
         if self.input_type == "url":

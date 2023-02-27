@@ -58,8 +58,6 @@ def namedrecord(
     )
 
     class Record(namedtuple(name, fields, defaults=defaults)):
-        _is_namedrecord = True
-
         def __getitem__(self, key):
             if isinstance(key, str):
                 idx = mapping.get(key)
@@ -128,6 +126,7 @@ def namedrecord(
             return {fields[i]: v for i, v in enumerate(self)}
 
     Record.__name__ = name
+    Record.is_namedrecord = True
     Record.fieldnames = fields.copy()
     Record.boolean = list(boolean) if boolean is not None else None
     Record.plural = list(plural) if plural is not None else None
@@ -242,7 +241,6 @@ def parse(
 
 
 class TabularRecord(object):
-    _is_tabular_record = True
     _serializer_options = {
         "plural_separator": "|",
         "none_value": "",
@@ -316,3 +314,10 @@ def coerce_row(row, consume=False):
         row = as_csv_row()
 
     return list(row) if consume else row
+
+
+def is_tabular_record_class(cls) -> bool:
+    try:
+        return issubclass(cls, TabularRecord)
+    except TypeError:
+        return False
