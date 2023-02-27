@@ -17,7 +17,7 @@ from casanova.resumers import (
 from casanova.headers import Headers
 from casanova.reader import Reader
 from casanova.writer import Writer
-from casanova.namedrecord import coerce_row
+from casanova.namedrecord import coerce_row, coerce_fieldnames
 from casanova.defaults import DEFAULTS
 
 
@@ -63,6 +63,8 @@ class Enricher(Reader):
             else:
                 self.selected_indices = self.headers.select(select)
                 self.output_fieldnames = self.filterrow(self.output_fieldnames)
+
+        add = coerce_fieldnames(add)
 
         if add is not None:
             if no_headers:

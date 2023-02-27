@@ -549,7 +549,7 @@ class TestEnricher(object):
         enricher = casanova.enricher(
             CsvIO([["John"]], ["name"]),
             buf,
-            add=Video.fieldnames,
+            add=Video,
             writer_lineterminator="\n",
         )
 
@@ -569,7 +569,7 @@ class TestEnricher(object):
         enricher = casanova.enricher(
             CsvIO([["John"]], ["name"]),
             buf,
-            add=Video.get_fieldnames(),
+            add=Video,
             writer_lineterminator="\n",
         )
 

@@ -321,3 +321,13 @@ def is_tabular_record_class(cls) -> bool:
         return issubclass(cls, TabularRecord)
     except TypeError:
         return False
+
+
+def coerce_fieldnames(cls):
+    if is_tabular_record_class(cls):
+        return cls.get_fieldnames()
+
+    if getattr(cls, "is_namedrecord", False):
+        return cls.fieldnames
+
+    return cls

@@ -137,7 +137,7 @@ class TestWriter(object):
 
         buf = StringIO()
 
-        writer = Writer(buf, lineterminator="\n", fieldnames=Video.fieldnames)
+        writer = Writer(buf, lineterminator="\n", fieldnames=Video)
 
         writer.writerow(Video("Title", ["a", "b"]))
 
@@ -151,8 +151,8 @@ class TestWriter(object):
 
         buf = StringIO()
 
-        writer = Writer(buf, lineterminator="\n")
+        writer = Writer(buf, lineterminator="\n", fieldnames=Video)
 
         writer.writerow(Video("Title", ["a", "b"]))
 
-        assert buf.getvalue().strip() == "Title,a&b"
+        assert buf.getvalue().strip() == "title,tags\nTitle,a&b"

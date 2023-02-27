@@ -9,7 +9,7 @@ import csv
 
 from casanova.defaults import DEFAULTS
 from casanova.resumers import Resumer, LastCellResumer
-from casanova.namedrecord import coerce_row
+from casanova.namedrecord import coerce_row, coerce_fieldnames
 from casanova.reader import Headers
 from casanova.utils import py310_wrap_csv_writerow, strip_null_bytes_from_row
 
@@ -37,6 +37,8 @@ class Writer(object):
             raise TypeError('expecting a boolean as "strip_null_bytes_on_write" kwarg')
 
         self.strip_null_bytes_on_write = strip_null_bytes_on_write
+
+        fieldnames = coerce_fieldnames(fieldnames)
 
         self.fieldnames = fieldnames
         self.headers = Headers(fieldnames) if fieldnames is not None else None
