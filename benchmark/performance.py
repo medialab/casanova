@@ -2,6 +2,14 @@ from ebbe import Timer
 import click
 import csv
 import casanova
+from dataclasses import dataclass
+
+
+@dataclass
+class Record(casanova.TabularRecord):
+    id: str
+    title: str
+    url: str
 
 
 @click.command()
@@ -9,7 +17,8 @@ import casanova
 @click.argument("column")
 @click.option("--headers/--no-headers", default=True)
 @click.option("--skip-std/--no-skip-std", default=True)
-def bench(path, column, headers=True, skip_std=True):
+@click.option("--tabular-record/--no-tabular-record", default=False)
+def bench(path, column, headers=True, skip_std=True, tabular_record=False):
     if not skip_std:
         with Timer("csv.reader"):
             with open(path) as f:
@@ -57,6 +66,13 @@ def bench(path, column, headers=True, skip_std=True):
             reader = casanova.reader(f, no_headers=not headers)
             for row, value in reader.cells(column, with_rows=True):
                 a = value
+
+    if tabular_record:
+        with Timer("casanova.reader: records tabular_record"):
+            with open(path) as f:
+                reader = casanova.reader(f, no_headers=not headers)
+                for record in reader.records(Record):
+                    a = record
 
 
 if __name__ == "__main__":
