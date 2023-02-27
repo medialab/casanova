@@ -4,7 +4,13 @@
 #
 # CSV-aware improvement over python's namedtuple.
 #
-from typing import Optional, Iterable
+import sys
+from typing import Optional, Iterable, Union
+
+if sys.version_info[:2] >= (3, 10):
+    from typing import get_origin, get_args
+else:
+    from typing_extensions import get_origin, get_args
 
 from collections import OrderedDict, namedtuple
 from dataclasses import fields, field
@@ -167,7 +173,66 @@ def tabular_field(
     return f
 
 
+NoneType = type(None)
+PluralTypes = (list, set, tuple)
+
+# TODO: deal with straightforward unions (Literal notably)
+def parse(
+    string,
+    t,
+    plural_separator: str = "|",
+    none_value: str = "",
+    true_value: str = "true",
+):
+    if t is str:
+        return string
+
+    if t is bool:
+        return string == true_value
+
+    if t is int:
+        return int(string)
+
+    if t is float:
+        return float(string)
+
+    origin = get_origin(t)
+
+    if origin is None:
+        raise NotImplementedError("cannot parse because type origin is unknown")
+
+    args = get_args(t)
+
+    if origin in PluralTypes:
+        values = (
+            parse(s, args[0], none_value=none_value, true_value=true_value)
+            for s in string.split(plural_separator)
+        )
+
+        return origin(values)
+
+    if origin is Union:
+        if len(args) > 2 or args[1] is not NoneType:
+            raise NotImplementedError(
+                "cannot parse arbitrary Union except for Optional"
+            )
+
+        if string == none_value:
+            return None
+
+        return parse(
+            string,
+            args[0],
+            plural_separator=plural_separator,
+            none_value=none_value,
+            true_value=true_value,
+        )
+
+    raise NotImplementedError("cannot parse arbitrary types")
+
+
 class TabularRecord(object):
+    _is_tabular_record = True
     _serializer_options = {
         "plural_separator": "|",
         "none_value": "",
@@ -179,6 +244,34 @@ class TabularRecord(object):
     @classmethod
     def get_fieldnames(cls):
         return [f.name for f in fields(cls)]
+
+    @classmethod
+    def parse(cls, row):
+        parsed = []
+        fs = fields(cls)
+
+        if len(row) != len(fs):
+            raise TypeError(
+                "attempting to parse a row with wrong number of items (%i while expecting %i)"
+                % (len(row), len(fs))
+            )
+
+        options = cls._serializer_options
+
+        for v, f in zip(row, fs):
+            f_options = {**options, **TABULAR_FIELDS.get(f, {})}
+
+            parsed.append(
+                parse(
+                    v,
+                    f.type,
+                    plural_separator=f_options["plural_separator"],
+                    none_value=f_options["none_value"],
+                    true_value=f_options["true_value"],
+                )
+            )
+
+        return cls(*parsed)
 
     def as_csv_row(self):
         row = []

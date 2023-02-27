@@ -1,7 +1,7 @@
 # =============================================================================
 # Casanova Named Record Unit Tests
 # =============================================================================
-from typing import List
+from typing import List, Optional, Tuple, Set
 
 import pytest
 from collections import OrderedDict
@@ -151,3 +151,37 @@ class TestTabularRecord(object):
         }
 
         assert Video.get_fieldnames() == ["title", "duration", "tags"]
+
+    def test_parse(self):
+        @dataclass
+        class Video(TabularRecord):
+            title: str
+            description: str
+            subtitle: Optional[str]
+            duration: int
+            time: float
+            seen: bool
+            tags: List[str]
+            tuple_tags: Tuple[str, str]
+            set_tags: Set[str] = tabular_field(plural_separator="&")
+            good: bool = tabular_field(true_value="yes")
+
+        with pytest.raises(TypeError, match="wrong number"):
+            Video.parse(["title"])
+
+        video = Video.parse(
+            ["Title", "", "", "167", "45.6", "false", "a|b", "b|c", "c&d", "yes"]
+        )
+
+        assert video == Video(
+            title="Title",
+            description="",
+            subtitle=None,
+            duration=167,
+            time=45.6,
+            seen=False,
+            tags=["a", "b"],
+            tuple_tags=("b", "c"),
+            set_tags={"d", "c"},
+            good=True,
+        )
