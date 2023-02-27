@@ -1,7 +1,7 @@
 # =============================================================================
 # Casanova Named Record Unit Tests
 # =============================================================================
-from typing import List, Optional, Tuple, Set
+from typing import List, Optional, Tuple, Set, Dict
 
 import pytest
 from collections import OrderedDict
@@ -185,3 +185,17 @@ class TestTabularRecord(object):
             set_tags={"d", "c"},
             good=True,
         )
+
+    def test_json(self):
+        @dataclass
+        class Video(TabularRecord):
+            title: str
+            data: Dict[str, str] = tabular_field(as_json=True)
+
+        video = Video("Title", {"hello": "world"})
+
+        assert video.as_csv_row() == ["Title", '{"hello": "world"}']
+
+        video = Video.parse(["Other", '{"test": "coucou"}'])
+
+        assert video == Video("Other", {"test": "coucou"})

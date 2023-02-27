@@ -5,6 +5,7 @@
 # CSV-aware improvement over python's namedtuple.
 #
 import sys
+import json
 from typing import Optional, Iterable, Union
 
 if sys.version_info[:2] >= (3, 10):
@@ -146,6 +147,7 @@ def tabular_field(
     true_value: Optional[str] = None,
     false_value: Optional[str] = None,
     stringify_everything: Optional[bool] = None,
+    as_json: Optional[bool] = None,
     **field_kwargs
 ):
     f = field(**field_kwargs)
@@ -167,6 +169,9 @@ def tabular_field(
     if stringify_everything is not None:
         f_serialization_options["stringify_everything"] = stringify_everything
 
+    if as_json is not None and as_json:
+        f_serialization_options["as_json"] = as_json
+
     if f_serialization_options:
         TABULAR_FIELDS[f] = f_serialization_options
 
@@ -176,6 +181,7 @@ def tabular_field(
 NoneType = type(None)
 PluralTypes = (list, set, tuple)
 
+
 # TODO: deal with straightforward unions (Literal notably)
 def parse(
     string,
@@ -183,7 +189,11 @@ def parse(
     plural_separator: str = "|",
     none_value: str = "",
     true_value: str = "true",
+    as_json: bool = False,
 ):
+    if as_json:
+        return json.loads(string)
+
     if t is str:
         return string
 
@@ -268,6 +278,7 @@ class TabularRecord(object):
                     plural_separator=f_options["plural_separator"],
                     none_value=f_options["none_value"],
                     true_value=f_options["true_value"],
+                    as_json=f_options.get("as_json", False),
                 )
             )
 
