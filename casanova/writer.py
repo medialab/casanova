@@ -9,6 +9,7 @@ import csv
 
 from casanova.defaults import DEFAULTS
 from casanova.resumers import Resumer, LastCellResumer
+from casanova.namedrecord import coerce_row
 from casanova.reader import Headers
 from casanova.utils import py310_wrap_csv_writerow, strip_null_bytes_from_row
 
@@ -112,11 +113,7 @@ class Writer(object):
             self.writeheader()
 
     def writerow(self, row):
-        serializer = getattr(row, "as_csv_row", None)
-
-        if callable(serializer):
-            row = serializer()
-
+        row = coerce_row(row)
         self.__writerow(row)
 
     def writeheader(self):

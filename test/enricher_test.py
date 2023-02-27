@@ -1,6 +1,8 @@
 # =============================================================================
 # Casanova Enricher Unit Tests
 # =============================================================================
+from typing import List
+
 import csv
 import gzip
 import casanova
@@ -8,6 +10,7 @@ import pytest
 import time
 import sys
 from io import StringIO
+from dataclasses import dataclass
 from collections import defaultdict
 from quenouille import imap_unordered
 
@@ -18,7 +21,7 @@ from casanova.resumers import (
     RowCountResumer,
     ThreadSafeResumer,
 )
-from casanova.namedrecord import namedrecord
+from casanova.namedrecord import namedrecord, TabularRecord, tabular_field
 from casanova.exceptions import Py310NullByteWriteError
 from casanova.utils import PY_310, CsvIO
 
@@ -540,14 +543,37 @@ class TestEnricher(object):
             ]
 
     def test_write_namedrecord(self):
-        Video = namedrecord("Video", ["title", 'tags'])
+        Video = namedrecord("Video", ["title", "tags"])
         buf = StringIO()
 
         enricher = casanova.enricher(
-            CsvIO([['John']], ['name']), buf, add=Video.fieldnames, writer_lineterminator="\n"
+            CsvIO([["John"]], ["name"]),
+            buf,
+            add=Video.fieldnames,
+            writer_lineterminator="\n",
         )
 
         for row in enricher:
-            enricher.writerow(row, Video("Title", ['a', 'b']))
+            enricher.writerow(row, Video("Title", ["a", "b"]))
 
         assert buf.getvalue().strip() == "name,title,tags\nJohn,Title,a|b"
+
+    def test_write_tabular_record(self):
+        @dataclass
+        class Video(TabularRecord):
+            title: str
+            tags: List[str] = tabular_field(plural_separator="&")
+
+        buf = StringIO()
+
+        enricher = casanova.enricher(
+            CsvIO([["John"]], ["name"]),
+            buf,
+            add=Video.get_fieldnames(),
+            writer_lineterminator="\n",
+        )
+
+        for row in enricher:
+            enricher.writerow(row, Video("Title", ["a", "b"]))
+
+        assert buf.getvalue().strip() == "name,title,tags\nJohn,Title,a&b"

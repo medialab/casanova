@@ -17,6 +17,7 @@ from casanova.resumers import (
 from casanova.headers import Headers
 from casanova.reader import Reader
 from casanova.writer import Writer
+from casanova.namedrecord import coerce_row
 from casanova.defaults import DEFAULTS
 
 
@@ -173,17 +174,8 @@ class Enricher(Reader):
         self.writer.writeheader()
 
     def writerow(self, row, add=None):
-        serializer = getattr(row, "as_csv_row", None)
-
-        if callable(serializer):
-            row = serializer()
-
-        if add is not None:
-            serializer = getattr(add, "as_csv_row", None)
-
-            if callable(serializer):
-                add = serializer()
-
+        row = coerce_row(row)
+        add = coerce_row(add)
         self.writer.writerow(self.formatrow(row, add))
 
 

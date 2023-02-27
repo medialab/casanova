@@ -134,14 +134,15 @@ TABULAR_FIELDS = {}
 
 
 def tabular_field(
+    *,
     plural_separator: Optional[str] = None,
     none_value: Optional[str] = None,
     true_value: Optional[str] = None,
     false_value: Optional[str] = None,
     stringify_everything: Optional[bool] = None,
-    **kwargs
+    **field_kwargs
 ):
-    f = field(**kwargs)
+    f = field(**field_kwargs)
 
     f_serialization_options = {}
 
@@ -202,3 +203,15 @@ class TabularRecord(object):
             row[f.name] = TABULAR_RECORD_SERIALIZER(getattr(self, f.name), **f_options)
 
         return row
+
+
+def coerce_row(row):
+    if row is None:
+        return None
+
+    as_csv_row = getattr(row, "as_csv_row", None)
+
+    if callable(as_csv_row):
+        row = as_csv_row()
+
+    return row

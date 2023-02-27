@@ -1,8 +1,11 @@
 # =============================================================================
 # Casanova Writer Unit Tests
 # =============================================================================
+from typing import List
+
 import pytest
 from io import StringIO
+from dataclasses import dataclass
 
 from test.utils import collect_csv
 
@@ -10,7 +13,7 @@ from casanova.utils import PY_310
 from casanova.writer import Writer
 from casanova.resumers import LastCellResumer
 from casanova.exceptions import Py310NullByteWriteError
-from casanova.namedrecord import namedrecord
+from casanova.namedrecord import namedrecord, TabularRecord, tabular_field
 
 
 class TestWriter(object):
@@ -134,8 +137,22 @@ class TestWriter(object):
 
         buf = StringIO()
 
+        writer = Writer(buf, lineterminator="\n", fieldnames=Video.fieldnames)
+
+        writer.writerow(Video("Title", ["a", "b"]))
+
+        assert buf.getvalue().strip() == "title,tags\nTitle,a|b"
+
+    def test_write_tabular_record(self):
+        @dataclass
+        class Video(TabularRecord):
+            title: str
+            tags: List[str] = tabular_field(plural_separator="&")
+
+        buf = StringIO()
+
         writer = Writer(buf, lineterminator="\n")
 
         writer.writerow(Video("Title", ["a", "b"]))
 
-        assert buf.getvalue().strip() == "Title,a|b"
+        assert buf.getvalue().strip() == "Title,a&b"
