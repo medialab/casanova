@@ -6,6 +6,7 @@
 # with csv.DictReader which is nice but very slow.
 #
 import csv
+from os import PathLike
 from collections import namedtuple
 from collections.abc import Iterable
 from itertools import chain
@@ -23,6 +24,7 @@ from casanova.utils import (
     create_csv_aware_backwards_lines_iterator,
     ltpy311_csv_reader,
     looks_like_url,
+    infer_delimiter_or_type,
 )
 from casanova.http import request
 from casanova.exceptions import MissingColumnError, NoHeadersError
@@ -61,12 +63,18 @@ class Reader(object):
 
         self.strip_null_bytes_on_read = strip_null_bytes_on_read
 
+        if delimiter is None:
+            data_format, inferred_delimiter = infer_delimiter_or_type(input_file)
+
+            if data_format == "csv" and inferred_delimiter is not None:
+                delimiter = inferred_delimiter
+
         # Detecting input type
         if isinstance(input_file, IOBase):
             input_type = "file"
 
-        elif isinstance(input_file, str):
-            if looks_like_url(input_file):
+        elif isinstance(input_file, (str, PathLike)):
+            if isinstance(input_file, str) and looks_like_url(input_file):
                 input_type = "url"
                 input_file = request(input_file)
             else:

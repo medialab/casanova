@@ -397,3 +397,9 @@ class TestReader(object):
         rows = list(reader)
 
         assert rows == [["John", "blue"], ["John", "gray"], ["Paris", "yellow"]]
+
+    def test_infer_delimiter(self):
+        with open("./test/resources/people.tsv") as f:
+            people = list(casanova.reader(f))
+
+            assert people == [["Harry", "Golding"], ["James", "Henry"]]

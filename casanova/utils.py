@@ -7,6 +7,8 @@
 import re
 import csv
 import gzip
+from os import PathLike
+from os.path import splitext
 from io import StringIO, DEFAULT_BUFFER_SIZE
 from platform import python_version_tuple
 from file_read_backwards.file_read_backwards import FileReadBackwardsIterator
@@ -58,8 +60,10 @@ def ltpy311_csv_reader(input_file, **kwargs):
 
 
 def ensure_open(p, encoding="utf-8", mode="r"):
-    if not isinstance(p, str):
+    if not isinstance(p, (str, PathLike)):
         return p
+
+    p = str(p)
 
     if p.endswith(".gz"):
         if "b" in mode:
@@ -72,6 +76,28 @@ def ensure_open(p, encoding="utf-8", mode="r"):
         return open(p, mode=mode)
 
     return open(p, encoding=encoding, mode=mode)
+
+
+def infer_delimiter_or_type(file_or_path):
+    if isinstance(file_or_path, PathLike):
+        file_or_path = str(file_or_path)
+
+    if hasattr(file_or_path, "name"):
+        file_or_path = file_or_path.name
+
+    if isinstance(file_or_path, str):
+        rest, ext = splitext(file_or_path)
+
+        if ext == ".gz":
+            _, ext = splitext(rest)
+
+        if ext == ".tsv" or ext == ".tab":
+            return ("csv", "\t")
+
+        if ext == ".ndjson" or ext == ".jsonl":
+            return ("ndjson", None)
+
+    return ("csv", None)
 
 
 BOM_RE = re.compile(r"^\ufeff")
