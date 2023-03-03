@@ -240,7 +240,18 @@ def parse(
     raise NotImplementedError("cannot parse arbitrary types")
 
 
+def _cached_fields(cls):
+    fs = cls._cached_fields
+
+    if fs is None:
+        fs = fields(cls)
+        cls._cached_fields = fs
+
+    return fs
+
+
 class TabularRecord(object):
+    _cached_fields = None
     _serializer_options = {
         "plural_separator": "|",
         "none_value": "",
@@ -253,7 +264,7 @@ class TabularRecord(object):
     def fieldnames(cls, prefix: str = ""):
         names = []
 
-        for f in fields(cls):
+        for f in _cached_fields(cls):
             if is_tabular_record_class(f.type):
                 names.extend(f.type.fieldnames(prefix=prefix + f.name + "_"))
             else:
@@ -264,7 +275,7 @@ class TabularRecord(object):
     @classmethod
     def parse(cls, row, _offset=0):
         parsed = []
-        fs = fields(cls)
+        fs = _cached_fields(cls)
 
         options = cls._serializer_options
 
@@ -309,7 +320,7 @@ class TabularRecord(object):
 
         options = self._serializer_options
 
-        for f in fields(self):
+        for f in _cached_fields(self):
             f_options = {**options, **TABULAR_FIELDS.get(id(f), {})}
 
             if is_tabular_record_class(f.type):
@@ -326,7 +337,7 @@ class TabularRecord(object):
 
         options = self._serializer_options
 
-        for f in fields(self):
+        for f in _cached_fields(self):
             f_options = {**options, **TABULAR_FIELDS.get(id(f), {})}
 
             if is_tabular_record_class(f.type):
@@ -361,7 +372,7 @@ def is_tabular_record_class(cls) -> bool:
 def tabular_fields(cls) -> List[Field]:
     fs = []
 
-    for f in fields(cls):
+    for f in _cached_fields(cls):
         if is_tabular_record_class(f.type):
             fs.extend(tabular_fields(f.type))
         else:
