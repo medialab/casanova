@@ -150,7 +150,7 @@ class TestTabularRecord(object):
             "tags": "action&romance",
         }
 
-        assert Video.get_fieldnames() == ["title", "duration", "tags"]
+        assert Video.fieldnames() == ["title", "duration", "tags"]
 
     def test_parse(self):
         @dataclass

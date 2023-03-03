@@ -250,7 +250,7 @@ class TabularRecord(object):
     }
 
     @classmethod
-    def get_fieldnames(cls):
+    def fieldnames(cls):
         return [f.name for f in fields(cls)]
 
     @classmethod
@@ -325,7 +325,7 @@ def is_tabular_record_class(cls) -> bool:
 
 def coerce_fieldnames(cls):
     if is_tabular_record_class(cls):
-        return cls.get_fieldnames()
+        return cls.fieldnames()
 
     if getattr(cls, "is_namedrecord", False):
         return cls.fieldnames

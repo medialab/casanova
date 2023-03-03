@@ -382,7 +382,7 @@ class Reader(object):
             if (
                 not ignore_headers
                 and self.fieldnames is not None
-                and self.fieldnames != shape[0].get_fieldnames()
+                and self.fieldnames != shape[0].fieldnames()
             ):
                 raise TypeError("file headers are not aligned with the record ones")
 
