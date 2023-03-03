@@ -171,7 +171,7 @@ class TestTabularRecord(object):
             set_tags: Set[str] = tabular_field(plural_separator="&")
             good: bool = tabular_field(true_value="yes")
 
-        with pytest.raises(TypeError, match="wrong number"):
+        with pytest.raises(TypeError, match="mismatch"):
             Video.parse(["title"])
 
         video = Video.parse(
@@ -240,3 +240,5 @@ class TestTabularRecord(object):
             "meta_author_name": "Guillaume",
             "meta_author_surname": "Gilford",
         }
+
+        assert Video.parse(["test", "14", "Guillaume", "Gilford"]) == video

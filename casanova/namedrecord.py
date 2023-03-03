@@ -6,7 +6,7 @@
 #
 import sys
 import json
-from typing import Optional, Iterable, Union
+from typing import Optional, Iterable, Union, List
 
 if sys.version_info[:2] >= (3, 10):
     from typing import get_origin, get_args
@@ -14,7 +14,7 @@ else:
     from typing_extensions import get_origin, get_args
 
 from collections import OrderedDict, namedtuple
-from dataclasses import fields, field
+from dataclasses import fields, field, Field
 
 from casanova.serialization import CSVSerializer
 
@@ -172,7 +172,7 @@ def tabular_field(
         f_serialization_options["as_json"] = as_json
 
     if f_serialization_options:
-        TABULAR_FIELDS[f] = f_serialization_options
+        TABULAR_FIELDS[id(f)] = f_serialization_options
 
     return f
 
@@ -262,33 +262,47 @@ class TabularRecord(object):
         return names
 
     @classmethod
-    def parse(cls, row):
+    def parse(cls, row, _offset=0):
         parsed = []
         fs = fields(cls)
 
-        if len(row) != len(fs):
-            raise TypeError(
-                "attempting to parse a row with wrong number of items (%i while expecting %i)"
-                % (len(row), len(fs))
-            )
-
         options = cls._serializer_options
 
-        for v, f in zip(row, fs):
-            f_options = {**options, **TABULAR_FIELDS.get(f, {})}
+        i = _offset
 
-            parsed.append(
-                parse(
-                    v,
-                    f.type,
-                    plural_separator=f_options["plural_separator"],
-                    none_value=f_options["none_value"],
-                    true_value=f_options["true_value"],
-                    as_json=f_options.get("as_json", False),
+        while i < len(row):
+            v = row[i]
+            f = fs[i - _offset]
+
+            f_options = {**options, **TABULAR_FIELDS.get(id(f), {})}
+
+            if is_tabular_record_class(f.type):
+                i, sub_record = f.type.parse(row, _offset=i)
+                parsed.append(sub_record)
+            else:
+                parsed.append(
+                    parse(
+                        v,
+                        f.type,
+                        plural_separator=f_options["plural_separator"],
+                        none_value=f_options["none_value"],
+                        true_value=f_options["true_value"],
+                        as_json=f_options.get("as_json", False),
+                    )
                 )
+                i += 1
+
+        try:
+            record = cls(*parsed)
+        except TypeError:
+            raise TypeError(
+                "mismatch between length of rows and number of properties held by tabular record"
             )
 
-        return cls(*parsed)
+        if _offset > 0:
+            return i, record
+
+        return record
 
     def as_csv_row(self):
         row = []
@@ -296,7 +310,7 @@ class TabularRecord(object):
         options = self._serializer_options
 
         for f in fields(self):
-            f_options = {**options, **TABULAR_FIELDS.get(f, {})}
+            f_options = {**options, **TABULAR_FIELDS.get(id(f), {})}
 
             if is_tabular_record_class(f.type):
                 row.extend(getattr(self, f.name).as_csv_row())
@@ -313,7 +327,7 @@ class TabularRecord(object):
         options = self._serializer_options
 
         for f in fields(self):
-            f_options = {**options, **TABULAR_FIELDS.get(f, {})}
+            f_options = {**options, **TABULAR_FIELDS.get(id(f), {})}
 
             if is_tabular_record_class(f.type):
                 data = getattr(self, f.name).as_csv_dict_row()
@@ -342,6 +356,18 @@ def is_tabular_record_class(cls) -> bool:
         return issubclass(cls, TabularRecord)
     except TypeError:
         return False
+
+
+def tabular_fields(cls) -> List[Field]:
+    fs = []
+
+    for f in fields(cls):
+        if is_tabular_record_class(f.type):
+            fs.extend(tabular_fields(f.type))
+        else:
+            fs.append(f)
+
+    return fs
 
 
 def coerce_fieldnames(cls):
