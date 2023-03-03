@@ -251,7 +251,15 @@ class TabularRecord(object):
 
     @classmethod
     def fieldnames(cls, prefix: str = ""):
-        return [prefix + f.name for f in fields(cls)]
+        names = []
+
+        for f in fields(cls):
+            if is_tabular_record_class(f.type):
+                names.extend(f.type.fieldnames(prefix=prefix + f.name + "_"))
+            else:
+                names.append(prefix + f.name)
+
+        return names
 
     @classmethod
     def parse(cls, row):
@@ -290,7 +298,12 @@ class TabularRecord(object):
         for f in fields(self):
             f_options = {**options, **TABULAR_FIELDS.get(f, {})}
 
-            row.append(TABULAR_RECORD_SERIALIZER(getattr(self, f.name), **f_options))
+            if is_tabular_record_class(f.type):
+                row.extend(getattr(self, f.name).as_csv_row())
+            else:
+                row.append(
+                    TABULAR_RECORD_SERIALIZER(getattr(self, f.name), **f_options)
+                )
 
         return row
 
@@ -302,7 +315,15 @@ class TabularRecord(object):
         for f in fields(self):
             f_options = {**options, **TABULAR_FIELDS.get(f, {})}
 
-            row[f.name] = TABULAR_RECORD_SERIALIZER(getattr(self, f.name), **f_options)
+            if is_tabular_record_class(f.type):
+                data = getattr(self, f.name).as_csv_dict_row()
+
+                for n, v in data.items():
+                    row[f.name + "_" + n] = v
+            else:
+                row[f.name] = TABULAR_RECORD_SERIALIZER(
+                    getattr(self, f.name), **f_options
+                )
 
         return row
 

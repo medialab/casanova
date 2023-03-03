@@ -204,3 +204,39 @@ class TestTabularRecord(object):
         video = Video.parse(["Other", '{"test": "coucou"}'])
 
         assert video == Video("Other", {"test": "coucou"})
+
+    def test_recursive(self):
+        @dataclass
+        class Author(TabularRecord):
+            name: str
+            surname: str
+
+        @dataclass
+        class Meta(TabularRecord):
+            count: int
+            author: Author
+
+        @dataclass
+        class Video(TabularRecord):
+            title: str
+            meta: Meta
+
+        assert Video.fieldnames() == [
+            "title",
+            "meta_count",
+            "meta_author_name",
+            "meta_author_surname",
+        ]
+
+        video = Video(
+            title="test",
+            meta=Meta(count=14, author=Author(name="Guillaume", surname="Gilford")),
+        )
+
+        assert video.as_csv_row() == ["test", "14", "Guillaume", "Gilford"]
+        assert video.as_csv_dict_row() == {
+            "title": "test",
+            "meta_count": "14",
+            "meta_author_name": "Guillaume",
+            "meta_author_surname": "Gilford",
+        }
