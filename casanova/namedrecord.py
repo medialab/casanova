@@ -250,8 +250,8 @@ class TabularRecord(object):
     }
 
     @classmethod
-    def fieldnames(cls):
-        return [f.name for f in fields(cls)]
+    def fieldnames(cls, prefix: str = ""):
+        return [prefix + f.name for f in fields(cls)]
 
     @classmethod
     def parse(cls, row):
