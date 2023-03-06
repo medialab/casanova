@@ -197,10 +197,11 @@ class ThreadSafeEnricher(Enricher):
     ):
         self.index_column = index_column
 
+        # Prepending index column to output
+        add = [index_column] + list(coerce_fieldnames(add or []))
+
         # Inheritance
-        super().__init__(
-            input_file, output_file, add=[index_column] + list(add or []), **kwargs
-        )
+        super().__init__(input_file, output_file, add=add, **kwargs)
 
     def __iter__(self):
         return self.enumerate()
@@ -230,10 +231,11 @@ class BatchEnricher(Enricher):
         self.cursor_column = cursor_column
         self.end_symbol = end_symbol
 
-        add = [] if add is None else list(add)
+        # Prepending cursor column to output
+        add = [cursor_column] + list(coerce_fieldnames(add or []))
 
         # Inheritance
-        super().__init__(input_file, output_file, add=[cursor_column] + add, **kwargs)
+        super().__init__(input_file, output_file, add=add, **kwargs)
 
     def writebatch(self, row, batch, cursor=None):
         if cursor is None:
