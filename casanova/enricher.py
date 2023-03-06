@@ -55,7 +55,6 @@ class Enricher(Reader):
         self.selected_indices = None
         self.output_fieldnames = self.fieldnames
         self.added_count = 0
-        self.padding = None
 
         if select is not None:
             if no_headers:
@@ -213,7 +212,10 @@ class ThreadSafeEnricher(Enricher):
         return self.enumerate_records(*shape, with_rows=with_rows)
 
     def writerow(self, index, row, *addenda):
-        super().writerow(row, [index], *addenda)
+        if not addenda:
+            super().writerow(row, [index] + self.padding[:-1])
+        else:
+            super().writerow(row, [index], *addenda)
 
 
 class BatchEnricher(Enricher):

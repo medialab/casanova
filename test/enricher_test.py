@@ -577,3 +577,15 @@ class TestEnricher(object):
             enricher.writerow(row, Video("Title", ["a", "b"]))
 
         assert buf.getvalue().strip() == "name,title,tags\nJohn,Title,a&b"
+
+    def test_threadsafe_writerow_without_addendum(self):
+        buf = StringIO()
+
+        enricher = casanova.threadsafe_enricher(
+            CsvIO([["John"]], ["name"]), buf, add=["count"], writer_lineterminator='\n'
+        )
+
+        for index, row in enricher:
+            enricher.writerow(index, row)
+
+        assert buf.getvalue().strip() == "name,index,count\nJohn,0,"
