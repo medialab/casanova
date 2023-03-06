@@ -2,6 +2,7 @@
 # Casanova Serialization Unit Tests
 # =============================================================================
 from pytest import raises
+from datetime import datetime, date, time
 
 from casanova.serialization import CSVSerializer
 
@@ -24,6 +25,13 @@ class TestSerialization(object):
         assert serializer(7.4, stringify_everything=False) == 7.4
         assert serializer(["blue", "yellow"]) == "blue|yellow"
         assert serializer(["blue", "yellow"], plural_separator="&") == "blue&yellow"
+        assert serializer(date(2022, 1, 2)) == "2022-01-02"
+        assert serializer(time(9, 9, 9)) == "09:09:09"
+        assert serializer(datetime(2022, 1, 2, 9, 9, 9)) == "2022-01-02T09:09:09"
+        assert (
+            serializer(datetime(2022, 1, 2, 9, 9, 9, 4536))
+            == "2022-01-02T09:09:09.004536"
+        )
 
         with raises(NotImplementedError):
             serializer({"hello": 45})

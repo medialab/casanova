@@ -1,6 +1,11 @@
 from typing import Optional, Iterable, Mapping, Any
 
 from json import dumps
+from datetime import date, datetime, time
+
+NUMBERS = (int, float)
+DATES = (date, datetime, time)
+LISTS = (list, set, frozenset, tuple)
 
 
 class CSVSerializer(object):
@@ -56,19 +61,22 @@ class CSVSerializer(object):
 
             return false_value if false_value is not None else self.false_value
 
-        if isinstance(value, (int, float)):
+        if isinstance(value, NUMBERS):
             if stringify_everything:
                 return str(value)
             else:
                 return value
 
-        if isinstance(value, (list, set, frozenset, tuple)):
+        if isinstance(value, LISTS):
             plural_separator = (
                 plural_separator
                 if plural_separator is not None
                 else self.plural_separator
             )
             return plural_separator.join(str(i) for i in value)
+
+        if isinstance(value, DATES):
+            return value.isoformat()
 
         raise NotImplementedError(
             "CSVSerializer does not support this kind of value: {}".format(
