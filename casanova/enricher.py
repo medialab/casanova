@@ -156,11 +156,19 @@ class Enricher(Reader):
                 # NOTE: this condition is just a memory optimization for the
                 # most frequent case.
                 if len(addenda) == 1:
-                    add = coerce_row(addenda[0], consume=True)
+                    addendum = addenda[0]
+                    add = (
+                        coerce_row(addendum, consume=True)
+                        if addendum is not None
+                        else []
+                    )
                 else:
                     add = []
 
                     for addition in addenda:
+                        if addenda is None:
+                            continue
+
                         addition = coerce_row(addition)
                         add.extend(addition)
 
