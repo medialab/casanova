@@ -287,7 +287,7 @@ class DictLikeRow(object):
         self.__row = row
 
     def replace(self, row):
-        assert len(row) == len(self.__row)
+        assert len(row) == len(self.__headers)
         self.__row = row
 
     def __getitem__(self, key):
@@ -329,7 +329,7 @@ class Headers(object):
 
         self.__mapping = defaultdict(list)
         self.__flat_mapping = {}
-        self.__current_dict_like_row = DictLikeRow(self, [])
+        self.__current_dict_like_row = DictLikeRow(self, fieldnames)
 
         for i, h in enumerate(self.fieldnames):
             self.__mapping[h].append(i)
