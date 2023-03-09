@@ -582,10 +582,65 @@ class TestEnricher(object):
         buf = StringIO()
 
         enricher = casanova.threadsafe_enricher(
-            CsvIO([["John"]], ["name"]), buf, add=["count"], writer_lineterminator='\n'
+            CsvIO([["John"]], ["name"]), buf, add=["count"], writer_lineterminator="\n"
         )
 
         for index, row in enricher:
             enricher.writerow(index, row)
+
+        assert buf.getvalue().strip() == "name,index,count\nJohn,0,"
+
+    def test_variadic_writerow(self):
+        buf = StringIO()
+
+        enricher = casanova.enricher(
+            CsvIO([["John"]], ["name"]),
+            buf,
+            writer_lineterminator="\n",
+            add=["count1", "count2"],
+        )
+
+        for row in enricher:
+            enricher.writerow(row, [0], [1])
+
+            with pytest.raises(TypeError):
+                enricher.writerow(row, [1])
+
+        assert buf.getvalue().strip() == "name,count1,count2\nJohn,0,1"
+
+    def test_backwards_compatibility_writerow(self):
+        # without add
+        buf = StringIO()
+
+        enricher = casanova.enricher(
+            CsvIO([["John"]], ["name"]), buf, writer_lineterminator="\n"
+        )
+
+        for row in enricher:
+            enricher.writerow(row, None)
+
+        assert buf.getvalue().strip() == "name\nJohn"
+
+        # with add
+        buf = StringIO()
+
+        enricher = casanova.enricher(
+            CsvIO([["John"]], ["name"]), buf, add=["count"], writer_lineterminator="\n"
+        )
+
+        for row in enricher:
+            enricher.writerow(row, None)
+
+        assert buf.getvalue().strip() == "name,count\nJohn,"
+
+        # threadsafe
+        buf = StringIO()
+
+        enricher = casanova.threadsafe_enricher(
+            CsvIO([["John"]], ["name"]), buf, add=["count"], writer_lineterminator="\n"
+        )
+
+        for index, row in enricher:
+            enricher.writerow(index, row, None)
 
         assert buf.getvalue().strip() == "name,index,count\nJohn,0,"

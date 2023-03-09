@@ -147,22 +147,17 @@ class Enricher(Reader):
 
         return row
 
-    def formatrow(self, row, *addenda):
+    def formatrow(self, row, add=None, *addenda):
         # We expect additions
         if self.added_count > 0:
-            if not addenda:
+            if add is None:
                 add = self.padding
             else:
-                # NOTE: this condition is just a memory optimization for the
-                # most frequent case.
-                if len(addenda) == 1:
-                    add = coerce_row(addenda[0], consume=True)
-                else:
-                    add = []
+                add = coerce_row(add, consume=True)
 
-                    for addition in addenda:
-                        addition = coerce_row(addition)
-                        add.extend(addition)
+                for addition in addenda:
+                    addition = coerce_row(addition)
+                    add.extend(addition)
 
                 if len(add) != self.added_count:
                     raise TypeError(
@@ -174,7 +169,7 @@ class Enricher(Reader):
 
         # We don't expect additions
         else:
-            if addenda:
+            if add is not None:
                 raise TypeError("casanova.enricher.writerow: expected no additions.")
 
             formatted_row = self.filterrow(row)
@@ -184,8 +179,8 @@ class Enricher(Reader):
     def writeheader(self):
         self.writer.writeheader()
 
-    def writerow(self, row, *addenda):
-        self.writer.writerow(self.formatrow(row, *addenda))
+    def writerow(self, row, add=None, *addenda):
+        self.writer.writerow(self.formatrow(row, add, *addenda))
 
 
 class ThreadSafeEnricher(Enricher):
@@ -211,11 +206,11 @@ class ThreadSafeEnricher(Enricher):
     def records(self, *shape, with_rows=False):
         return self.enumerate_records(*shape, with_rows=with_rows)
 
-    def writerow(self, index, row, *addenda):
-        if not addenda:
+    def writerow(self, index, row, add=None, *addenda):
+        if add is None:
             super().writerow(row, [index] + self.padding[:-1])
         else:
-            super().writerow(row, [index], *addenda)
+            super().writerow(row, [index], add, *addenda)
 
 
 class BatchEnricher(Enricher):
