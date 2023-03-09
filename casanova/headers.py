@@ -280,17 +280,47 @@ def walk_row(node, row):
 
 
 class DictLikeRow(object):
-    __slots__ = ("__mapping", "__row")
+    __slots__ = ("__headers", "__row")
 
-    def __init__(self, mapping, row):
-        self.__mapping = mapping
+    def __init__(self, headers, row):
+        self.__headers = headers
+        self.__row = row
+
+    def replace(self, row):
+        assert len(row) == len(self.__row)
         self.__row = row
 
     def __getitem__(self, key):
-        return self.__row[self.__mapping[key]]
+        return self.__row[self.__headers[key]]
+
+    def get(self, key, default=None, index=None):
+        idx = self.__headers.get(key, index=index)
+
+        if idx is None:
+            return default
+
+        return self.__row[idx]
+
+    def __contains__(self, key):
+        return key in self.__headers
 
     def __getattr__(self, key):
         return self.__getitem__(key)
+
+    def __iter__(self):
+        yield from self.__headers.fieldnames
+
+    def __len__(self):
+        return len(self.__row)
+
+    def keys(self):
+        yield from self.__headers.fieldnames
+
+    def values(self):
+        yield from self.__row
+
+    def items(self):
+        yield from zip(self.__headers.fieldnames, self.__row)
 
 
 class Headers(object):
@@ -299,6 +329,7 @@ class Headers(object):
 
         self.__mapping = defaultdict(list)
         self.__flat_mapping = {}
+        self.__current_dict_like_row = DictLikeRow(self, [])
 
         for i, h in enumerate(self.fieldnames):
             self.__mapping[h].append(i)
@@ -344,6 +375,20 @@ class Headers(object):
         return self.__getitem__(key)
 
     def __contains__(self, key):
+        if isinstance(key, int):
+            return key < len(self)
+
+        if isinstance(key, tuple):
+            if len(key) != 2:
+                raise TypeError("expecting a str, a int or a (str, int) tuple")
+
+            indices = self.__mapping.get(key[0])
+
+            if indices is None:
+                return False
+
+            return key[1] < len(indices)
+
         return key in self.__mapping
 
     def __iter__(self):
@@ -356,12 +401,26 @@ class Headers(object):
             raise ColumnOutOfRangeError(index)
 
     def get(self, key, default=None, index=None):
+        if isinstance(key, tuple):
+            if len(key) != 2:
+                raise TypeError("expecting a str, a int or a (str, int) tuple")
+
+            if index is not None:
+                raise TypeError(
+                    "key cannot be a (name, index) tuple if index kwarg is not None"
+                )
+
+            index = key[1]
+            key = key[0]
+
         if isinstance(key, int):
             if index is not None:
                 raise TypeError("it does not make sense to get an nth index")
 
             if key >= len(self):
                 return default
+
+            return key
 
         indices = self.__mapping.get(key)
 
@@ -517,11 +576,15 @@ class Headers(object):
 
         return projection
 
-    def wrap(self, row):
+    def wrap(self, row, transient=False):
         if len(row) != len(self.fieldnames):
             raise TypeError("len mismatch for row and headers")
 
-        return DictLikeRow(self.__flat_mapping, row)
+        if transient:
+            self.__current_dict_like_row.replace(row)
+            return self.__current_dict_like_row
+
+        return DictLikeRow(self, row)
 
     def __repr__(self):
         class_name = self.__class__.__name__

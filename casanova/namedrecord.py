@@ -172,7 +172,7 @@ def tabular_field(
         f_serialization_options["as_json"] = as_json
 
     if f_serialization_options:
-        TABULAR_FIELDS[id(f)] = f_serialization_options
+        TABULAR_FIELDS[f] = f_serialization_options
 
     return f
 
@@ -285,7 +285,7 @@ class TabularRecord(object):
             v = row[i]
             f = fs[i - _offset]
 
-            f_options = {**options, **TABULAR_FIELDS.get(id(f), {})}
+            f_options = {**options, **TABULAR_FIELDS.get(f, {})}
 
             if is_tabular_record_class(f.type):
                 i, sub_record = f.type.parse(row, _offset=i)
@@ -321,7 +321,7 @@ class TabularRecord(object):
         options = self._serializer_options
 
         for f in _cached_fields(self):
-            f_options = {**options, **TABULAR_FIELDS.get(id(f), {})}
+            f_options = {**options, **TABULAR_FIELDS.get(f, {})}
 
             if is_tabular_record_class(f.type):
                 row.extend(getattr(self, f.name).as_csv_row())
@@ -338,7 +338,7 @@ class TabularRecord(object):
         options = self._serializer_options
 
         for f in _cached_fields(self):
-            f_options = {**options, **TABULAR_FIELDS.get(id(f), {})}
+            f_options = {**options, **TABULAR_FIELDS.get(f, {})}
 
             if is_tabular_record_class(f.type):
                 data = getattr(self, f.name).as_csv_dict_row()

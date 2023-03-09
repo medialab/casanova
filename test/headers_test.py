@@ -173,3 +173,45 @@ class TestHeaders(object):
         renamed = Headers.rename(headers, "Foo", "Truc")
 
         assert renamed.fieldnames == ["Truc", "Bar", "Truc", "Test"]
+
+    def test_wrap(self):
+        headers = Headers(["Foo", "Bar", "Foo", "Test"])
+
+        row = headers.wrap(["One", "Two", "Three", "Four"])
+
+        assert row[1] == "Two"
+        assert row.Foo == "One"
+        assert row["Test"] == "Four"
+        assert row["Foo", 1] == "Three"
+        assert row.get(1) == "Two"
+        assert row.get("Foo") == "One"
+        assert row.get(("Foo", 1)) == "Three"
+        assert row.get(6) is None
+        assert row.get("Coco", "NA") == "NA"
+        assert 1 in row
+        assert "Foo" in row
+        assert ("Foo", 1) in row
+        assert ("Foo", 2) not in row
+        assert ("Coco", 1) not in row
+        assert 6 not in row
+        assert "Coco" not in row
+
+        assert len(row) == 4
+        assert list(row) == ["Foo", "Bar", "Foo", "Test"]
+        assert list(row.keys()) == ["Foo", "Bar", "Foo", "Test"]
+        assert list(row.values()) == ["One", "Two", "Three", "Four"]
+        assert list(row.items()) == [
+            ("Foo", "One"),
+            ("Bar", "Two"),
+            ("Foo", "Three"),
+            ("Test", "Four"),
+        ]
+
+        row.replace(["1", "2", "3", "4"])
+
+        assert list(row.items()) == [
+            ("Foo", "1"),
+            ("Bar", "2"),
+            ("Foo", "3"),
+            ("Test", "4"),
+        ]
