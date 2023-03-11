@@ -23,10 +23,18 @@ class TestWriter(object):
         writer.writerow(["John", "Cage"])
         writer.writerow(["Julia", "Andrews"])
 
+        def rows():
+            yield ["Mary", "Sue"]
+            yield ["Stuart", "Anderson"]
+
+        writer.writerows(rows())
+
         assert collect_csv(output) == [
             ["name", "surname"],
             ["John", "Cage"],
             ["Julia", "Andrews"],
+            ["Mary", "Sue"],
+            ["Stuart", "Anderson"],
         ]
 
     def test_resumable(self, tmpdir):

@@ -118,6 +118,10 @@ class Writer(object):
         row = coerce_row(row)
         self.__writerow(row)
 
+    def writerows(self, rows):
+        for row in rows:
+            self.writerow(row)
+
     def writeheader(self):
         if self.fieldnames is None:
             raise TypeError("cannot write header if fieldnames were not provided")
