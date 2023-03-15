@@ -94,6 +94,15 @@ class TestWriter(object):
 
         assert output.getvalue().strip() == "John,,Davis"
 
+        # Testing more non string values
+        output = StringIO()
+
+        writer = Writer(output, strip_null_bytes_on_write=True, lineterminator="\n")
+
+        writer.writerow(["John\x00Test", 15, None, "Ok"])
+
+        assert output.getvalue().strip() == "JohnTest,15,,Ok"
+
     def test_py310_wrapper(self):
         if not PY_310:
             return

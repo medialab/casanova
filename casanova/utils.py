@@ -130,7 +130,9 @@ def first_cell_index_with_null_byte(row):
 
 def strip_null_bytes_from_row(row):
     if any(has_null_byte(cell) for cell in row if isinstance(cell, str)):
-        return [strip_null_bytes(cell) for cell in row]
+        return [
+            strip_null_bytes(cell) if isinstance(cell, str) else cell for cell in row
+        ]
 
     return row
 
