@@ -1,11 +1,11 @@
 import os
 import sys
 import platform
-import math
+import multiprocessing
 from argparse import ArgumentParser
 
-from casanova import Enricher, CSVSerializer
 from casanova.utils import ensure_open
+from casanova.cli import map_action
 
 
 def acquire_cross_platform_stdout():
@@ -25,20 +25,6 @@ def acquire_cross_platform_stdout():
     return sys.stdout
 
 
-serialize = CSVSerializer()
-
-
-# TODO: -X/--exec, multiproc, row context + irow, frow etc.
-def map_action(cli_args, output_file):
-    with Enricher(cli_args.file, output_file, add=[cli_args.new_column]) as enricher:
-        context = {"math": math, "index": 0}
-
-        for i, row in enricher.enumerate():
-            context["index"] = i
-            result = eval(cli_args.code, None, context)
-            enricher.writerow(row, [serialize(result)])
-
-
 COMMON_ARGUMENTS = [
     (
         ("-d", "--delimiter"),
@@ -47,6 +33,22 @@ COMMON_ARGUMENTS = [
     (
         ("-o", "--output"),
         {"help": "Path to the output file. Will default to stdout."},
+    ),
+    (
+        ("-p", "--processes"),
+        {
+            "help": "Number of processes to use. Defaults to 1.",
+            "default": 1,
+            "type": int,
+        },
+    ),
+    (
+        ("--chunk-size",),
+        {
+            "help": "Multiprocessing chunk size. Defaults to 1.",
+            "default": 1,
+            "type": int,
+        },
     ),
 ]
 
@@ -57,6 +59,9 @@ def add_common_arguments(parser: ArgumentParser):
 
 
 def main():
+    multiprocessing.freeze_support()
+    multiprocessing.set_start_method("spawn")
+
     parser = ArgumentParser(
         "casanova",
         description="Casanova command line utilities such as mapping, filtering, reducing columns of a given CSV files.",
@@ -94,8 +99,8 @@ def main():
     if args.output is None:
         action(args, acquire_cross_platform_stdout())
     else:
-        with ensure_open(args.output, "w", encoding="utf-8", newline=""):
-            pass
+        with ensure_open(args.output, "w", encoding="utf-8", newline="") as output_file:
+            action(args, output_file)
 
 
 if __name__ == "__main__":
