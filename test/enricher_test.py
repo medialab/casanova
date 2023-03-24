@@ -82,6 +82,24 @@ class TestEnricher(object):
             ["Julia", "Stone", "0", "1", "2"],
         ]
 
+    def test_writebatch(self, tmpdir):
+        output_path = str(tmpdir.join("./enriched.csv"))
+        with open("./test/resources/people.csv") as f, open(
+            output_path, "w", newline=""
+        ) as of:
+            enricher = casanova.enricher(f, of, add=("number",))
+
+            for row in enricher:
+                enricher.writebatch(row, [[2], [3], [6]])
+                break
+
+        assert collect_csv(output_path) == [
+            ["name", "surname", "number"],
+            ["John", "Matthews", "2"],
+            ["John", "Matthews", "3"],
+            ["John", "Matthews", "6"],
+        ]
+
     def test_dialect(self, tmpdir):
         output_path = str(tmpdir.join("./enriched.csv"))
         with open("./test/resources/semicolons.csv") as f, open(

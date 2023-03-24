@@ -61,7 +61,7 @@ class Enricher(Reader):
                 self.selected_indices = Headers.select_no_headers(self.row_len, select)
             else:
                 self.selected_indices = self.headers.select(select)
-                self.output_fieldnames = self.filterrow(self.output_fieldnames)
+                self.output_fieldnames = self.__filterrow(self.output_fieldnames)
 
         add = coerce_fieldnames(add)
 
@@ -139,7 +139,7 @@ class Enricher(Reader):
     def should_write_header(self):
         return self.writer.should_write_header
 
-    def filterrow(self, row):
+    def __filterrow(self, row):
         row = coerce_row(row)
 
         if self.selected_indices is not None:
@@ -147,7 +147,7 @@ class Enricher(Reader):
 
         return row
 
-    def formatrow(self, row, add=None, *addenda):
+    def __formatrow(self, row, add=None, *addenda):
         # We expect additions
         if self.added_count > 0:
             if add is None:
@@ -165,14 +165,14 @@ class Enricher(Reader):
                         % (self.added_count, len(add))
                     )
 
-            formatted_row = self.filterrow(row) + add
+            formatted_row = self.__filterrow(row) + add
 
         # We don't expect additions
         else:
             if add is not None:
                 raise TypeError("casanova.enricher.writerow: expected no additions.")
 
-            formatted_row = self.filterrow(row)
+            formatted_row = self.__filterrow(row)
 
         return formatted_row
 
@@ -180,7 +180,21 @@ class Enricher(Reader):
         self.writer.writeheader()
 
     def writerow(self, row, add=None, *addenda):
-        self.writer.writerow(self.formatrow(row, add, *addenda))
+        self.writer.writerow(self.__formatrow(row, add, *addenda))
+
+    def writebatch(self, row, addenda):
+        row = self.__filterrow(row)
+
+        for addendum in addenda:
+            addendum = coerce_row(addendum)
+
+            if len(addendum) != self.added_count:
+                raise TypeError(
+                    "casanova.enricher.writebatch: expected %i additional cells but got %i."
+                    % (self.added_count, len(addendum))
+                )
+
+            self.writer.writerow(row + addendum)
 
 
 class ThreadSafeEnricher(Enricher):
@@ -234,9 +248,9 @@ class BatchEnricher(Enricher):
         # Inheritance
         super().__init__(input_file, output_file, add=add, **kwargs)
 
-    def writebatch(self, row, batch, cursor=None):
+    def writebatch(self, row, addenda, cursor=None):
         if cursor is None:
             cursor = self.end_symbol
 
-        for is_last, addendum in with_is_last(batch):
+        for is_last, addendum in with_is_last(addenda):
             self.writerow(row, [cursor if is_last else None], addendum)
