@@ -22,5 +22,11 @@ setup(
         ":python_version<'3.10'": ["typing_extensions"],
         "http": ["urllib3", "certifi"],
     },
+    entry_points={
+        "console_scripts": [
+            "casanova=casanova.__main__:main",
+            "casa=casanova.__main__:main",
+        ]
+    },
     zip_safe=True,
 )

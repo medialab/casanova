@@ -59,7 +59,7 @@ def ltpy311_csv_reader(input_file, **kwargs):
     return wrapped()
 
 
-def ensure_open(p, encoding="utf-8", mode="r"):
+def ensure_open(p, mode="r", encoding="utf-8", newline=None):
     if not isinstance(p, (str, PathLike)):
         return p
 
@@ -67,15 +67,15 @@ def ensure_open(p, encoding="utf-8", mode="r"):
 
     if p.endswith(".gz"):
         if "b" in mode:
-            return gzip.open(p, mode=mode)
+            return gzip.open(p, mode=mode, newline=newline)
 
         mode += "t"
-        return gzip.open(p, encoding=encoding, mode=mode)
+        return gzip.open(p, encoding=encoding, mode=mode, newline=newline)
 
     if "b" in mode:
-        return open(p, mode=mode)
+        return open(p, mode=mode, newline=newline)
 
-    return open(p, encoding=encoding, mode=mode)
+    return open(p, encoding=encoding, mode=mode, newline=newline)
 
 
 def infer_delimiter_or_type(file_or_path):
