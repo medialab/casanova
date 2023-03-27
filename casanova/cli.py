@@ -135,5 +135,5 @@ def mp_iteration(cli_args, enricher):
 
 def map_action(cli_args, output_file):
     with Enricher(cli_args.file, output_file, add=[cli_args.new_column]) as enricher:
-        for i, row, result in mp_iteration(cli_args, enricher):
+        for _, row, result in mp_iteration(cli_args, enricher):
             enricher.writerow(row, [serialize(result)])
