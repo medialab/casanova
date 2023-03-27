@@ -3,6 +3,7 @@ import sys
 import platform
 import multiprocessing
 from argparse import ArgumentParser
+from functools import partial
 
 from casanova.utils import ensure_open
 from casanova.cli import map_action
@@ -34,6 +35,9 @@ COMMON_ARGUMENTS = [
         ("-o", "--output"),
         {"help": "Path to the output file. Will default to stdout."},
     ),
+]
+
+MP_ARGUMENTS = [
     (
         ("-p", "--processes"),
         {
@@ -60,12 +64,22 @@ COMMON_ARGUMENTS = [
             "action": "store_true",
         },
     ),
+    (
+        ("-I", "--init"),
+        {
+            "help": "Code to execute once before starting to iterate over file. Useful to setup global variables used in evaluated code later."
+        },
+    ),
 ]
 
 
-def add_common_arguments(parser: ArgumentParser):
-    for args, kwargs in COMMON_ARGUMENTS:
+def add_arguments(parser: ArgumentParser, arguments):
+    for args, kwargs in arguments:
         parser.add_argument(*args, **kwargs)
+
+
+add_common_arguments = partial(add_arguments, arguments=COMMON_ARGUMENTS)
+add_mp_arguments = partial(add_arguments, arguments=MP_ARGUMENTS)
 
 
 def main():
@@ -82,6 +96,7 @@ def main():
 
     map_parser = subparsers.add_parser("map")
     add_common_arguments(map_parser)
+    add_mp_arguments(map_parser)
     map_parser.add_argument(
         "new_column",
         help="Name of the new column to create & containing the result of the evaluated code.",

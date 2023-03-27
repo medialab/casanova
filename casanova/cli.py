@@ -1,11 +1,22 @@
+from typing import Optional, List
+
 import sys
 import math
 import random
 from os.path import join
 from urllib.parse import urlsplit, urljoin
 from multiprocessing import Pool as MultiProcessPool
+from dataclasses import dataclass
 
 from casanova import Enricher, CSVSerializer, RowWrapper, Headers
+
+
+@dataclass
+class InitializerOptions:
+    code: str
+    row_len: int
+    init_code: Optional[str] = None
+    fieldnames: Optional[List[str]] = None
 
 
 # NOTE: just a thin wrapper to make sure we catch KeyboardInterrupt in
@@ -38,8 +49,8 @@ class SingleProcessPool(object):
         return
 
 
-def get_pool(code, fieldnames, row_len, n=1):
-    initargs = (code, fieldnames, row_len)
+def get_pool(n: int, options: InitializerOptions):
+    initargs = (options,)
 
     if n < 2:
         multiprocessed_initializer(*initargs)
@@ -66,17 +77,20 @@ LOCAL_CONTEXT = {
 }
 
 
-def multiprocessed_initializer(code, fieldnames, row_len):
+def multiprocessed_initializer(options: InitializerOptions):
     global CODE
 
-    CODE = code
+    CODE = options.code
 
-    if fieldnames is not None:
-        LOCAL_CONTEXT["fieldnames"] = fieldnames
-        LOCAL_CONTEXT["headers"] = Headers(fieldnames)
+    if options.fieldnames is not None:
+        LOCAL_CONTEXT["fieldnames"] = options.fieldnames
+        LOCAL_CONTEXT["headers"] = Headers(options.fieldnames)
         headers = LOCAL_CONTEXT["headers"]
     else:
-        headers = Headers(range(row_len))
+        headers = Headers(range(options.row_len))
+
+    if options.init_code is not None:
+        exec(options.init_code, None, LOCAL_CONTEXT)
 
     LOCAL_CONTEXT["row"] = RowWrapper(headers, None)
 
@@ -91,16 +105,18 @@ def multiprocessed_worker(payload):
     return (i, eval(CODE, None, LOCAL_CONTEXT))
 
 
-# TODO: -X/--exec, filter, reducer, reverse, conditional rich-argparse, re, initializers
+# TODO: -X/--exec, filter, reducer, reverse, conditional rich-argparse, re, exec rather than eval?
 def mp_iteration(cli_args, enricher):
     worker = WorkerWrapper(multiprocessed_worker)
 
-    with get_pool(
-        cli_args.code,
-        enricher.fieldnames,
-        enricher.row_len,
-        cli_args.processes,
-    ) as pool:
+    init_options = InitializerOptions(
+        code=cli_args.code,
+        init_code=cli_args.init,
+        row_len=enricher.row_len,
+        fieldnames=enricher.fieldnames,
+    )
+
+    with get_pool(cli_args.processes, init_options) as pool:
         # NOTE: we keep track of rows being worked on from the main process
         # to avoid serializing them back with worker result.
         worked_rows = {}
