@@ -91,7 +91,7 @@ def multiprocessed_worker(payload):
     return (i, eval(CODE, None, LOCAL_CONTEXT))
 
 
-# TODO: -X/--exec, filter, reducer, reverse, conditional rich-argparse
+# TODO: -X/--exec, filter, reducer, reverse, conditional rich-argparse, re, initializers
 def mp_iteration(cli_args, enricher):
     worker = WorkerWrapper(multiprocessed_worker)
 
