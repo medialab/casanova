@@ -112,7 +112,14 @@ def multiprocessed_worker(payload):
     return (i, eval(CODE, None, LOCAL_CONTEXT))
 
 
-# TODO: -X/--exec, filter, reducer, reverse, conditional rich-argparse, --plural-separator etc., -I could be given multiple times, -b also (think about reduce before)
+# TODO: -X/--exec file
+# TODO: filter, reduce
+# TODO: reverse
+# TODO: conditional rich-argparse,
+# TODO: --plural-separator etc.,
+# TODO: -I could be given multiple times,
+# TODO: -b also (think about reduce before)
+# TODO: explicit - standin
 def mp_iteration(cli_args, enricher):
     worker = WorkerWrapper(multiprocessed_worker)
 
