@@ -1,5 +1,6 @@
 from typing import Optional, List
 
+import re
 import sys
 import math
 import random
@@ -65,20 +66,25 @@ serialize = CSVSerializer()
 
 CODE = None
 LOCAL_CONTEXT = {
+    # lib
     "join": join,
     "math": math,
     "random": random,
+    "re": re,
     "urljoin": urljoin,
     "urlsplit": urlsplit,
+    # state
     "fieldnames": None,
     "headers": None,
     "index": 0,
     "row": None,
 }
+ROW = None
 
 
 def multiprocessed_initializer(options: InitializerOptions):
     global CODE
+    global ROW
 
     CODE = options.code
 
@@ -93,6 +99,7 @@ def multiprocessed_initializer(options: InitializerOptions):
         exec(options.init_code, None, LOCAL_CONTEXT)
 
     LOCAL_CONTEXT["row"] = RowWrapper(headers, None)
+    ROW = LOCAL_CONTEXT["row"]
 
 
 def multiprocessed_worker(payload):
@@ -100,12 +107,12 @@ def multiprocessed_worker(payload):
 
     i, row = payload
     LOCAL_CONTEXT["index"] = i
-    LOCAL_CONTEXT["row"]._replace(row)
+    ROW._replace(row)
 
     return (i, eval(CODE, None, LOCAL_CONTEXT))
 
 
-# TODO: -X/--exec, filter, reducer, reverse, conditional rich-argparse, re, exec rather than eval?
+# TODO: -X/--exec, filter, reducer, reverse, conditional rich-argparse, --plural-separator etc., -I could be given multiple times, -b also (think about reduce before)
 def mp_iteration(cli_args, enricher):
     worker = WorkerWrapper(multiprocessed_worker)
 
