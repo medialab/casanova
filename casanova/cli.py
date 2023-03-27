@@ -16,7 +16,7 @@ from casanova import Enricher, CSVSerializer, RowWrapper, Headers
 class InitializerOptions:
     code: str
     row_len: int
-    init_code: Optional[str] = None
+    init_codes: List[str]
     fieldnames: Optional[List[str]] = None
 
 
@@ -95,8 +95,8 @@ def multiprocessed_initializer(options: InitializerOptions):
     else:
         headers = Headers(range(options.row_len))
 
-    if options.init_code is not None:
-        exec(options.init_code, None, LOCAL_CONTEXT)
+    for init_code in options.init_codes:
+        exec(init_code, None, LOCAL_CONTEXT)
 
     LOCAL_CONTEXT["row"] = RowWrapper(headers, None)
     ROW = LOCAL_CONTEXT["row"]
@@ -117,7 +117,6 @@ def multiprocessed_worker(payload):
 # TODO: reverse
 # TODO: conditional rich-argparse,
 # TODO: --plural-separator etc.,
-# TODO: -I could be given multiple times,
 # TODO: -b also (think about reduce before)
 # TODO: explicit - standin
 def mp_iteration(cli_args, enricher):
@@ -125,7 +124,7 @@ def mp_iteration(cli_args, enricher):
 
     init_options = InitializerOptions(
         code=cli_args.code,
-        init_code=cli_args.init,
+        init_codes=cli_args.init,
         row_len=enricher.row_len,
         fieldnames=enricher.fieldnames,
     )

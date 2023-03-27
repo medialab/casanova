@@ -67,7 +67,8 @@ MP_ARGUMENTS = [
     (
         ("-I", "--init"),
         {
-            "help": "Code to execute once before starting to iterate over file. Useful to setup global variables used in evaluated code later."
+            "help": "Code to execute once before starting to iterate over file. Useful to setup global variables used in evaluated code later. Can be given multiple times.",
+            "action": "append",
         },
     ),
 ]
