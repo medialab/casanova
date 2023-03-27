@@ -17,6 +17,8 @@ class InitializerOptions:
     code: str
     row_len: int
     init_codes: List[str]
+    before_codes: List[str]
+    after_codes: List[str]
     fieldnames: Optional[List[str]] = None
 
 
@@ -65,6 +67,8 @@ def get_pool(n: int, options: InitializerOptions):
 serialize = CSVSerializer()
 
 CODE = None
+BEFORE_CODES = []
+AFTER_CODES = []
 LOCAL_CONTEXT = {
     # lib
     "join": join,
@@ -84,9 +88,13 @@ ROW = None
 
 def multiprocessed_initializer(options: InitializerOptions):
     global CODE
+    global BEFORE_CODES
+    global AFTER_CODES
     global ROW
 
     CODE = options.code
+    BEFORE_CODES = options.before_codes
+    AFTER_CODES = options.after_codes
 
     if options.fieldnames is not None:
         LOCAL_CONTEXT["fieldnames"] = options.fieldnames
@@ -109,7 +117,15 @@ def multiprocessed_worker(payload):
     LOCAL_CONTEXT["index"] = i
     ROW._replace(row)
 
-    return (i, eval(CODE, None, LOCAL_CONTEXT))
+    for before_code in BEFORE_CODES:
+        exec(before_code, None, LOCAL_CONTEXT)
+
+    value = (i, eval(CODE, None, LOCAL_CONTEXT))
+
+    for after_code in AFTER_CODES:
+        exec(after_code, None, LOCAL_CONTEXT)
+
+    return value
 
 
 # TODO: -X/--exec file (or -m)
@@ -117,7 +133,6 @@ def multiprocessed_worker(payload):
 # TODO: reverse
 # TODO: conditional rich-argparse,
 # TODO: --plural-separator etc.,
-# TODO: -b also (think about reduce before)
 # TODO: explicit - standin
 def mp_iteration(cli_args, enricher):
     worker = WorkerWrapper(multiprocessed_worker)
@@ -125,6 +140,8 @@ def mp_iteration(cli_args, enricher):
     init_options = InitializerOptions(
         code=cli_args.code,
         init_codes=cli_args.init,
+        before_codes=cli_args.before,
+        after_codes=cli_args.after,
         row_len=enricher.row_len,
         fieldnames=enricher.fieldnames,
     )

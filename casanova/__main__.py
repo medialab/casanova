@@ -69,6 +69,23 @@ MP_ARGUMENTS = [
         {
             "help": "Code to execute once before starting to iterate over file. Useful to setup global variables used in evaluated code later. Can be given multiple times.",
             "action": "append",
+            "default": [],
+        },
+    ),
+    (
+        ("-B", "--before"),
+        {
+            "help": "Code to execute before each evaluation of code for a row in the CSV file. Useful to update variables before returning something. Can be given multiple times.",
+            "action": "append",
+            "default": [],
+        },
+    ),
+    (
+        ("-A", "--after"),
+        {
+            "help": "Code to execute after each evaluation of code for a row in the CSV file. Useful to update variables after having returned something. Can be given multiple times.",
+            "action": "append",
+            "default": [],
         },
     ),
 ]
