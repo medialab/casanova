@@ -1,6 +1,8 @@
 import sys
 import math
 import random
+from os.path import join
+from urllib.parse import urlsplit, urljoin
 from multiprocessing import Pool as MultiProcessPool
 
 from casanova import Enricher, CSVSerializer, RowWrapper, Headers
@@ -52,8 +54,11 @@ serialize = CSVSerializer()
 
 CODE = None
 LOCAL_CONTEXT = {
+    "join": join,
     "math": math,
     "random": random,
+    "urljoin": urljoin,
+    "urlsplit": urlsplit,
     "fieldnames": None,
     "headers": None,
     "index": 0,
@@ -86,7 +91,7 @@ def multiprocessed_worker(payload):
     return (i, eval(CODE, None, LOCAL_CONTEXT))
 
 
-# TODO: -X/--exec, multiproc, row context + irow, frow etc., urljoin
+# TODO: -X/--exec, filter, reducer, reverse
 def mp_iteration(cli_args, enricher):
     worker = WorkerWrapper(multiprocessed_worker)
 

@@ -43,7 +43,10 @@ COMMON_ARGUMENTS = [
         },
     ),
     (
-        ("--chunk-size",),
+        (
+            "-c",
+            "--chunk-size",
+        ),
         {
             "help": "Multiprocessing chunk size. Defaults to 1.",
             "default": 1,
