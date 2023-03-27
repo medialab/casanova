@@ -1,10 +1,9 @@
 import sys
 import math
 import random
-import time
 from multiprocessing import Pool as MultiProcessPool
 
-from casanova import Enricher, CSVSerializer
+from casanova import Enricher, CSVSerializer, RowWrapper, Headers
 
 
 # NOTE: just a thin wrapper to make sure we catch KeyboardInterrupt in
@@ -37,8 +36,8 @@ class SingleProcessPool(object):
         return
 
 
-def get_pool(code, n=1):
-    initargs = (code,)
+def get_pool(code, fieldnames, row_len, n=1):
+    initargs = (code, fieldnames, row_len)
 
     if n < 2:
         multiprocessed_initializer(*initargs)
@@ -52,20 +51,37 @@ def get_pool(code, n=1):
 serialize = CSVSerializer()
 
 CODE = None
-LOCAL_CONTEXT = {"math": math, "random": random, "time": time, "index": 0}
+LOCAL_CONTEXT = {
+    "math": math,
+    "random": random,
+    "fieldnames": None,
+    "headers": None,
+    "index": 0,
+    "row": None,
+}
 
 
-def multiprocessed_initializer(code):
+def multiprocessed_initializer(code, fieldnames, row_len):
     global CODE
 
     CODE = code
+
+    if fieldnames is not None:
+        LOCAL_CONTEXT["fieldnames"] = fieldnames
+        LOCAL_CONTEXT["headers"] = Headers(fieldnames)
+        headers = LOCAL_CONTEXT["headers"]
+    else:
+        headers = Headers(range(row_len))
+
+    LOCAL_CONTEXT["row"] = RowWrapper(headers, None)
 
 
 def multiprocessed_worker(payload):
     global LOCAL_CONTEXT
 
-    i, _ = payload
+    i, row = payload
     LOCAL_CONTEXT["index"] = i
+    LOCAL_CONTEXT["row"]._replace(row)
 
     return (i, eval(CODE, None, LOCAL_CONTEXT))
 
@@ -74,7 +90,12 @@ def multiprocessed_worker(payload):
 def mp_iteration(cli_args, enricher):
     worker = WorkerWrapper(multiprocessed_worker)
 
-    with get_pool(cli_args.code, cli_args.processes) as pool:
+    with get_pool(
+        cli_args.code,
+        enricher.fieldnames,
+        enricher.row_len,
+        cli_args.processes,
+    ) as pool:
         # NOTE: we keep track of rows being worked on from the main process
         # to avoid serializing them back with worker result.
         worked_rows = {}

@@ -197,19 +197,17 @@ class TestHeaders(object):
         assert "Coco" not in row
 
         assert len(row) == 4
-        assert list(row) == ["Foo", "Bar", "Foo", "Test"]
-        assert list(row.keys()) == ["Foo", "Bar", "Foo", "Test"]
-        assert list(row.values()) == ["One", "Two", "Three", "Four"]
-        assert list(row.items()) == [
+        assert list(row) == ["One", "Two", "Three", "Four"]
+        assert list(row.cells()) == [
             ("Foo", "One"),
             ("Bar", "Two"),
             ("Foo", "Three"),
             ("Test", "Four"),
         ]
 
-        row.replace(["1", "2", "3", "4"])
+        row._replace(["1", "2", "3", "4"])
 
-        assert list(row.items()) == [
+        assert list(row.cells()) == [
             ("Foo", "1"),
             ("Bar", "2"),
             ("Foo", "3"),

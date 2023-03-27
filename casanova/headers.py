@@ -279,15 +279,14 @@ def walk_row(node, row):
     raise NotImplementedError
 
 
-class DictLikeRow(object):
+class RowWrapper(object):
     __slots__ = ("__headers", "__row")
 
     def __init__(self, headers, row):
         self.__headers = headers
         self.__row = row
 
-    def replace(self, row):
-        assert len(row) == len(self.__headers)
+    def _replace(self, row):
         self.__row = row
 
     def __getitem__(self, key):
@@ -308,18 +307,12 @@ class DictLikeRow(object):
         return self.__getitem__(key)
 
     def __iter__(self):
-        yield from self.__headers.fieldnames
+        yield from self.__row
 
     def __len__(self):
         return len(self.__row)
 
-    def keys(self):
-        yield from self.__headers.fieldnames
-
-    def values(self):
-        yield from self.__row
-
-    def items(self):
+    def cells(self):
         yield from zip(self.__headers.fieldnames, self.__row)
 
 
@@ -329,7 +322,7 @@ class Headers(object):
 
         self.__mapping = defaultdict(list)
         self.__flat_mapping = {}
-        self.__current_dict_like_row = DictLikeRow(self, fieldnames)
+        self.__wrapper = RowWrapper(self, fieldnames)
 
         for i, h in enumerate(self.fieldnames):
             self.__mapping[h].append(i)
@@ -581,10 +574,10 @@ class Headers(object):
             raise TypeError("len mismatch for row and headers")
 
         if transient:
-            self.__current_dict_like_row.replace(row)
-            return self.__current_dict_like_row
+            self.__wrapper._replace(row)
+            return self.__wrapper
 
-        return DictLikeRow(self, row)
+        return RowWrapper(self, row)
 
     def __repr__(self):
         class_name = self.__class__.__name__

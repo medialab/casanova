@@ -8,7 +8,7 @@ from io import StringIO
 from dataclasses import dataclass
 
 from casanova.defaults import set_defaults
-from casanova.headers import DictLikeRow, Headers
+from casanova.headers import RowWrapper, Headers
 from casanova.reader import Multiplexer
 from casanova.namedrecord import namedrecord, TabularRecord
 from casanova.exceptions import (
@@ -299,7 +299,7 @@ class TestReader(object):
             for row in reader:
                 wrapped = reader.wrap(row)
 
-                assert isinstance(wrapped, DictLikeRow)
+                assert isinstance(wrapped, RowWrapper)
                 assert wrapped["name"] == row[0]
                 assert wrapped.surname == row[1]
 

@@ -169,7 +169,7 @@ _Methods_
 - **cells**: take the name of a column or its position and returns an iterator over values of the given column. Can be given `with_rows=True` if you want to iterate over a `value, row` tuple instead if required.
 - **enumerate**: resuming-safe enumeration over rows yielding `index, row` tuples. Takes an optional `start` kwarg like builtin `enumerate`.
 - **enumerate_cells**: resuming-safe enumeration over cells yielding `index, cell` or `index, row, cell` if given `with_rows=True`. Takes an optional `start` kwarg like builtin `enumerate`.
-- **wrap**: method taking a list row and returning a `DictLikeRow` object to wrap it.
+- **wrap**: method taking a list row and returning a `RowWrapper` object to wrap it.
 - **close**: cleans up the reader resources manually when not using the dedicated context manager. It is usually only useful when the reader was given a path and not an already opened file handle.
 
 <em id="multiplexing">Multiplexing</em>
@@ -283,7 +283,7 @@ headers.nth(1)
 
 # Wraping a row
 headers.wrap(['John', 'Matthews', '45'])
->>> DictLikeRow(name='John', surname='Matthews', age='45')
+>>> RowWrapper(name='John', surname='Matthews', age='45')
 
 # Selecting some columns (by name and/or index)):
 headers.select(['name', 2])
