@@ -112,7 +112,7 @@ def multiprocessed_worker(payload):
     return (i, eval(CODE, None, LOCAL_CONTEXT))
 
 
-# TODO: -X/--exec file
+# TODO: -X/--exec file (or -m)
 # TODO: filter, reduce
 # TODO: reverse
 # TODO: conditional rich-argparse,
