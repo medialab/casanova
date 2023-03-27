@@ -91,7 +91,7 @@ def multiprocessed_worker(payload):
     return (i, eval(CODE, None, LOCAL_CONTEXT))
 
 
-# TODO: -X/--exec, filter, reducer, reverse
+# TODO: -X/--exec, filter, reducer, reverse, conditional rich-argparse
 def mp_iteration(cli_args, enricher):
     worker = WorkerWrapper(multiprocessed_worker)
 
@@ -110,7 +110,9 @@ def mp_iteration(cli_args, enricher):
                 worked_rows[t[0]] = t[1]
                 yield t
 
-        for i, result in pool.imap(worker, payloads(), chunksize=cli_args.chunk_size):
+        mapper = pool.imap if not cli_args.unordered else pool.imap_unordered
+
+        for i, result in mapper(worker, payloads(), chunksize=cli_args.chunk_size):
             row = worked_rows.pop(i)
             yield i, row, result
 

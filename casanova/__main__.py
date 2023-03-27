@@ -53,6 +53,13 @@ COMMON_ARGUMENTS = [
             "type": int,
         },
     ),
+    (
+        ("-u", "--unordered"),
+        {
+            "help": "Whether you allow the result to be in arbitrary order when using multiple processes. Defaults to no.",
+            "action": "store_true",
+        },
+    ),
 ]
 
 
