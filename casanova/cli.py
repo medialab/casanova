@@ -151,6 +151,8 @@ def multiprocessed_worker_using_function(payload):
 # TODO: flag to ignore errors
 # TODO: cell selector as value
 # TODO: dynamic dispatch
+# TODO: flatmap
+# TODO: csv from glob
 def mp_iteration(cli_args, enricher):
     worker = WorkerWrapper(
         multiprocessed_worker_using_eval
