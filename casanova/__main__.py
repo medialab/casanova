@@ -1,3 +1,5 @@
+from typing import Optional
+
 import os
 import sys
 import platform
@@ -100,7 +102,7 @@ add_common_arguments = partial(add_arguments, arguments=COMMON_ARGUMENTS)
 add_mp_arguments = partial(add_arguments, arguments=MP_ARGUMENTS)
 
 
-def main():
+def main(arguments_override: Optional[str] = None):
     multiprocessing.freeze_support()
     multiprocessing.set_start_method("spawn")
 
@@ -131,7 +133,7 @@ def main():
 
     commands = {"map": (map_parser, map_action)}
 
-    args = parser.parse_args()
+    args = parser.parse_args(arguments_override.split(" "))
 
     if args.action is None:
         parser.print_help()

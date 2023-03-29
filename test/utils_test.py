@@ -2,6 +2,7 @@
 # Casanova Utils Unit Tests
 # =============================================================================
 from casanova.utils import (
+    parse_module_and_function,
     size_of_row_in_memory,
     size_of_row_in_file,
     CsvCellIO,
@@ -11,6 +12,16 @@ from casanova.utils import (
 
 
 class TestUtils(object):
+    def test_parse_module_and_function(self):
+        assert parse_module_and_function("casanova.module") == (
+            "casanova.module",
+            "main",
+        )
+        assert parse_module_and_function("casanova.module:fn") == (
+            "casanova.module",
+            "fn",
+        )
+
     def test_size_of_row_in_memory(self):
         assert size_of_row_in_memory([]) == 64
         assert size_of_row_in_memory(["test"]) == 125

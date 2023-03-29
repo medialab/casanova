@@ -78,6 +78,14 @@ def ensure_open(p, mode="r", encoding="utf-8", newline=None):
     return open(p, encoding=encoding, mode=mode, newline=newline)
 
 
+def parse_module_and_function(path):
+    if ":" in path:
+        s = path.rsplit(":", 1)
+        return s[0], s[1]
+
+    return path, "main"
+
+
 def infer_delimiter_or_type(file_or_path):
     if isinstance(file_or_path, PathLike):
         file_or_path = str(file_or_path)
