@@ -93,6 +93,13 @@ MP_ARGUMENTS = [
             "default": [],
         },
     ),
+    (
+        ("-m", "--module"),
+        {
+            "help": "If set, given code will be interpreted as a python module to import and a function name taking the current index and row.",
+            "action": "store_true",
+        },
+    ),
 ]
 
 

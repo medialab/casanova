@@ -7,6 +7,7 @@
 import re
 import csv
 import gzip
+import importlib
 from os import PathLike
 from os.path import splitext
 from io import StringIO, DEFAULT_BUFFER_SIZE
@@ -84,6 +85,12 @@ def parse_module_and_function(path):
         return s[0], s[1]
 
     return path, "main"
+
+
+def import_function(path):
+    module_name, function_name = parse_module_and_function(path)
+    m = importlib.import_module(module_name)
+    return getattr(m, function_name)
 
 
 def infer_delimiter_or_type(file_or_path):

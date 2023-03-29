@@ -10,11 +10,13 @@ from multiprocessing import Pool as MultiProcessPool
 from dataclasses import dataclass
 
 from casanova import Enricher, CSVSerializer, RowWrapper, Headers
+from casanova.utils import import_function
 
 
 @dataclass
 class InitializerOptions:
     code: str
+    module: bool
     row_len: int
     init_codes: List[str]
     before_codes: List[str]
@@ -67,6 +69,7 @@ def get_pool(n: int, options: InitializerOptions):
 serialize = CSVSerializer()
 
 CODE = None
+FUNCTION = None
 BEFORE_CODES = []
 AFTER_CODES = []
 LOCAL_CONTEXT = {
@@ -88,13 +91,17 @@ ROW = None
 
 def multiprocessed_initializer(options: InitializerOptions):
     global CODE
+    global FUNCTION
     global BEFORE_CODES
     global AFTER_CODES
     global ROW
 
-    CODE = options.code
-    BEFORE_CODES = options.before_codes
-    AFTER_CODES = options.after_codes
+    if options.module:
+        FUNCTION = import_function(options.code)
+    else:
+        CODE = options.code
+        BEFORE_CODES = options.before_codes
+        AFTER_CODES = options.after_codes
 
     if options.fieldnames is not None:
         LOCAL_CONTEXT["fieldnames"] = options.fieldnames
@@ -110,7 +117,7 @@ def multiprocessed_initializer(options: InitializerOptions):
     ROW = LOCAL_CONTEXT["row"]
 
 
-def multiprocessed_worker(payload):
+def multiprocessed_worker_using_eval(payload):
     global LOCAL_CONTEXT
 
     i, row = payload
@@ -120,25 +127,40 @@ def multiprocessed_worker(payload):
     for before_code in BEFORE_CODES:
         exec(before_code, None, LOCAL_CONTEXT)
 
-    value = (i, eval(CODE, None, LOCAL_CONTEXT))
+    value = eval(CODE, None, LOCAL_CONTEXT)
 
     for after_code in AFTER_CODES:
         exec(after_code, None, LOCAL_CONTEXT)
 
-    return value
+    return i, value
+
+
+def multiprocessed_worker_using_function(payload):
+    i, row = payload
+    ROW._replace(row)
+
+    value = FUNCTION(i, ROW)
+
+    return i, value
 
 
 # TODO: -X/--exec file (or -m)
 # TODO: filter, reduce
 # TODO: reverse
-# TODO: conditional rich-argparse,
 # TODO: --plural-separator etc.,
 # TODO: flag to ignore errors
+# TODO: cell selector as value
+# TODO: dynamic dispatch
 def mp_iteration(cli_args, enricher):
-    worker = WorkerWrapper(multiprocessed_worker)
+    worker = WorkerWrapper(
+        multiprocessed_worker_using_eval
+        if not cli_args.module
+        else multiprocessed_worker_using_function
+    )
 
     init_options = InitializerOptions(
         code=cli_args.code,
+        module=cli_args.module,
         init_codes=cli_args.init,
         before_codes=cli_args.before,
         after_codes=cli_args.after,
