@@ -9,7 +9,7 @@ from urllib.parse import urlsplit, urljoin
 from multiprocessing import Pool as MultiProcessPool
 from dataclasses import dataclass
 
-from casanova import Enricher, CSVSerializer, RowWrapper, Headers
+from casanova import Reader, Enricher, CSVSerializer, RowWrapper, Headers
 from casanova.utils import import_function
 
 
@@ -145,15 +145,14 @@ def multiprocessed_worker_using_function(payload):
 
 
 # TODO: -X/--exec file (or -m)
-# TODO: filter, reduce
+# TODO: reduce, flatmap
 # TODO: reverse
 # TODO: --plural-separator etc.,
 # TODO: flag to ignore errors
 # TODO: cell selector as value
 # TODO: dynamic dispatch
-# TODO: flatmap
 # TODO: csv from glob
-def mp_iteration(cli_args, enricher):
+def mp_iteration(cli_args, reader: Reader):
     worker = WorkerWrapper(
         multiprocessed_worker_using_eval
         if not cli_args.module
@@ -166,8 +165,8 @@ def mp_iteration(cli_args, enricher):
         init_codes=cli_args.init,
         before_codes=cli_args.before,
         after_codes=cli_args.after,
-        row_len=enricher.row_len,
-        fieldnames=enricher.fieldnames,
+        row_len=reader.row_len,
+        fieldnames=reader.fieldnames,
     )
 
     with get_pool(cli_args.processes, init_options) as pool:
@@ -176,7 +175,7 @@ def mp_iteration(cli_args, enricher):
         worked_rows = {}
 
         def payloads():
-            for t in enricher.enumerate():
+            for t in reader.enumerate():
                 worked_rows[t[0]] = t[1]
                 yield t
 
@@ -196,3 +195,10 @@ def map_action(cli_args, output_file):
     ) as enricher:
         for _, row, result in mp_iteration(cli_args, enricher):
             enricher.writerow(row, [serialize(result)])
+
+
+def filter_action(cli_args, output_file):
+    with Enricher(cli_args.file, output_file, delimiter=cli_args.delimiter) as enricher:
+        for _, row, result in mp_iteration(cli_args, enricher):
+            if result:
+                enricher.writerow(row)

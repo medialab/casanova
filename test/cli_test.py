@@ -101,3 +101,8 @@ class TestCLI(object):
             [["n", "result"], ["1", "42"], ["2", "42"], ["3", "42"]],
             sort=True,
         )
+
+    def test_filter(self):
+        self.assert_run(
+            'filter "int(row.n) > 2" ./test/resources/count.csv', [["n"], ["3"]]
+        )

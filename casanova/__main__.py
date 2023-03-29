@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 from functools import partial
 
 from casanova.utils import ensure_open
-from casanova.cli import map_action
+from casanova.cli import map_action, filter_action
 
 
 def acquire_cross_platform_stdout():
@@ -136,7 +136,21 @@ def main(arguments_override: Optional[str] = None):
         help="CSV file to process. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
     )
 
-    commands = {"map": (map_parser, map_action)}
+    filter_parser = subparsers.add_parser("filter")
+    add_common_arguments(filter_parser)
+    add_mp_arguments(filter_parser)
+    filter_parser.add_argument(
+        "code", help="Python code to evaluate for each row of the CSV file."
+    )
+    filter_parser.add_argument(
+        "file",
+        help="CSV file to process. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
+    )
+
+    commands = {
+        "map": (map_parser, map_action),
+        "filter": (filter_parser, filter_action),
+    }
 
     cli_args = parser.parse_args(
         shlex.split(arguments_override) if arguments_override is not None else None
