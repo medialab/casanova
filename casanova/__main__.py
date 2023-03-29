@@ -2,6 +2,7 @@ from typing import Optional
 
 import os
 import sys
+import shlex
 import platform
 import multiprocessing
 from argparse import ArgumentParser
@@ -103,9 +104,6 @@ add_mp_arguments = partial(add_arguments, arguments=MP_ARGUMENTS)
 
 
 def main(arguments_override: Optional[str] = None):
-    multiprocessing.freeze_support()
-    multiprocessing.set_start_method("spawn")
-
     parser = ArgumentParser(
         "casanova",
         description="Casanova command line utilities such as mapping, filtering, reducing columns of a given CSV files.",
@@ -133,7 +131,7 @@ def main(arguments_override: Optional[str] = None):
 
     commands = {"map": (map_parser, map_action)}
 
-    args = parser.parse_args(arguments_override.split(" "))
+    args = parser.parse_args(shlex.split(arguments_override))
 
     if args.action is None:
         parser.print_help()
@@ -149,6 +147,9 @@ def main(arguments_override: Optional[str] = None):
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
+    multiprocessing.set_start_method("spawn")
+
     try:
         main()
     except (KeyboardInterrupt, BrokenPipeError):
