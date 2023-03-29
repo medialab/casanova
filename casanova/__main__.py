@@ -36,7 +36,9 @@ COMMON_ARGUMENTS = [
     ),
     (
         ("-o", "--output"),
-        {"help": "Path to the output file. Will default to stdout."},
+        {
+            "help": "Path to the output file. Will default to stdout and will consider `-` as stdout."
+        },
     ),
 ]
 
@@ -124,26 +126,33 @@ def main(arguments_override: Optional[str] = None):
     )
     map_parser.add_argument(
         "file",
-        help="CSV file to process. Can be compressed, and can also be a URL. If not given, the command will fallback to read the file from stdin.",
-        default=sys.stdin,
-        nargs="?",
+        help="CSV file to process. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
     )
 
     commands = {"map": (map_parser, map_action)}
 
-    args = parser.parse_args(shlex.split(arguments_override))
+    cli_args = parser.parse_args(
+        shlex.split(arguments_override) if arguments_override is not None else None
+    )
 
-    if args.action is None:
+    if cli_args.action is None:
         parser.print_help()
         sys.exit(0)
 
-    _, action = commands[args.action]
+    _, action = commands[cli_args.action]
 
-    if args.output is None:
-        action(args, acquire_cross_platform_stdout())
+    # Stdin fallback
+    if getattr(cli_args, "file", None) == "-":
+        cli_args.file = sys.stdin
+
+    # Dealing with output stream
+    if cli_args.output is None or cli_args.output == "-":
+        action(cli_args, acquire_cross_platform_stdout())
     else:
-        with ensure_open(args.output, "w", encoding="utf-8", newline="") as output_file:
-            action(args, output_file)
+        with ensure_open(
+            cli_args.output, "w", encoding="utf-8", newline=""
+        ) as output_file:
+            action(cli_args, output_file)
 
 
 if __name__ == "__main__":

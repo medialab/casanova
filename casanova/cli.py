@@ -133,7 +133,7 @@ def multiprocessed_worker(payload):
 # TODO: reverse
 # TODO: conditional rich-argparse,
 # TODO: --plural-separator etc.,
-# TODO: explicit - standin
+# TODO: flag to ignore errors
 def mp_iteration(cli_args, enricher):
     worker = WorkerWrapper(multiprocessed_worker)
 
@@ -164,6 +164,11 @@ def mp_iteration(cli_args, enricher):
 
 
 def map_action(cli_args, output_file):
-    with Enricher(cli_args.file, output_file, add=[cli_args.new_column]) as enricher:
+    with Enricher(
+        cli_args.file,
+        output_file,
+        add=[cli_args.new_column],
+        delimiter=cli_args.delimiter,
+    ) as enricher:
         for _, row, result in mp_iteration(cli_args, enricher):
             enricher.writerow(row, [serialize(result)])
