@@ -8,8 +8,12 @@ from casanova.__main__ import main
 WINDOWS = "windows" in platform.system().lower()
 
 
+def sort_key(row):
+    return tuple(row)
+
+
 class TestCLI(object):
-    def assert_run(self, args, expected):
+    def assert_run(self, args, expected, sort=False):
         if WINDOWS:
             return
 
@@ -20,6 +24,10 @@ class TestCLI(object):
 
         output.seek(0)
         data = list(Reader(output, no_headers=True))
+
+        if sort:
+            data.sort(key=sort_key)
+            expected = sorted(expected, key=sort_key)
 
         assert data == expected
 
@@ -91,4 +99,5 @@ class TestCLI(object):
         self.assert_run(
             "map result 42 -p 2 -u ./test/resources/count.csv",
             [["n", "result"], ["1", "42"], ["2", "42"], ["3", "42"]],
+            sort=True,
         )
