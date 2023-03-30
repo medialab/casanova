@@ -3,6 +3,7 @@ from typing import Optional
 import os
 import sys
 import shlex
+import shutil
 import platform
 import multiprocessing
 from argparse import ArgumentParser, HelpFormatter, ArgumentTypeError
@@ -35,6 +36,11 @@ class SortingHelpFormatter(HelpFormatter):
             actions, key=lambda a: tuple(s.lower() for s in a.option_strings)
         )
         return super().add_arguments(actions)
+
+
+def custom_formatter(prog):
+    terminal_size = shutil.get_terminal_size()
+    return SortingHelpFormatter(prog, width=terminal_size.columns, max_help_position=32)
 
 
 VALID_ARG_NAMES = {"index", "row", "headers", "fieldnames"}
@@ -153,13 +159,13 @@ def main(arguments_override: Optional[str] = None):
     parser = ArgumentParser(
         "casanova",
         description="Casanova command line utilities such as mapping, filtering, reducing columns of a given CSV files.",
-        formatter_class=SortingHelpFormatter,
+        formatter_class=custom_formatter,
     )
     add_common_arguments(parser)
 
     subparsers = parser.add_subparsers(dest="action", help="Command to execute.")
 
-    map_parser = subparsers.add_parser("map", formatter_class=SortingHelpFormatter)
+    map_parser = subparsers.add_parser("map", formatter_class=custom_formatter)
     add_common_arguments(map_parser)
     add_mp_arguments(map_parser)
     map_parser.add_argument(
@@ -173,10 +179,28 @@ def main(arguments_override: Optional[str] = None):
         "file",
         help="CSV file to map. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
     )
-
-    filter_parser = subparsers.add_parser(
-        "filter", formatter_class=SortingHelpFormatter
+    map_parser.add_argument(
+        "--plural-separator",
+        help='Character to use to join lists and sets together in a single cell. Defaults to "|". If you need to emit multiple rows instead, consider using flatmap.',
+        default="|",
     )
+    map_parser.add_argument(
+        "--none-value",
+        help="String used to serialize None values. Defaults to an empty string.",
+        default="",
+    )
+    map_parser.add_argument(
+        "--true-value",
+        help='String used to serialize True values. Defaults to "true".',
+        default="true",
+    )
+    map_parser.add_argument(
+        "--false-value",
+        help='String used to serialize False values. Defaults to "false".',
+        default="false",
+    )
+
+    filter_parser = subparsers.add_parser("filter", formatter_class=custom_formatter)
     add_common_arguments(filter_parser)
     add_mp_arguments(filter_parser)
     filter_parser.add_argument(
@@ -187,9 +211,7 @@ def main(arguments_override: Optional[str] = None):
         help="CSV file to filter. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
     )
 
-    reverse_parser = subparsers.add_parser(
-        "reverse", formatter_class=SortingHelpFormatter
-    )
+    reverse_parser = subparsers.add_parser("reverse", formatter_class=custom_formatter)
     add_common_arguments(reverse_parser)
     reverse_parser.add_argument(
         "file",

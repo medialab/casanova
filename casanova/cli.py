@@ -67,7 +67,14 @@ def get_pool(n: int, options: InitializerOptions):
     )
 
 
-serialize = CSVSerializer()
+def get_serializer(cli_args):
+    return CSVSerializer(
+        plural_separator=cli_args.plural_separator,
+        none_value=cli_args.none_value,
+        true_value=cli_args.true_value,
+        false_value=cli_args.false_value,
+    )
+
 
 CODE = None
 FUNCTION = None
@@ -164,7 +171,6 @@ def multiprocessed_worker_using_function(payload):
 
 # TODO: flatmap, reduce?
 # TODO: generator functions cast as list and flatmap relation
-# TODO: --plural-separator etc.,
 # TODO: flag to ignore errors
 # TODO: cell selector as value
 def mp_iteration(cli_args, reader: Reader):
@@ -203,6 +209,8 @@ def mp_iteration(cli_args, reader: Reader):
 
 
 def map_action(cli_args, output_file):
+    serialize = get_serializer(cli_args)
+
     with Enricher(
         cli_args.file,
         output_file,

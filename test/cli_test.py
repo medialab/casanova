@@ -114,6 +114,32 @@ class TestCLI(object):
             [["n", "result"], ["1", "0"], ["2", "20"], ["3", "40"]],
         )
 
+    def test_map_formatting(self):
+        self.assert_run(
+            "map result None ./test/resources/count.csv",
+            [["n", "result"], ["1", ""], ["2", ""], ["3", ""]],
+        )
+
+        self.assert_run(
+            "map result None --none-value none ./test/resources/count.csv",
+            [["n", "result"], ["1", "none"], ["2", "none"], ["3", "none"]],
+        )
+
+        self.assert_run(
+            "map result True --true-value yes ./test/resources/count.csv",
+            [["n", "result"], ["1", "yes"], ["2", "yes"], ["3", "yes"]],
+        )
+
+        self.assert_run(
+            "map result False --false-value no ./test/resources/count.csv",
+            [["n", "result"], ["1", "no"], ["2", "no"], ["3", "no"]],
+        )
+
+        self.assert_run(
+            "map result '[1, 2, 3]' --plural-separator '§' ./test/resources/count.csv",
+            [["n", "result"], ["1", "1§2§3"], ["2", "1§2§3"], ["3", "1§2§3"]],
+        )
+
     def test_filter(self):
         self.assert_run(
             'filter "int(row.n) > 2" ./test/resources/count.csv', [["n"], ["3"]]
