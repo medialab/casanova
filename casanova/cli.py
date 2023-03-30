@@ -215,13 +215,14 @@ def mp_iteration(cli_args, reader: Reader):
         mapper = pool.imap if not cli_args.unordered else pool.imap_unordered
 
         for exc, i, result in mapper(worker, payloads(), chunksize=cli_args.chunk_size):
+            row = worked_rows.pop(i)
+
             if exc is not None:
                 if cli_args.ignore_errors:
                     result = None
                 else:
                     raise exc
 
-            row = worked_rows.pop(i)
             yield i, row, result
 
 
