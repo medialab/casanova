@@ -139,10 +139,10 @@ def multiprocessed_worker_using_eval(payload):
     return i, value
 
 
-def collect_args(i, row):
+def collect_args(i):
     for arg_name in ARGS:
         if arg_name == "row":
-            yield row
+            yield ROW
         elif arg_name == "index":
             yield i
         elif arg_name == "fieldnames":
@@ -155,7 +155,7 @@ def multiprocessed_worker_using_function(payload):
     i, row = payload
     ROW._replace(row)
 
-    args = tuple(collect_args(i, row))
+    args = tuple(collect_args(i))
 
     value = FUNCTION(*args)
 

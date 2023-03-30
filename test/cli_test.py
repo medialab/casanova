@@ -102,6 +102,18 @@ class TestCLI(object):
             sort=True,
         )
 
+    def test_map_module(self):
+        self.assert_run(
+            "map result -m test.cli_functions ./test/resources/count.csv",
+            [["n", "result"], ["1", "10"], ["2", "20"], ["3", "30"]],
+        )
+
+    def test_map_args(self):
+        self.assert_run(
+            "map result -m test.cli_functions:enumerate_times_20 --args index ./test/resources/count.csv",
+            [["n", "result"], ["1", "0"], ["2", "20"], ["3", "40"]],
+        )
+
     def test_filter(self):
         self.assert_run(
             'filter "int(row.n) > 2" ./test/resources/count.csv', [["n"], ["3"]]
