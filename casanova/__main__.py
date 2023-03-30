@@ -146,6 +146,13 @@ MP_ARGUMENTS = [
             "type": ArgsType(),
         },
     ),
+    (
+        ("-i", "--ignore-errors"),
+        {
+            "help": "If set, evaluation raising an error will be considered as returning None instead of raising.",
+            "action": "store_true",
+        },
+    ),
 ]
 
 

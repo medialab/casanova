@@ -145,6 +145,12 @@ class TestCLI(object):
             [["n", "result"], ["1", "1§2§3"], ["2", "1§2§3"], ["3", "1§2§3"]],
         )
 
+    def test_map_ignore_errors(self):
+        self.assert_run(
+            "map result ukn ./test/resources/count.csv --ignore-errors",
+            [["n", "result"], ["1", ""], ["2", ""], ["3", ""]],
+        )
+
     def test_filter(self):
         self.assert_run(
             'filter "int(row.n) > 2" ./test/resources/count.csv', [["n"], ["3"]]

@@ -136,15 +136,18 @@ def multiprocessed_worker_using_eval(payload):
     LOCAL_CONTEXT["index"] = i
     ROW._replace(row)
 
-    for before_code in BEFORE_CODES:
-        exec(before_code, None, LOCAL_CONTEXT)
+    try:
+        for before_code in BEFORE_CODES:
+            exec(before_code, None, LOCAL_CONTEXT)
 
-    value = eval(CODE, None, LOCAL_CONTEXT)
+        value = eval(CODE, None, LOCAL_CONTEXT)
 
-    for after_code in AFTER_CODES:
-        exec(after_code, None, LOCAL_CONTEXT)
+        for after_code in AFTER_CODES:
+            exec(after_code, None, LOCAL_CONTEXT)
 
-    return i, value
+        return None, i, value
+    except Exception as e:
+        return e, i, None
 
 
 def collect_args(i):
@@ -157,6 +160,8 @@ def collect_args(i):
             yield LOCAL_CONTEXT["fieldnames"]
         elif arg_name == "headers":
             yield LOCAL_CONTEXT["headers"]
+        else:
+            raise TypeError("unknown arg_name: %s" % arg_name)
 
 
 def multiprocessed_worker_using_function(payload):
@@ -165,17 +170,19 @@ def multiprocessed_worker_using_function(payload):
 
     args = tuple(collect_args(i))
 
-    value = FUNCTION(*args)
+    try:
+        value = FUNCTION(*args)
 
-    # NOTE: consuming generators
-    if isinstance(value, GeneratorType):
-        value = list(value)
+        # NOTE: consuming generators
+        if isinstance(value, GeneratorType):
+            value = list(value)
 
-    return i, value
+        return None, i, value
+    except Exception as e:
+        return e, i, None
 
 
 # TODO: flatmap, reduce?
-# TODO: flag to ignore errors
 # TODO: cell selector as value
 def mp_iteration(cli_args, reader: Reader):
     worker = WorkerWrapper(
@@ -207,7 +214,13 @@ def mp_iteration(cli_args, reader: Reader):
 
         mapper = pool.imap if not cli_args.unordered else pool.imap_unordered
 
-        for i, result in mapper(worker, payloads(), chunksize=cli_args.chunk_size):
+        for exc, i, result in mapper(worker, payloads(), chunksize=cli_args.chunk_size):
+            if exc is not None:
+                if cli_args.ignore_errors:
+                    result = None
+                else:
+                    raise exc
+
             row = worked_rows.pop(i)
             yield i, row, result
 
