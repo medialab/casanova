@@ -118,3 +118,8 @@ class TestCLI(object):
         self.assert_run(
             'filter "int(row.n) > 2" ./test/resources/count.csv', [["n"], ["3"]]
         )
+
+    def test_reverse(self):
+        self.assert_run(
+            "reverse ./test/resources/count.csv", [["n"], ["3"], ["2"], ["1"]]
+        )

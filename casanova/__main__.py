@@ -9,7 +9,7 @@ from argparse import ArgumentParser, HelpFormatter, ArgumentTypeError
 from functools import partial
 
 from casanova.utils import ensure_open
-from casanova.cli import map_action, filter_action
+from casanova.cli import map_action, filter_action, reverse_action
 
 
 def acquire_cross_platform_stdout():
@@ -171,7 +171,7 @@ def main(arguments_override: Optional[str] = None):
     )
     map_parser.add_argument(
         "file",
-        help="CSV file to process. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
+        help="CSV file to map. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
     )
 
     filter_parser = subparsers.add_parser(
@@ -184,12 +184,22 @@ def main(arguments_override: Optional[str] = None):
     )
     filter_parser.add_argument(
         "file",
-        help="CSV file to process. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
+        help="CSV file to filter. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
+    )
+
+    reverse_parser = subparsers.add_parser(
+        "reverse", formatter_class=SortingHelpFormatter
+    )
+    add_common_arguments(reverse_parser)
+    reverse_parser.add_argument(
+        "file",
+        help="CSV file to read in reverse. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
     )
 
     commands = {
         "map": (map_parser, map_action),
         "filter": (filter_parser, filter_action),
+        "reverse": (reverse_parser, reverse_action),
     }
 
     cli_args = parser.parse_args(

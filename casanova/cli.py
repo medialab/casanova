@@ -162,8 +162,8 @@ def multiprocessed_worker_using_function(payload):
     return i, value
 
 
-# TODO: flatmap
-# TODO: reverse
+# TODO: flatmap, reduce?
+# TODO: generator functions cast as list and flatmap relation
 # TODO: --plural-separator etc.,
 # TODO: flag to ignore errors
 # TODO: cell selector as value
@@ -218,3 +218,11 @@ def filter_action(cli_args, output_file):
         for _, row, result in mp_iteration(cli_args, enricher):
             if result:
                 enricher.writerow(row)
+
+
+def reverse_action(cli_args, output_file):
+    with Enricher(
+        cli_args.file, output_file, delimiter=cli_args.delimiter, reverse=True
+    ) as enricher:
+        for row in enricher:
+            enricher.writerow(row)
