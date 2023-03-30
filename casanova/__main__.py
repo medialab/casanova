@@ -5,7 +5,7 @@ import sys
 import shlex
 import platform
 import multiprocessing
-from argparse import ArgumentParser
+from argparse import ArgumentParser, HelpFormatter, ArgumentTypeError
 from functools import partial
 
 from casanova.utils import ensure_open
@@ -27,6 +27,35 @@ def acquire_cross_platform_stdout():
         )
 
     return sys.stdout
+
+
+class SortingHelpFormatter(HelpFormatter):
+    def add_arguments(self, actions) -> None:
+        actions = sorted(
+            actions, key=lambda a: tuple(s.lower() for s in a.option_strings)
+        )
+        return super().add_arguments(actions)
+
+
+VALID_ARG_NAMES = {"index", "row", "headers", "fieldnames"}
+
+
+class ArgsType:
+    def __call__(self, string):
+        args = []
+
+        for s in string.split(","):
+            arg_name = s.strip().lower()
+
+            if arg_name not in VALID_ARG_NAMES:
+                raise ArgumentTypeError(
+                    "%s is not a valid arg name. Must be one of: %s"
+                    % (s, VALID_ARG_NAMES)
+                )
+
+            args.append(arg_name)
+
+        return args
 
 
 COMMON_ARGUMENTS = [
@@ -100,6 +129,14 @@ MP_ARGUMENTS = [
             "action": "store_true",
         },
     ),
+    (
+        ("-a", "--args"),
+        {
+            "help": 'List of arguments to pass to the function when using -m/--module. Defaults to "row".',
+            "default": ["row"],
+            "type": ArgsType(),
+        },
+    ),
 ]
 
 
@@ -116,12 +153,13 @@ def main(arguments_override: Optional[str] = None):
     parser = ArgumentParser(
         "casanova",
         description="Casanova command line utilities such as mapping, filtering, reducing columns of a given CSV files.",
+        formatter_class=SortingHelpFormatter,
     )
     add_common_arguments(parser)
 
     subparsers = parser.add_subparsers(dest="action", help="Command to execute.")
 
-    map_parser = subparsers.add_parser("map")
+    map_parser = subparsers.add_parser("map", formatter_class=SortingHelpFormatter)
     add_common_arguments(map_parser)
     add_mp_arguments(map_parser)
     map_parser.add_argument(
@@ -136,7 +174,9 @@ def main(arguments_override: Optional[str] = None):
         help="CSV file to process. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
     )
 
-    filter_parser = subparsers.add_parser("filter")
+    filter_parser = subparsers.add_parser(
+        "filter", formatter_class=SortingHelpFormatter
+    )
     add_common_arguments(filter_parser)
     add_mp_arguments(filter_parser)
     filter_parser.add_argument(

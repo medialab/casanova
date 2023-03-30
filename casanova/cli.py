@@ -18,6 +18,7 @@ class InitializerOptions:
     code: str
     module: bool
     row_len: int
+    args: List[str]
     init_codes: List[str]
     before_codes: List[str]
     after_codes: List[str]
@@ -70,6 +71,7 @@ serialize = CSVSerializer()
 
 CODE = None
 FUNCTION = None
+ARGS = None
 BEFORE_CODES = []
 AFTER_CODES = []
 LOCAL_CONTEXT = {
@@ -92,12 +94,14 @@ ROW = None
 def multiprocessed_initializer(options: InitializerOptions):
     global CODE
     global FUNCTION
+    global ARGS
     global BEFORE_CODES
     global AFTER_CODES
     global ROW
 
     if options.module:
         FUNCTION = import_function(options.code)
+        ARGS = options.args
     else:
         CODE = options.code
         BEFORE_CODES = options.before_codes
@@ -135,23 +139,34 @@ def multiprocessed_worker_using_eval(payload):
     return i, value
 
 
+def collect_args(i, row):
+    for arg_name in ARGS:
+        if arg_name == "row":
+            yield row
+        elif arg_name == "index":
+            yield i
+        elif arg_name == "fieldnames":
+            yield LOCAL_CONTEXT["fieldnames"]
+        elif arg_name == "headers":
+            yield LOCAL_CONTEXT["headers"]
+
+
 def multiprocessed_worker_using_function(payload):
     i, row = payload
     ROW._replace(row)
 
-    value = FUNCTION(i, ROW)
+    args = tuple(collect_args(i, row))
+
+    value = FUNCTION(*args)
 
     return i, value
 
 
-# TODO: -X/--exec file (or -m)
-# TODO: reduce, flatmap
+# TODO: flatmap
 # TODO: reverse
 # TODO: --plural-separator etc.,
 # TODO: flag to ignore errors
 # TODO: cell selector as value
-# TODO: dynamic dispatch
-# TODO: csv from glob
 def mp_iteration(cli_args, reader: Reader):
     worker = WorkerWrapper(
         multiprocessed_worker_using_eval
@@ -162,6 +177,7 @@ def mp_iteration(cli_args, reader: Reader):
     init_options = InitializerOptions(
         code=cli_args.code,
         module=cli_args.module,
+        args=cli_args.args,
         init_codes=cli_args.init,
         before_codes=cli_args.before,
         after_codes=cli_args.after,
