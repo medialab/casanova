@@ -4,6 +4,7 @@ import re
 import sys
 import math
 import random
+from types import GeneratorType
 from os.path import join
 from urllib.parse import urlsplit, urljoin
 from multiprocessing import Pool as MultiProcessPool
@@ -166,11 +167,14 @@ def multiprocessed_worker_using_function(payload):
 
     value = FUNCTION(*args)
 
+    # NOTE: consuming generators
+    if isinstance(value, GeneratorType):
+        value = list(value)
+
     return i, value
 
 
 # TODO: flatmap, reduce?
-# TODO: generator functions cast as list and flatmap relation
 # TODO: flag to ignore errors
 # TODO: cell selector as value
 def mp_iteration(cli_args, reader: Reader):

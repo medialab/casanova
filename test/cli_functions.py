@@ -11,3 +11,8 @@ def main(row: RowWrapper):
 
 def enumerate_times_20(index: int):
     return index * 20
+
+
+def gen():
+    yield 1
+    yield 2

@@ -50,6 +50,9 @@ class ArgsType:
     def __call__(self, string):
         args = []
 
+        if not string.strip():
+            return args
+
         for s in string.split(","):
             arg_name = s.strip().lower()
 

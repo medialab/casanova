@@ -108,6 +108,11 @@ class TestCLI(object):
             [["n", "result"], ["1", "10"], ["2", "20"], ["3", "30"]],
         )
 
+        self.assert_run(
+            "map result -m test.cli_functions:gen --args '' ./test/resources/count.csv",
+            [["n", "result"], ["1", "1|2"], ["2", "1|2"], ["3", "1|2"]],
+        )
+
     def test_map_args(self):
         self.assert_run(
             "map result -m test.cli_functions:enumerate_times_20 --args index ./test/resources/count.csv",
