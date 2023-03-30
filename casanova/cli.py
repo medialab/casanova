@@ -83,7 +83,7 @@ FUNCTION = None
 ARGS = None
 BEFORE_CODES = []
 AFTER_CODES = []
-LOCAL_CONTEXT = {
+EVALUATION_CONTEXT = {
     # lib
     "join": join,
     "math": math,
@@ -119,34 +119,34 @@ def multiprocessed_initializer(options: InitializerOptions):
         AFTER_CODES = options.after_codes
 
     if options.fieldnames is not None:
-        LOCAL_CONTEXT["fieldnames"] = options.fieldnames
-        LOCAL_CONTEXT["headers"] = Headers(options.fieldnames)
-        headers = LOCAL_CONTEXT["headers"]
+        EVALUATION_CONTEXT["fieldnames"] = options.fieldnames
+        EVALUATION_CONTEXT["headers"] = Headers(options.fieldnames)
+        headers = EVALUATION_CONTEXT["headers"]
     else:
         headers = Headers(range(options.row_len))
 
     for init_code in options.init_codes:
-        exec(init_code, None, LOCAL_CONTEXT)
+        exec(init_code, None, EVALUATION_CONTEXT)
 
-    LOCAL_CONTEXT["row"] = RowWrapper(headers, None)
-    ROW = LOCAL_CONTEXT["row"]
+    EVALUATION_CONTEXT["row"] = RowWrapper(headers, None)
+    ROW = EVALUATION_CONTEXT["row"]
 
 
 def multiprocessed_worker_using_eval(payload):
-    global LOCAL_CONTEXT
+    global EVALUATION_CONTEXT
 
     i, row = payload
-    LOCAL_CONTEXT["index"] = i
+    EVALUATION_CONTEXT["index"] = i
     ROW._replace(row)
 
     try:
         for before_code in BEFORE_CODES:
-            exec(before_code, None, LOCAL_CONTEXT)
+            exec(before_code, None, EVALUATION_CONTEXT)
 
-        value = eval(CODE, None, LOCAL_CONTEXT)
+        value = eval(CODE, None, EVALUATION_CONTEXT)
 
         for after_code in AFTER_CODES:
-            exec(after_code, None, LOCAL_CONTEXT)
+            exec(after_code, None, EVALUATION_CONTEXT)
 
         return None, i, value
     except Exception as e:
@@ -160,9 +160,9 @@ def collect_args(i):
         elif arg_name == "index":
             yield i
         elif arg_name == "fieldnames":
-            yield LOCAL_CONTEXT["fieldnames"]
+            yield EVALUATION_CONTEXT["fieldnames"]
         elif arg_name == "headers":
-            yield LOCAL_CONTEXT["headers"]
+            yield EVALUATION_CONTEXT["headers"]
         else:
             raise TypeError("unknown arg_name: %s" % arg_name)
 
