@@ -185,7 +185,8 @@ def multiprocessed_worker_using_function(payload):
         return e, i, None
 
 
-# TODO: flatmap, reduce, groupby?
+# TODO: flatmap
+# TODO: reduce, groupby? -> serialize lists/dicts or --raw or --json
 # TODO: cell selector as value
 # TODO: go to minet for progress bar and rich?
 # TODO: bug of local vs. global context (test range)
