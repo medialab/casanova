@@ -4,6 +4,7 @@ import re
 import sys
 import math
 import random
+import statistics
 from types import GeneratorType
 from os.path import join
 from urllib.parse import urlsplit, urljoin
@@ -86,6 +87,8 @@ LOCAL_CONTEXT = {
     # lib
     "join": join,
     "math": math,
+    "mean": statistics.mean,
+    "median": statistics.median,
     "random": random,
     "re": re,
     "urljoin": urljoin,
@@ -182,8 +185,10 @@ def multiprocessed_worker_using_function(payload):
         return e, i, None
 
 
-# TODO: flatmap, reduce?
+# TODO: flatmap, reduce, groupby?
 # TODO: cell selector as value
+# TODO: go to minet for progress bar and rich?
+# TODO: bug of local vs. global context (test range)
 def mp_iteration(cli_args, reader: Reader):
     worker = WorkerWrapper(
         multiprocessed_worker_using_eval
