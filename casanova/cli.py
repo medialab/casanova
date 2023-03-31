@@ -10,6 +10,8 @@ from os.path import join
 from urllib.parse import urlsplit, urljoin
 from multiprocessing import Pool as MultiProcessPool
 from dataclasses import dataclass
+from collections import Counter, defaultdict, deque
+
 
 from casanova import Reader, Enricher, CSVSerializer, RowWrapper, Headers
 from casanova.utils import import_function, flatmap
@@ -103,6 +105,10 @@ def initialize_evaluation_context():
         "re": re,
         "urljoin": urljoin,
         "urlsplit": urlsplit,
+        # classes
+        "Counter": Counter,
+        "defaultdict": defaultdict,
+        "deque": deque,
         # state
         "fieldnames": None,
         "headers": None,
