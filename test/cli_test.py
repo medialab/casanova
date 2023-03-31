@@ -157,6 +157,37 @@ class TestCLI(object):
             [["n", "result"], ["1", ""], ["2", ""], ["3", ""]],
         )
 
+    def test_map_select(self):
+        self.assert_run(
+            'map result "int(cell) + 5" ./test/resources/count.csv -s n',
+            [["n", "result"], ["1", "6"], ["2", "7"], ["3", "8"]],
+        )
+
+        self.assert_run(
+            "map result -m test.cli_functions:plus_5 ./test/resources/count.csv -s n --args cell",
+            [["n", "result"], ["1", "6"], ["2", "7"], ["3", "8"]],
+        )
+
+        self.assert_run(
+            'map result -B "name, surname = cells" "name + \'%\' + surname" ./test/resources/people.csv -s name,surname',
+            [
+                ["name", "surname", "result"],
+                ["John", "Matthews", "John%Matthews"],
+                ["Mary", "Sue", "Mary%Sue"],
+                ["Julia", "Stone", "Julia%Stone"],
+            ],
+        )
+
+        self.assert_run(
+            "map result -m test.cli_functions:concat_name ./test/resources/people.csv -s name,surname --args cells",
+            [
+                ["name", "surname", "result"],
+                ["John", "Matthews", "John%Matthews"],
+                ["Mary", "Sue", "Mary%Sue"],
+                ["Julia", "Stone", "Julia%Stone"],
+            ],
+        )
+
     def test_filter(self):
         self.assert_run(
             'filter "int(row.n) > 2" ./test/resources/count.csv', [["n"], ["3"]]

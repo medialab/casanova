@@ -25,6 +25,7 @@ class InitializerOptions:
     before_codes: List[str]
     after_codes: List[str]
     fieldnames: Optional[List[str]] = None
+    selected_indices: Optional[List[int]] = None
 
 
 # NOTE: just a thin wrapper to make sure we catch KeyboardInterrupt in
@@ -78,28 +79,38 @@ def get_serializer(cli_args):
     )
 
 
+# Global multiprocessing variables
 CODE = None
 FUNCTION = None
 ARGS = None
+SELECTION = None
 BEFORE_CODES = []
 AFTER_CODES = []
-EVALUATION_CONTEXT = {
-    # lib
-    "join": join,
-    "math": math,
-    "mean": statistics.mean,
-    "median": statistics.median,
-    "random": random,
-    "re": re,
-    "urljoin": urljoin,
-    "urlsplit": urlsplit,
-    # state
-    "fieldnames": None,
-    "headers": None,
-    "index": 0,
-    "row": None,
-}
+EVALUATION_CONTEXT = None
 ROW = None
+
+
+def initialize_evaluation_context():
+    global EVALUATION_CONTEXT
+
+    EVALUATION_CONTEXT = {
+        # lib
+        "join": join,
+        "math": math,
+        "mean": statistics.mean,
+        "median": statistics.median,
+        "random": random,
+        "re": re,
+        "urljoin": urljoin,
+        "urlsplit": urlsplit,
+        # state
+        "fieldnames": None,
+        "headers": None,
+        "index": 0,
+        "row": None,
+        "cell": None,
+        "cells": None,
+    }
 
 
 def multiprocessed_initializer(options: InitializerOptions):
@@ -109,6 +120,17 @@ def multiprocessed_initializer(options: InitializerOptions):
     global BEFORE_CODES
     global AFTER_CODES
     global ROW
+    global SELECTION
+
+    # Reset in case of multiple execution from same process
+    CODE = None
+    FUNCTION = None
+    ARGS = None
+    SELECTION = None
+    BEFORE_CODES = []
+    AFTER_CODES = []
+    ROW = None
+    initialize_evaluation_context()
 
     if options.module:
         FUNCTION = import_function(options.code)
@@ -117,6 +139,9 @@ def multiprocessed_initializer(options: InitializerOptions):
         CODE = options.code
         BEFORE_CODES = options.before_codes
         AFTER_CODES = options.after_codes
+
+    if options.selected_indices is not None:
+        SELECTION = options.selected_indices
 
     if options.fieldnames is not None:
         EVALUATION_CONTEXT["fieldnames"] = options.fieldnames
@@ -132,12 +157,23 @@ def multiprocessed_initializer(options: InitializerOptions):
     ROW = EVALUATION_CONTEXT["row"]
 
 
+def select(row):
+    if SELECTION is None:
+        return
+
+    cells = [row[i] for i in SELECTION]
+    EVALUATION_CONTEXT["cells"] = cells
+    EVALUATION_CONTEXT["cell"] = cells[0]
+
+
 def multiprocessed_worker_using_eval(payload):
     global EVALUATION_CONTEXT
 
     i, row = payload
     EVALUATION_CONTEXT["index"] = i
     ROW._replace(row)
+
+    select(row)
 
     try:
         for before_code in BEFORE_CODES:
@@ -153,7 +189,7 @@ def multiprocessed_worker_using_eval(payload):
         return e, i, None
 
 
-def collect_args(i):
+def collect_args(i, row):
     for arg_name in ARGS:
         if arg_name == "row":
             yield ROW
@@ -163,6 +199,13 @@ def collect_args(i):
             yield EVALUATION_CONTEXT["fieldnames"]
         elif arg_name == "headers":
             yield EVALUATION_CONTEXT["headers"]
+        elif arg_name == "cell":
+            # NOTE: we know SELECTION is relevant because it's validated by CLI
+            yield row[SELECTION[0]]
+        elif arg_name == "cells":
+            # NOTE: we know SELECTION is relevant because it's validated by CLI
+            for idx in SELECTION:
+                yield row[idx]
         else:
             raise TypeError("unknown arg_name: %s" % arg_name)
 
@@ -171,7 +214,7 @@ def multiprocessed_worker_using_function(payload):
     i, row = payload
     ROW._replace(row)
 
-    args = tuple(collect_args(i))
+    args = tuple(collect_args(i, row))
 
     try:
         value = FUNCTION(*args)
@@ -187,7 +230,6 @@ def multiprocessed_worker_using_function(payload):
 
 # TODO: flatmap
 # TODO: reduce, groupby? -> serialize lists/dicts or --raw or --json
-# TODO: cell selector as value
 # TODO: go to minet for progress bar and rich?
 def mp_iteration(cli_args, reader: Reader):
     worker = WorkerWrapper(
@@ -195,6 +237,14 @@ def mp_iteration(cli_args, reader: Reader):
         if not cli_args.module
         else multiprocessed_worker_using_function
     )
+
+    selected_indices = None
+
+    if cli_args.select:
+        if reader.headers is not None:
+            selected_indices = reader.headers.select(cli_args.select)
+        else:
+            selected_indices = Headers.select_no_headers(cli_args.select)
 
     init_options = InitializerOptions(
         code=cli_args.code,
@@ -205,6 +255,7 @@ def mp_iteration(cli_args, reader: Reader):
         after_codes=cli_args.after,
         row_len=reader.row_len,
         fieldnames=reader.fieldnames,
+        selected_indices=selected_indices,
     )
 
     with get_pool(cli_args.processes, init_options) as pool:

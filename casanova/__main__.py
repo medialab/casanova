@@ -30,6 +30,15 @@ def acquire_cross_platform_stdout():
     return sys.stdout
 
 
+def print_err(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
+def die(*args):
+    print_err(*args)
+    sys.exit(1)
+
+
 class SortingHelpFormatter(HelpFormatter):
     def add_arguments(self, actions) -> None:
         actions = sorted(
@@ -43,7 +52,7 @@ def custom_formatter(prog):
     return SortingHelpFormatter(prog, width=terminal_size.columns, max_help_position=32)
 
 
-VALID_ARG_NAMES = {"index", "row", "headers", "fieldnames"}
+VALID_ARG_NAMES = {"index", "row", "headers", "fieldnames", "cell", "cells"}
 
 
 class ArgsType:
@@ -153,6 +162,12 @@ MP_ARGUMENTS = [
             "action": "store_true",
         },
     ),
+    (
+        ("-s", "--select"),
+        {
+            "help": 'Use to select columns. First selected column value will be forwared as "cell" and selected column values as "cells".'
+        },
+    ),
 ]
 
 
@@ -243,6 +258,13 @@ def main(arguments_override: Optional[str] = None):
         sys.exit(0)
 
     _, action = commands[cli_args.action]
+
+    # Validating
+    args_flag = getattr(cli_args, "args", [])
+
+    if "cell" in args_flag or "cells" in args_flag:
+        if not getattr(cli_args, "select", None):
+            die('Cannot use "cell" or "cells" in --args without providing -s/--select!')
 
     # Stdin fallback
     if getattr(cli_args, "file", None) == "-":

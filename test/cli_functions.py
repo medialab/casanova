@@ -16,3 +16,11 @@ def enumerate_times_20(index: int):
 def gen():
     yield 1
     yield 2
+
+
+def plus_5(n: str) -> int:
+    return int(n) + 5
+
+
+def concat_name(name: str, surname: str) -> str:
+    return name + "%" + surname
