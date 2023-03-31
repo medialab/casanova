@@ -13,7 +13,7 @@ from os.path import splitext
 from io import StringIO, DEFAULT_BUFFER_SIZE
 from platform import python_version_tuple
 from file_read_backwards.file_read_backwards import FileReadBackwardsIterator
-from collections.abc import Mapping
+from collections.abc import Mapping, Iterable
 
 from casanova.exceptions import Py310NullByteWriteError, LtPy311ByteReadError
 
@@ -188,6 +188,14 @@ def size_of_row_in_file(row):
     a += sum(len(cell) for cell in row)
 
     return a
+
+
+def flatmap(item):
+    if not isinstance(item, Iterable) or isinstance(item, (str, bytes)):
+        yield item
+    else:
+        for sub_item in item:
+            yield from flatmap(sub_item)
 
 
 class CsvIOBase(StringIO):

@@ -5,6 +5,7 @@ from casanova.utils import (
     parse_module_and_function,
     size_of_row_in_memory,
     size_of_row_in_file,
+    flatmap,
     CsvCellIO,
     CsvRowIO,
     CsvIO,
@@ -31,6 +32,17 @@ class TestUtils(object):
         assert size_of_row_in_file([]) == 0
         assert size_of_row_in_file(["test"]) == 4
         assert size_of_row_in_file(["hello", "world"]) == 11
+
+    def test_flatmap(self):
+        assert list(flatmap("test")) == ["test"]
+        assert list(flatmap(45)) == [45]
+        assert list(flatmap(["one", "two", ["three", [["four", {"five"}]]]])) == [
+            "one",
+            "two",
+            "three",
+            "four",
+            "five",
+        ]
 
     def test_csv_cell_io(self):
         assert CsvCellIO("Yomgui", "name").getvalue().strip() == "name\nYomgui"

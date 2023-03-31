@@ -170,6 +170,37 @@ MP_ARGUMENTS = [
     ),
 ]
 
+SERIALIZATION_ARGUMENTS = [
+    (
+        ("--plural-separator",),
+        {
+            "help": 'Character to use to join lists and sets together in a single cell. Defaults to "|". If you need to emit multiple rows instead, consider using flatmap.',
+            "default": "|",
+        },
+    ),
+    (
+        ("--none-value",),
+        {
+            "help": "String used to serialize None values. Defaults to an empty string.",
+            "default": "",
+        },
+    ),
+    (
+        ("--true-value",),
+        {
+            "help": 'String used to serialize True values. Defaults to "true".',
+            "default": "true",
+        },
+    ),
+    (
+        ("--false-value",),
+        {
+            "help": 'String used to serialize False values. Defaults to "false".',
+            "default": "false",
+        },
+    ),
+]
+
 
 def add_arguments(parser: ArgumentParser, arguments):
     for args, kwargs in arguments:
@@ -178,9 +209,10 @@ def add_arguments(parser: ArgumentParser, arguments):
 
 add_common_arguments = partial(add_arguments, arguments=COMMON_ARGUMENTS)
 add_mp_arguments = partial(add_arguments, arguments=MP_ARGUMENTS)
+add_serialization_arguments = partial(add_arguments, arguments=SERIALIZATION_ARGUMENTS)
 
 
-def main(arguments_override: Optional[str] = None):
+def build_commands():
     parser = ArgumentParser(
         "casanova",
         description="Casanova command line utilities such as mapping, filtering, reducing columns of a given CSV files.",
@@ -193,6 +225,7 @@ def main(arguments_override: Optional[str] = None):
     map_parser = subparsers.add_parser("map", formatter_class=custom_formatter)
     add_common_arguments(map_parser)
     add_mp_arguments(map_parser)
+    add_serialization_arguments(map_parser)
     map_parser.add_argument(
         "new_column",
         help="Name of the new column to create & containing the result of the evaluated code.",
@@ -203,26 +236,6 @@ def main(arguments_override: Optional[str] = None):
     map_parser.add_argument(
         "file",
         help="CSV file to map. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
-    )
-    map_parser.add_argument(
-        "--plural-separator",
-        help='Character to use to join lists and sets together in a single cell. Defaults to "|". If you need to emit multiple rows instead, consider using flatmap.',
-        default="|",
-    )
-    map_parser.add_argument(
-        "--none-value",
-        help="String used to serialize None values. Defaults to an empty string.",
-        default="",
-    )
-    map_parser.add_argument(
-        "--true-value",
-        help='String used to serialize True values. Defaults to "true".',
-        default="true",
-    )
-    map_parser.add_argument(
-        "--false-value",
-        help='String used to serialize False values. Defaults to "false".',
-        default="false",
     )
 
     filter_parser = subparsers.add_parser("filter", formatter_class=custom_formatter)
@@ -249,15 +262,22 @@ def main(arguments_override: Optional[str] = None):
         "reverse": (reverse_parser, reverse_action),
     }
 
-    cli_args = parser.parse_args(
+    return parser, commands
+
+
+CASANOVA_PARSER, CASANOVA_COMMANDS = build_commands()
+
+
+def main(arguments_override: Optional[str] = None):
+    cli_args = CASANOVA_PARSER.parse_args(
         shlex.split(arguments_override) if arguments_override is not None else None
     )
 
     if cli_args.action is None:
-        parser.print_help()
+        CASANOVA_PARSER.print_help()
         sys.exit(0)
 
-    _, action = commands[cli_args.action]
+    _, action = CASANOVA_COMMANDS[cli_args.action]
 
     # Validating
     args_flag = getattr(cli_args, "args", [])
