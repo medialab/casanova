@@ -188,6 +188,20 @@ class TestCLI(object):
             ],
         )
 
+    def test_flatmap(self):
+        self.assert_run(
+            'flatmap result -B "n = int(row.n)" "[n * 2, n * 3]" ./test/resources/count.csv',
+            [
+                ["n", "result"],
+                ["1", "2"],
+                ["1", "3"],
+                ["2", "4"],
+                ["2", "6"],
+                ["3", "6"],
+                ["3", "9"],
+            ],
+        )
+
     def test_filter(self):
         self.assert_run(
             'filter "int(row.n) > 2" ./test/resources/count.csv', [["n"], ["3"]]

@@ -12,7 +12,7 @@ from multiprocessing import Pool as MultiProcessPool
 from dataclasses import dataclass
 
 from casanova import Reader, Enricher, CSVSerializer, RowWrapper, Headers
-from casanova.utils import import_function
+from casanova.utils import import_function, flatmap
 
 
 @dataclass
@@ -228,9 +228,9 @@ def multiprocessed_worker_using_function(payload):
         return e, i, None
 
 
-# TODO: flatmap
 # TODO: reduce, groupby? -> serialize lists/dicts or --raw or --json
 # TODO: go to minet for progress bar and rich?
+# TODO: write proper cli documentation
 def mp_iteration(cli_args, reader: Reader):
     worker = WorkerWrapper(
         multiprocessed_worker_using_eval
@@ -293,6 +293,20 @@ def map_action(cli_args, output_file):
     ) as enricher:
         for _, row, result in mp_iteration(cli_args, enricher):
             enricher.writerow(row, [serialize(result)])
+
+
+def flatmap_action(cli_args, output_file):
+    serialize = get_serializer(cli_args)
+
+    with Enricher(
+        cli_args.file,
+        output_file,
+        add=[cli_args.new_column],
+        delimiter=cli_args.delimiter,
+    ) as enricher:
+        for _, row, result in mp_iteration(cli_args, enricher):
+            for value in flatmap(result):
+                enricher.writerow(row, [serialize(value)])
 
 
 def filter_action(cli_args, output_file):
