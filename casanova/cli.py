@@ -141,12 +141,12 @@ def multiprocessed_worker_using_eval(payload):
 
     try:
         for before_code in BEFORE_CODES:
-            exec(before_code, None, EVALUATION_CONTEXT)
+            exec(before_code, EVALUATION_CONTEXT, None)
 
-        value = eval(CODE, None, EVALUATION_CONTEXT)
+        value = eval(CODE, EVALUATION_CONTEXT, None)
 
         for after_code in AFTER_CODES:
-            exec(after_code, None, EVALUATION_CONTEXT)
+            exec(after_code, EVALUATION_CONTEXT, None)
 
         return None, i, value
     except Exception as e:
@@ -189,7 +189,6 @@ def multiprocessed_worker_using_function(payload):
 # TODO: reduce, groupby? -> serialize lists/dicts or --raw or --json
 # TODO: cell selector as value
 # TODO: go to minet for progress bar and rich?
-# TODO: bug of local vs. global context (test range)
 def mp_iteration(cli_args, reader: Reader):
     worker = WorkerWrapper(
         multiprocessed_worker_using_eval

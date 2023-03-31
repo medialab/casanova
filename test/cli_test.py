@@ -67,6 +67,12 @@ class TestCLI(object):
             [["n", "result"], ["1", "3"], ["2", "4"], ["3", "5"]],
         )
 
+    def test_global_context(self):
+        self.assert_run(
+            'map sum "sum(int(row[i]) for i in range(3))" ./test/resources/transposed.csv',
+            [["one", "two", "three", "sum"], ["35", "23", "26", "84"]],
+        )
+
     def test_map_init(self):
         self.assert_run(
             "map result -I 's = 34' s ./test/resources/count.csv",
