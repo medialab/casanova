@@ -318,6 +318,7 @@ def filter_action(cli_args, output_file):
 
 def reduce_action(cli_args, output_file):
     cli_args.init.insert(0, "acc = %s" % cli_args.acc)
+    cli_args.code = "acc = (%s)" % cli_args.code
 
     with Reader(
         cli_args.file,

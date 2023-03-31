@@ -13,7 +13,7 @@ def sort_key(row):
 
 
 class TestCLI(object):
-    def assert_run(self, args, expected, sort=False):
+    def assert_run(self, args, expected, sort=False, raw=False):
         if WINDOWS:
             return
 
@@ -21,6 +21,9 @@ class TestCLI(object):
 
         with redirect_stdout(output):
             main(args)
+
+        if raw:
+            assert output.getvalue().strip() == expected
 
         output.seek(0)
         data = list(Reader(output, no_headers=True))
@@ -206,6 +209,11 @@ class TestCLI(object):
         self.assert_run(
             'filter "int(row.n) > 2" ./test/resources/count.csv', [["n"], ["3"]]
         )
+
+    # def test_reduce(self):
+    #     self.assert_run(
+    #         'reduce 0 "acc + int(row.n)" ./test/resources/count.csv', "6", raw=True
+    #     )
 
     def test_reverse(self):
         self.assert_run(
