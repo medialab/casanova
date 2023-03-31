@@ -316,6 +316,19 @@ def filter_action(cli_args, output_file):
                 enricher.writerow(row)
 
 
+def reduce_action(cli_args, output_file):
+    cli_args.init.insert(0, "acc = %s" % cli_args.acc)
+
+    with Reader(
+        cli_args.file,
+        delimiter=cli_args.delimiter,
+    ) as enricher:
+        for _, row, result in mp_iteration(cli_args, enricher):
+            pass
+
+        print(result, file=output_file)
+
+
 def reverse_action(cli_args, output_file):
     with Enricher(
         cli_args.file, output_file, delimiter=cli_args.delimiter, reverse=True

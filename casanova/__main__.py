@@ -10,7 +10,13 @@ from argparse import ArgumentParser, HelpFormatter, ArgumentTypeError
 from functools import partial
 
 from casanova.utils import ensure_open
-from casanova.cli import map_action, flatmap_action, filter_action, reverse_action
+from casanova.cli import (
+    map_action,
+    flatmap_action,
+    filter_action,
+    reduce_action,
+    reverse_action,
+)
 
 
 def acquire_cross_platform_stdout():
@@ -265,6 +271,21 @@ def build_commands():
         help="CSV file to filter. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
     )
 
+    reduce_parser = subparsers.add_parser("reduce", formatter_class=custom_formatter)
+    add_common_arguments(reduce_parser)
+    add_mp_arguments(reduce_parser)
+    reduce_parser.add_argument(
+        "acc",
+        help="Python code to evaluate as initial value of the reducer's accumulator.",
+    )
+    reduce_parser.add_argument(
+        "code", help="Python code to evaluate for each row of the CSV file."
+    )
+    reduce_parser.add_argument(
+        "file",
+        help="CSV file to reduce. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
+    )
+
     reverse_parser = subparsers.add_parser("reverse", formatter_class=custom_formatter)
     add_common_arguments(reverse_parser)
     reverse_parser.add_argument(
@@ -276,6 +297,7 @@ def build_commands():
         "map": (map_parser, map_action),
         "flatmap": (flatmap_parser, flatmap_action),
         "filter": (filter_parser, filter_action),
+        "reduce": (reduce_parser, reduce_action),
         "reverse": (reverse_parser, reverse_action),
     }
 
