@@ -239,6 +239,7 @@ def multiprocessed_worker_using_function(payload):
 # TODO: go to minet for progress bar and rich?
 # TODO: write proper cli documentation
 def mp_iteration(cli_args, reader: Reader):
+    # TODO: don't wrap in not actually mp
     worker = WorkerWrapper(
         multiprocessed_worker_using_eval
         if not cli_args.module
