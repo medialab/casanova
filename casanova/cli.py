@@ -235,6 +235,7 @@ def multiprocessed_worker_using_function(payload):
 
 
 # TODO: reduce, groupby? -> serialize lists/dicts or --raw or --json
+# TODO: think about reduce & groupby related to multiprocessing
 # TODO: go to minet for progress bar and rich?
 # TODO: write proper cli documentation
 def mp_iteration(cli_args, reader: Reader):
