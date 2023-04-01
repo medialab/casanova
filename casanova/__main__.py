@@ -207,6 +207,24 @@ SERIALIZATION_ARGUMENTS = [
     ),
 ]
 
+FORMAT_ARGUMENTS = [
+    (
+        ("--json",),
+        {"help": "Whether to format the output as json.", "action": "store_true"},
+    ),
+    (
+        ("--pretty",),
+        {
+            "help": "Whether to prettify the output, e.g. indent the json file.",
+            "action": "store_true",
+        },
+    ),
+    (
+        ("--csv",),
+        {"help": "Whether to format the output as csv.", "action": "store_true"},
+    ),
+]
+
 
 def add_arguments(parser: ArgumentParser, arguments):
     for args, kwargs in arguments:
@@ -216,6 +234,7 @@ def add_arguments(parser: ArgumentParser, arguments):
 add_common_arguments = partial(add_arguments, arguments=COMMON_ARGUMENTS)
 add_mp_arguments = partial(add_arguments, arguments=MP_ARGUMENTS)
 add_serialization_arguments = partial(add_arguments, arguments=SERIALIZATION_ARGUMENTS)
+add_format_arguments = partial(add_arguments, arguments=FORMAT_ARGUMENTS)
 
 
 def build_commands():
@@ -276,6 +295,8 @@ def build_commands():
     )
     add_common_arguments(map_reduce_parser)
     add_mp_arguments(map_reduce_parser)
+    add_serialization_arguments(map_reduce_parser)
+    add_format_arguments(map_reduce_parser)
     map_reduce_parser.add_argument(
         "code", help="Python code to evaluate for each row of the CSV file."
     )

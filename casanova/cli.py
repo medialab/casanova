@@ -2,6 +2,7 @@ from typing import Optional, List
 
 import re
 import sys
+import json
 import math
 import random
 import statistics
@@ -11,9 +12,9 @@ from urllib.parse import urlsplit, urljoin
 from multiprocessing import Pool as MultiProcessPool
 from dataclasses import dataclass
 from collections import Counter, defaultdict, deque
+from collections.abc import Mapping, Iterable
 
-
-from casanova import Reader, Enricher, CSVSerializer, RowWrapper, Headers
+from casanova import Reader, Enricher, CSVSerializer, RowWrapper, Headers, Writer
 from casanova.utils import import_function, flatmap
 
 
@@ -72,7 +73,7 @@ def get_pool(n: int, options: InitializerOptions):
     )
 
 
-def get_serializer(cli_args):
+def get_csv_serializer(cli_args):
     return CSVSerializer(
         plural_separator=cli_args.plural_separator,
         none_value=cli_args.none_value,
@@ -298,7 +299,7 @@ def mp_iteration(cli_args, reader: Reader):
 
 
 def map_action(cli_args, output_file):
-    serialize = get_serializer(cli_args)
+    serialize = get_csv_serializer(cli_args)
 
     with Enricher(
         cli_args.file,
@@ -311,7 +312,7 @@ def map_action(cli_args, output_file):
 
 
 def flatmap_action(cli_args, output_file):
-    serialize = get_serializer(cli_args)
+    serialize = get_csv_serializer(cli_args)
 
     with Enricher(
         cli_args.file,
@@ -364,7 +365,36 @@ def map_reduce_action(cli_args, output_file):
             else:
                 acc_context["acc"] = acc_fn(acc_context["acc"], result)
 
-        print(acc_context["acc"], file=output_file)
+        final_result = acc_context["acc"]
+
+        if cli_args.json:
+            json.dump(
+                final_result,
+                output_file,
+                indent=2 if cli_args.pretty else None,
+                ensure_ascii=False,
+            )
+            print(file=output_file)
+        elif cli_args.csv:
+            writer = Writer(output_file)
+
+            serializer = get_csv_serializer(cli_args)
+            fieldnames = ["value"]
+
+            if isinstance(final_result, Mapping):
+                fieldnames = list(final_result.keys())
+                writer.writerow(fieldnames)
+                writer.writerow(serializer.serialize_dict_row(final_result, fieldnames))
+            elif isinstance(final_result, Iterable) and not isinstance(
+                final_result, (bytes, str)
+            ):
+                writer.writerow(serializer.serialize_row(final_result))
+            else:
+                writer.writerow(fieldnames)
+                writer.writerow(serializer(final_result))
+
+        else:
+            print(final_result, file=output_file)
 
 
 def reverse_action(cli_args, output_file):

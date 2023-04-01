@@ -17,7 +17,7 @@ class TestCLI(object):
         if WINDOWS:
             return
 
-        output = StringIO(newline="")
+        output = StringIO()
 
         with redirect_stdout(output):
             main(args)
@@ -228,6 +228,33 @@ class TestCLI(object):
             "map-reduce -m test.cli_functions test.cli_functions:accumulate ./test/resources/count.csv",
             "6000",
             raw=True,
+        )
+
+        self.assert_run(
+            """map-reduce -V '{"result": 0}' 'int(row.n)' '{"result": acc["result"] + current}' ./test/resources/count.csv --json""",
+            '{"result": 6}',
+            raw=True,
+        )
+
+        self.assert_run(
+            """map-reduce -V '{"result": 0}' 'int(row.n)' '{"result": acc["result"] + current}' ./test/resources/count.csv --json --pretty""",
+            '{\n  "result": 6\n}',
+            raw=True,
+        )
+
+        self.assert_run(
+            "map-reduce 'int(row.n)' 'acc + current' ./test/resources/count.csv --csv",
+            [["value"], ["6"]],
+        )
+
+        self.assert_run(
+            """map-reduce -V '{"result": 0}' 'int(row.n)' '{"result": acc["result"] + current, "hello": True}' ./test/resources/count.csv --csv""",
+            [["result", "hello"], ["6", "true"]],
+        )
+
+        self.assert_run(
+            """map-reduce -V '[0, 0]' 'int(row.n)' '[acc[0] + current, acc[1] + 1]' ./test/resources/count.csv --csv""",
+            [["6", "3"]],
         )
 
     def test_reverse(self):
