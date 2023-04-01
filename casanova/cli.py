@@ -413,14 +413,20 @@ def groupby_action(cli_args, output_file):
                 l.append(row)
 
         # Aggregating
-        # TODO: sort option and reverse sort and --fieldnames (but sort by what exactly)
         # TODO: support for -m flag
         agg_context = EVALUATION_CONTEXT_LIB.copy()
         header_emitted = False
 
         writer = Writer(output_file)
         fieldnames = ["group"]
+        mapping_fieldnames = None
         serializer = get_csv_serializer(cli_args)
+
+        if cli_args.fieldnames is not None:
+            mapping_fieldnames = cli_args.fieldnames
+            fieldnames += cli_args.fieldnames
+            header_emitted = True
+            writer.writerow(fieldnames)
 
         for name, group in groups.items():
             agg_context["name"] = name
@@ -431,11 +437,13 @@ def groupby_action(cli_args, output_file):
 
             if isinstance(result, Mapping):
                 if not header_emitted:
-                    fieldnames += list(result.keys())
+                    mapping_fieldnames = list(result.keys())
+                    fieldnames += mapping_fieldnames
                     writer.writerow(fieldnames)
                     header_emitted = True
+
                 writer.writerow(
-                    [name] + serializer.serialize_dict_row(result, fieldnames)
+                    [name] + serializer.serialize_dict_row(result, mapping_fieldnames)
                 )
             elif isinstance(result, Iterable) and not isinstance(result, (bytes, str)):
                 writer.writerow([name] + serializer.serialize_row(result))

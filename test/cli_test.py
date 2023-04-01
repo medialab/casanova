@@ -263,6 +263,31 @@ class TestCLI(object):
             [["group", "value"], ["false", "1"], ["true", "2"]],
         )
 
+        self.assert_run(
+            """groupby 'int(row.n) > 1' 'len(group)' ./test/resources/count.csv -f len""",
+            [["group", "len"], ["false", "1"], ["true", "2"]],
+        )
+
+        self.assert_run(
+            """groupby 'int(row.n) > 1' 'len(group), len(group) * 2' ./test/resources/count.csv""",
+            [["false", "1", "2"], ["true", "2", "4"]],
+        )
+
+        self.assert_run(
+            """groupby 'int(row.n) > 1' 'len(group), len(group) * 2' ./test/resources/count.csv -f len,len2""",
+            [["group", "len", "len2"], ["false", "1", "2"], ["true", "2", "4"]],
+        )
+
+        self.assert_run(
+            """groupby 'int(row.n) > 1' '{"one": len(group), "two": len(group) * 2}' ./test/resources/count.csv""",
+            [["group", "one", "two"], ["false", "1", "2"], ["true", "2", "4"]],
+        )
+
+        self.assert_run(
+            """groupby 'int(row.n) > 1' '{"one": len(group), "two": len(group) * 2}' ./test/resources/count.csv -f two""",
+            [["group", "two"], ["false", "2"], ["true", "4"]],
+        )
+
     def test_reverse(self):
         self.assert_run(
             "reverse ./test/resources/count.csv", [["n"], ["3"], ["2"], ["1"]]

@@ -84,6 +84,14 @@ class ArgsType:
         return args
 
 
+class SpliterType:
+    def __init__(self, splitchar=","):
+        self.splitchar = splitchar
+
+    def __call__(self, string):
+        return string.split(self.splitchar)
+
+
 COMMON_ARGUMENTS = [
     (
         ("-d", "--delimiter"),
@@ -330,6 +338,12 @@ def build_commands():
     groupby_parser.add_argument(
         "file",
         help="CSV file to group. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
+    )
+    groupby_parser.add_argument(
+        "-f",
+        "--fieldnames",
+        help="Output CSV file fieldnames. Useful when emitting sequences without keys (e.g. lists, tuples etc.).",
+        type=SpliterType(),
     )
 
     reverse_parser = subparsers.add_parser("reverse", formatter_class=custom_formatter)
