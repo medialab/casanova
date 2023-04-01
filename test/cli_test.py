@@ -284,8 +284,8 @@ class TestCLI(object):
         )
 
         self.assert_run(
-            """groupby 'int(row.n) > 1' '{"one": len(group), "two": len(group) * 2}' ./test/resources/count.csv -f two""",
-            [["group", "two"], ["false", "2"], ["true", "4"]],
+            """groupby -m test.cli_functions:grouper test.cli_functions:aggregate ./test/resources/count.csv""",
+            [["group", "value"], ["false", "1"], ["true", "2"]],
         )
 
     def test_reverse(self):

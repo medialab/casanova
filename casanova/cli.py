@@ -330,6 +330,11 @@ def filter_action(cli_args, output_file):
 
 
 def map_reduce_action(cli_args, output_file):
+    acc_fn = None
+
+    if cli_args.module:
+        acc_fn = import_function(cli_args.accumulator)
+
     with Reader(
         cli_args.file,
         delimiter=cli_args.delimiter,
@@ -344,11 +349,6 @@ def map_reduce_action(cli_args, output_file):
             acc = eval(cli_args.init_value, acc_context, None)
 
         acc_context["acc"] = acc
-
-        acc_fn = None
-
-        if cli_args.module:
-            acc_fn = import_function(cli_args.accumulator)
 
         for _, row, result in mp_iteration(cli_args, enricher):
             if not initialized:
@@ -395,6 +395,11 @@ def map_reduce_action(cli_args, output_file):
 
 
 def groupby_action(cli_args, output_file):
+    agg_fn = None
+
+    if cli_args.module:
+        agg_fn = import_function(cli_args.aggregator)
+
     with Reader(
         cli_args.file,
         delimiter=cli_args.delimiter,
@@ -413,7 +418,6 @@ def groupby_action(cli_args, output_file):
                 l.append(row)
 
         # Aggregating
-        # TODO: support for -m flag
         agg_context = EVALUATION_CONTEXT_LIB.copy()
         header_emitted = False
 
@@ -429,9 +433,12 @@ def groupby_action(cli_args, output_file):
             writer.writerow(fieldnames)
 
         for name, group in groups.items():
-            agg_context["name"] = name
-            agg_context["group"] = group
-            result = eval(cli_args.aggregator, agg_context, None)
+            if agg_fn is not None:
+                result = agg_fn(name, group)
+            else:
+                agg_context["name"] = name
+                agg_context["group"] = group
+                result = eval(cli_args.aggregator, agg_context, None)
 
             name = serializer(name)
 

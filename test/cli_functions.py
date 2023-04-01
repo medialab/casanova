@@ -28,3 +28,11 @@ def concat_name(name: str, surname: str) -> str:
 
 def accumulate(acc: int, current: int) -> int:
     return acc * current
+
+
+def grouper(row) -> bool:
+    return int(row.n) > 1
+
+
+def aggregate(name: str, group) -> int:
+    return len(group)
