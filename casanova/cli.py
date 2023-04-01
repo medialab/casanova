@@ -11,7 +11,7 @@ from os.path import join
 from urllib.parse import urlsplit, urljoin
 from multiprocessing import Pool as MultiProcessPool
 from dataclasses import dataclass
-from collections import Counter, defaultdict, deque
+from collections import Counter, defaultdict, deque, OrderedDict
 from collections.abc import Mapping, Iterable
 
 from casanova import Reader, Enricher, CSVSerializer, RowWrapper, Headers, Writer
@@ -239,7 +239,6 @@ def multiprocessed_worker_using_function(payload):
         return e, i, None
 
 
-# TODO: groupby
 # TODO: go to minet for progress bar and rich?
 # TODO: write proper cli documentation
 def mp_iteration(cli_args, reader: Reader):
@@ -393,6 +392,58 @@ def map_reduce_action(cli_args, output_file):
 
         else:
             print(final_result, file=output_file)
+
+
+def groupby_action(cli_args, output_file):
+    with Reader(
+        cli_args.file,
+        delimiter=cli_args.delimiter,
+    ) as enricher:
+        # NOTE: using an ordered dict to guarantee stability for all python versions
+        groups = OrderedDict()
+
+        # Grouping
+        for _, row, result in mp_iteration(cli_args, enricher):
+            l = groups.get(result)
+
+            if l is None:
+                l = [row]
+                groups[result] = l
+            else:
+                l.append(row)
+
+        # Aggregating
+        # TODO: sort option and reverse sort and --fieldnames (but sort by what exactly)
+        # TODO: support for -m flag
+        agg_context = EVALUATION_CONTEXT_LIB.copy()
+        header_emitted = False
+
+        writer = Writer(output_file)
+        fieldnames = ["group"]
+        serializer = get_csv_serializer(cli_args)
+
+        for name, group in groups.items():
+            agg_context["name"] = name
+            agg_context["group"] = group
+            result = eval(cli_args.aggregator, agg_context, None)
+
+            name = serializer(name)
+
+            if isinstance(result, Mapping):
+                if not header_emitted:
+                    fieldnames += list(result.keys())
+                    writer.writerow(fieldnames)
+                    header_emitted = True
+                writer.writerow(
+                    [name] + serializer.serialize_dict_row(result, fieldnames)
+                )
+            elif isinstance(result, Iterable) and not isinstance(result, (bytes, str)):
+                writer.writerow([name] + serializer.serialize_row(result))
+            else:
+                if not header_emitted:
+                    writer.writerow(fieldnames + ["value"])
+                    header_emitted = True
+                writer.writerow([name, serializer(result)])
 
 
 def reverse_action(cli_args, output_file):

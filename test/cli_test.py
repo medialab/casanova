@@ -257,6 +257,12 @@ class TestCLI(object):
             [["6", "3"]],
         )
 
+    def test_groupby(self):
+        self.assert_run(
+            """groupby 'int(row.n) > 1' 'len(group)' ./test/resources/count.csv""",
+            [["group", "value"], ["false", "1"], ["true", "2"]],
+        )
+
     def test_reverse(self):
         self.assert_run(
             "reverse ./test/resources/count.csv", [["n"], ["3"], ["2"], ["1"]]

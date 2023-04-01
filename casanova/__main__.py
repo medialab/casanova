@@ -16,6 +16,7 @@ from casanova.cli import (
     flatmap_action,
     filter_action,
     map_reduce_action,
+    groupby_action,
     reverse_action,
 )
 
@@ -315,6 +316,22 @@ def build_commands():
         help="Python code to evaluate to initialize the accumulator's value. If not given, the initial value will be the first map result.",
     )
 
+    groupby_parser = subparsers.add_parser("groupby", formatter_class=custom_formatter)
+    add_common_arguments(groupby_parser)
+    add_mp_arguments(groupby_parser)
+    add_serialization_arguments(groupby_parser)
+    groupby_parser.add_argument(
+        "code", help="Python code to evaluate to group each row of the CSV file."
+    )
+    groupby_parser.add_argument(
+        "aggregator",
+        help="Python code that will be evaluated to perform the aggregation of each yielded group of rows.",
+    )
+    groupby_parser.add_argument(
+        "file",
+        help="CSV file to group. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
+    )
+
     reverse_parser = subparsers.add_parser("reverse", formatter_class=custom_formatter)
     add_common_arguments(reverse_parser)
     reverse_parser.add_argument(
@@ -327,6 +344,7 @@ def build_commands():
         "flatmap": (flatmap_parser, flatmap_action),
         "filter": (filter_parser, filter_action),
         "map-reduce": (map_reduce_parser, map_reduce_action),
+        "groupby": (groupby_parser, groupby_action),
         "reverse": (reverse_parser, reverse_action),
     }
 
