@@ -14,7 +14,7 @@ from casanova.cli import (
     map_action,
     flatmap_action,
     filter_action,
-    reduce_action,
+    map_reduce_action,
     reverse_action,
 )
 
@@ -271,19 +271,26 @@ def build_commands():
         help="CSV file to filter. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
     )
 
-    reduce_parser = subparsers.add_parser("reduce", formatter_class=custom_formatter)
-    add_common_arguments(reduce_parser)
-    add_mp_arguments(reduce_parser)
-    reduce_parser.add_argument(
-        "acc",
-        help="Python code to evaluate as initial value of the reducer's accumulator.",
+    map_reduce_parser = subparsers.add_parser(
+        "map-reduce", formatter_class=custom_formatter
     )
-    reduce_parser.add_argument(
+    add_common_arguments(map_reduce_parser)
+    add_mp_arguments(map_reduce_parser)
+    map_reduce_parser.add_argument(
         "code", help="Python code to evaluate for each row of the CSV file."
     )
-    reduce_parser.add_argument(
+    map_reduce_parser.add_argument(
+        "accumulator",
+        help="Python code that will be evaluated to perform the accumulation towards a final value.",
+    )
+    map_reduce_parser.add_argument(
         "file",
-        help="CSV file to reduce. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
+        help="CSV file to map-reduce. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
+    )
+    map_reduce_parser.add_argument(
+        "-V",
+        "--init-value",
+        help="Python code to evaluate to initialize the accumulator's value. If not given, the initial value will be the first map result.",
     )
 
     reverse_parser = subparsers.add_parser("reverse", formatter_class=custom_formatter)
@@ -297,7 +304,7 @@ def build_commands():
         "map": (map_parser, map_action),
         "flatmap": (flatmap_parser, flatmap_action),
         "filter": (filter_parser, filter_action),
-        "reduce": (reduce_parser, reduce_action),
+        "map-reduce": (map_reduce_parser, map_reduce_action),
         "reverse": (reverse_parser, reverse_action),
     }
 

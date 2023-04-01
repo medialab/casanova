@@ -24,6 +24,7 @@ class TestCLI(object):
 
         if raw:
             assert output.getvalue().strip() == expected
+            return
 
         output.seek(0)
         data = list(Reader(output, no_headers=True))
@@ -210,10 +211,18 @@ class TestCLI(object):
             'filter "int(row.n) > 2" ./test/resources/count.csv', [["n"], ["3"]]
         )
 
-    # def test_reduce(self):
-    #     self.assert_run(
-    #         'reduce 0 "acc + int(row.n)" ./test/resources/count.csv', "6", raw=True
-    #     )
+    def test_map_reduce(self):
+        self.assert_run(
+            "map-reduce 'int(row.n)' 'acc + current' test/resources/count.csv",
+            "6",
+            raw=True,
+        )
+
+        self.assert_run(
+            "map-reduce 'int(row.n)' 'acc + current' test/resources/count.csv --init-value '-6'",
+            "0",
+            raw=True,
+        )
 
     def test_reverse(self):
         self.assert_run(

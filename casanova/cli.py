@@ -88,27 +88,31 @@ ARGS = None
 SELECTION = None
 BEFORE_CODES = []
 AFTER_CODES = []
-EVALUATION_CONTEXT = None
+EVALUATION_CONTEXT = {}
 ROW = None
+
+EVALUATION_CONTEXT_LIB = {
+    # lib
+    "join": join,
+    "math": math,
+    "mean": statistics.mean,
+    "median": statistics.median,
+    "random": random,
+    "re": re,
+    "urljoin": urljoin,
+    "urlsplit": urlsplit,
+    # classes
+    "Counter": Counter,
+    "defaultdict": defaultdict,
+    "deque": deque,
+}
 
 
 def initialize_evaluation_context():
     global EVALUATION_CONTEXT
 
     EVALUATION_CONTEXT = {
-        # lib
-        "join": join,
-        "math": math,
-        "mean": statistics.mean,
-        "median": statistics.median,
-        "random": random,
-        "re": re,
-        "urljoin": urljoin,
-        "urlsplit": urlsplit,
-        # classes
-        "Counter": Counter,
-        "defaultdict": defaultdict,
-        "deque": deque,
+        **EVALUATION_CONTEXT_LIB,
         # state
         "fieldnames": None,
         "headers": None,
@@ -239,12 +243,14 @@ def multiprocessed_worker_using_function(payload):
 # TODO: go to minet for progress bar and rich?
 # TODO: write proper cli documentation
 def mp_iteration(cli_args, reader: Reader):
-    # TODO: don't wrap in not actually mp
-    worker = WorkerWrapper(
+    worker = (
         multiprocessed_worker_using_eval
         if not cli_args.module
         else multiprocessed_worker_using_function
     )
+
+    if cli_args.processes > 1:
+        worker = WorkerWrapper(worker)
 
     selected_indices = None
 
@@ -324,18 +330,32 @@ def filter_action(cli_args, output_file):
                 enricher.writerow(row)
 
 
-def reduce_action(cli_args, output_file):
-    cli_args.init.insert(0, "acc = %s" % cli_args.acc)
-    cli_args.code = "acc = (%s)" % cli_args.code
-
+def map_reduce_action(cli_args, output_file):
     with Reader(
         cli_args.file,
         delimiter=cli_args.delimiter,
     ) as enricher:
-        for _, row, result in mp_iteration(cli_args, enricher):
-            pass
+        acc_context = EVALUATION_CONTEXT_LIB.copy()
 
-        print(result, file=output_file)
+        acc = None
+        initialized = False
+
+        if cli_args.init_value is not None:
+            initialized = True
+            acc = eval(cli_args.init_value, acc_context, None)
+
+        acc_context["acc"] = acc
+
+        for _, row, result in mp_iteration(cli_args, enricher):
+            if not initialized:
+                acc_context["acc"] = result
+                initialized = True
+                continue
+
+            acc_context["current"] = result
+            acc_context["acc"] = eval(cli_args.accumulator, acc_context, None)
+
+        print(acc_context["acc"], file=output_file)
 
 
 def reverse_action(cli_args, output_file):
