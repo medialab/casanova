@@ -9,7 +9,8 @@ import multiprocessing
 from argparse import ArgumentParser, HelpFormatter, ArgumentTypeError
 from functools import partial
 
-from casanova.utils import ensure_open
+from casanova.defaults import set_defaults
+from casanova.utils import ensure_open, LT_PY311
 from casanova.cli import (
     map_action,
     flatmap_action,
@@ -370,6 +371,9 @@ def main(arguments_override: Optional[str] = None):
 if __name__ == "__main__":
     multiprocessing.freeze_support()
     multiprocessing.set_start_method("spawn")
+
+    if LT_PY311:
+        set_defaults(strip_null_bytes_on_read=True, strip_null_bytes_on_write=True)
 
     try:
         main()

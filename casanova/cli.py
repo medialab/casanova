@@ -242,7 +242,6 @@ def multiprocessed_worker_using_function(payload):
 # TODO: groupby
 # TODO: go to minet for progress bar and rich?
 # TODO: write proper cli documentation
-# TODO: null bytes
 def mp_iteration(cli_args, reader: Reader):
     worker = (
         multiprocessed_worker_using_eval
