@@ -213,14 +213,20 @@ class TestCLI(object):
 
     def test_map_reduce(self):
         self.assert_run(
-            "map-reduce 'int(row.n)' 'acc + current' test/resources/count.csv",
+            "map-reduce 'int(row.n)' 'acc + current' ./test/resources/count.csv",
             "6",
             raw=True,
         )
 
         self.assert_run(
-            "map-reduce 'int(row.n)' 'acc + current' test/resources/count.csv --init-value '-6'",
+            "map-reduce 'int(row.n)' 'acc + current' ./test/resources/count.csv --init-value '-6'",
             "0",
+            raw=True,
+        )
+
+        self.assert_run(
+            "map-reduce -m test.cli_functions test.cli_functions:accumulate ./test/resources/count.csv",
+            "6000",
             raw=True,
         )
 

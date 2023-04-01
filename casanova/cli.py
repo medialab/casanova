@@ -242,6 +242,7 @@ def multiprocessed_worker_using_function(payload):
 # TODO: think about reduce & groupby related to multiprocessing
 # TODO: go to minet for progress bar and rich?
 # TODO: write proper cli documentation
+# TODO: null bytes
 def mp_iteration(cli_args, reader: Reader):
     worker = (
         multiprocessed_worker_using_eval
@@ -346,14 +347,22 @@ def map_reduce_action(cli_args, output_file):
 
         acc_context["acc"] = acc
 
+        acc_fn = None
+
+        if cli_args.module:
+            acc_fn = import_function(cli_args.accumulator)
+
         for _, row, result in mp_iteration(cli_args, enricher):
             if not initialized:
                 acc_context["acc"] = result
                 initialized = True
                 continue
 
-            acc_context["current"] = result
-            acc_context["acc"] = eval(cli_args.accumulator, acc_context, None)
+            if acc_fn is None:
+                acc_context["current"] = result
+                acc_context["acc"] = eval(cli_args.accumulator, acc_context, None)
+            else:
+                acc_context["acc"] = acc_fn(acc_context["acc"], result)
 
         print(acc_context["acc"], file=output_file)
 

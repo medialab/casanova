@@ -24,3 +24,7 @@ def plus_5(n: str) -> int:
 
 def concat_name(name: str, surname: str) -> str:
     return name + "%" + surname
+
+
+def accumulate(acc: int, current: int) -> int:
+    return acc * current
