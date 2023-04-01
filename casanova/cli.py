@@ -394,6 +394,29 @@ def map_reduce_action(cli_args, output_file):
             print(final_result, file=output_file)
 
 
+class GroupWrapper:
+    __slots__ = ("__name", "__rows", "__wrapper")
+
+    def __init__(self, fieldnames):
+        self.__wrapper = RowWrapper(Headers(fieldnames), range(len(fieldnames)))
+
+    def _replace(self, name, rows):
+        self.__name = name
+        self.__rows = rows
+
+    @property
+    def name(self):
+        return self.__name
+
+    def __len__(self):
+        return len(self.__rows)
+
+    def __iter__(self):
+        for row in self.__rows:
+            self.__wrapper._replace(row)
+            yield self.__wrapper
+
+
 def groupby_action(cli_args, output_file):
     agg_fn = None
 
@@ -432,12 +455,15 @@ def groupby_action(cli_args, output_file):
             header_emitted = True
             writer.writerow(fieldnames)
 
-        for name, group in groups.items():
+        group_wrapper = GroupWrapper(enricher.fieldnames)
+
+        for name, rows in groups.items():
+            group_wrapper._replace(name, rows)
+
             if agg_fn is not None:
-                result = agg_fn(name, group)
+                result = agg_fn(group_wrapper)
             else:
-                agg_context["name"] = name
-                agg_context["group"] = group
+                agg_context["group"] = group_wrapper
                 result = eval(cli_args.aggregator, agg_context, None)
 
             name = serializer(name)

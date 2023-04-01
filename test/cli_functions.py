@@ -34,5 +34,5 @@ def grouper(row) -> bool:
     return int(row.n) > 1
 
 
-def aggregate(name: str, group) -> int:
+def aggregate(group) -> int:
     return len(group)
