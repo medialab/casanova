@@ -288,6 +288,11 @@ class TestCLI(object):
             [["group", "value"], ["false", "1"], ["true", "2"]],
         )
 
+        self.assert_run(
+            """groupby 'None' 'mean(int(row.n) for row in group)' ./test/resources/count.csv --none-value all""",
+            [["group", "value"], ["all", "2"]],
+        )
+
     def test_reverse(self):
         self.assert_run(
             "reverse ./test/resources/count.csv", [["n"], ["3"], ["2"], ["1"]]
