@@ -239,8 +239,7 @@ def multiprocessed_worker_using_function(payload):
         return e, i, None
 
 
-# TODO: reduce, groupby? -> serialize lists/dicts or --raw or --json
-# TODO: think about reduce & groupby related to multiprocessing
+# TODO: groupby
 # TODO: go to minet for progress bar and rich?
 # TODO: write proper cli documentation
 # TODO: null bytes
