@@ -254,7 +254,7 @@ class TestCLI(object):
 
         self.assert_run(
             """map-reduce -V '[0, 0]' 'int(row.n)' '[acc[0] + current, acc[1] + 1]' ./test/resources/count.csv --csv""",
-            [["6", "3"]],
+            [["col1", "col2"], ["6", "3"]],
         )
 
     def test_groupby(self):
@@ -270,7 +270,7 @@ class TestCLI(object):
 
         self.assert_run(
             """groupby 'int(row.n) > 1' 'len(group), len(group) * 2' ./test/resources/count.csv""",
-            [["false", "1", "2"], ["true", "2", "4"]],
+            [["group", "col1", "col2"], ["false", "1", "2"], ["true", "2", "4"]],
         )
 
         self.assert_run(

@@ -385,7 +385,9 @@ def map_reduce_action(cli_args, output_file):
             elif isinstance(final_result, Iterable) and not isinstance(
                 final_result, (bytes, str)
             ):
-                writer.writerow(serializer.serialize_row(final_result))
+                serialized = serializer.serialize_row(final_result)
+                writer.writerow(["col%i" % i for i in range(1, len(serialized) + 1)])
+                writer.writerow(serialized)
             else:
                 writer.writerow(fieldnames)
                 writer.writerow(serializer(final_result))
@@ -479,6 +481,11 @@ def groupby_action(cli_args, output_file):
                     [name] + serializer.serialize_dict_row(result, mapping_fieldnames)
                 )
             elif isinstance(result, Iterable) and not isinstance(result, (bytes, str)):
+                if not header_emitted:
+                    fieldnames += ["col%i" % i for i in range(1, len(result) + 1)]
+                    writer.writerow(fieldnames)
+                    header_emitted = True
+
                 writer.writerow([name] + serializer.serialize_row(result))
             else:
                 if not header_emitted:
