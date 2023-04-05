@@ -262,11 +262,11 @@ def build_commands():
     add_mp_arguments(map_parser)
     add_serialization_arguments(map_parser)
     map_parser.add_argument(
-        "new_column",
-        help="Name of the new column to create & containing the result of the evaluated code.",
+        "code", help="Python code to evaluate for each row of the CSV file."
     )
     map_parser.add_argument(
-        "code", help="Python code to evaluate for each row of the CSV file."
+        "new_column",
+        help="Name of the new column to create & containing the result of the evaluated code.",
     )
     map_parser.add_argument(
         "file",
@@ -278,11 +278,11 @@ def build_commands():
     add_mp_arguments(flatmap_parser)
     add_serialization_arguments(flatmap_parser)
     flatmap_parser.add_argument(
-        "new_column",
-        help="Name of the new column to create & containing the result of the evaluated code.",
+        "code", help="Python code to evaluate for each row of the CSV file."
     )
     flatmap_parser.add_argument(
-        "code", help="Python code to evaluate for each row of the CSV file."
+        "new_column",
+        help="Name of the new column to create & containing the result of the evaluated code.",
     )
     flatmap_parser.add_argument(
         "file",

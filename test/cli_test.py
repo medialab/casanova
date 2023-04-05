@@ -37,7 +37,7 @@ class TestCLI(object):
 
     def test_delimiter(self):
         self.assert_run(
-            'map result 42 ./test/resources/people.tsv -d "\t"',
+            'map 42 result ./test/resources/people.tsv -d "\t"',
             [
                 ["name", "surname", "result"],
                 ["Harry", "Golding", "42"],
@@ -47,133 +47,133 @@ class TestCLI(object):
 
     def test_map(self):
         self.assert_run(
-            "map result 42 ./test/resources/count.csv",
+            "map 42 result ./test/resources/count.csv",
             [["n", "result"], ["1", "42"], ["2", "42"], ["3", "42"]],
         )
 
         self.assert_run(
-            "map result index ./test/resources/count.csv",
+            "map index result ./test/resources/count.csv",
             [["n", "result"], ["1", "0"], ["2", "1"], ["3", "2"]],
         )
 
         self.assert_run(
-            "map result 'int(row.n) * 2' ./test/resources/count.csv",
+            "map 'int(row.n) * 2' result ./test/resources/count.csv",
             [["n", "result"], ["1", "2"], ["2", "4"], ["3", "6"]],
         )
 
         self.assert_run(
-            "map result 'int(row[headers.n]) * 2' ./test/resources/count.csv",
+            "map 'int(row[headers.n]) * 2' result ./test/resources/count.csv",
             [["n", "result"], ["1", "2"], ["2", "4"], ["3", "6"]],
         )
 
         self.assert_run(
-            "map result 'math.floor(math.sqrt(int(row.n) * 10))' ./test/resources/count.csv",
+            "map 'math.floor(math.sqrt(int(row.n) * 10))' result ./test/resources/count.csv",
             [["n", "result"], ["1", "3"], ["2", "4"], ["3", "5"]],
         )
 
     def test_global_context(self):
         self.assert_run(
-            'map sum "sum(int(row[i]) for i in range(3))" ./test/resources/transposed.csv',
+            'map "sum(int(row[i]) for i in range(3))" sum ./test/resources/transposed.csv',
             [["one", "two", "three", "sum"], ["35", "23", "26", "84"]],
         )
 
     def test_map_init(self):
         self.assert_run(
-            "map result -I 's = 34' s ./test/resources/count.csv",
+            "map -I 's = 34' s result ./test/resources/count.csv",
             [["n", "result"], ["1", "34"], ["2", "34"], ["3", "34"]],
         )
 
     def test_map_before(self):
         self.assert_run(
-            "map result -I 's = 10' -B 's += 1' s ./test/resources/count.csv",
+            "map -I 's = 10' -B 's += 1' s result ./test/resources/count.csv",
             [["n", "result"], ["1", "11"], ["2", "12"], ["3", "13"]],
         )
 
     def test_map_after(self):
         self.assert_run(
-            "map result -I 's = 10' -A 's += 1' s ./test/resources/count.csv",
+            "map -I 's = 10' -A 's += 1' s result ./test/resources/count.csv",
             [["n", "result"], ["1", "10"], ["2", "11"], ["3", "12"]],
         )
 
     def test_map_mp(self):
         self.assert_run(
-            "map result 42 -p 2 ./test/resources/count.csv",
+            "map 42 -p 2 result ./test/resources/count.csv",
             [["n", "result"], ["1", "42"], ["2", "42"], ["3", "42"]],
         )
 
         self.assert_run(
-            "map result 42 -p 2 -c 2 ./test/resources/count.csv",
+            "map 42 -p 2 -c 2 result ./test/resources/count.csv",
             [["n", "result"], ["1", "42"], ["2", "42"], ["3", "42"]],
         )
 
         self.assert_run(
-            "map result 42 -p 2 -u ./test/resources/count.csv",
+            "map 42 -p 2 -u result ./test/resources/count.csv",
             [["n", "result"], ["1", "42"], ["2", "42"], ["3", "42"]],
             sort=True,
         )
 
     def test_map_module(self):
         self.assert_run(
-            "map result -m test.cli_functions ./test/resources/count.csv",
+            "map -m test.cli_functions result ./test/resources/count.csv",
             [["n", "result"], ["1", "10"], ["2", "20"], ["3", "30"]],
         )
 
         self.assert_run(
-            "map result -m test.cli_functions:gen --args '' ./test/resources/count.csv",
+            "map -m test.cli_functions:gen --args '' result ./test/resources/count.csv",
             [["n", "result"], ["1", "1|2"], ["2", "1|2"], ["3", "1|2"]],
         )
 
     def test_map_args(self):
         self.assert_run(
-            "map result -m test.cli_functions:enumerate_times_20 --args index ./test/resources/count.csv",
+            "map -m test.cli_functions:enumerate_times_20 --args index result ./test/resources/count.csv",
             [["n", "result"], ["1", "0"], ["2", "20"], ["3", "40"]],
         )
 
     def test_map_formatting(self):
         self.assert_run(
-            "map result None ./test/resources/count.csv",
+            "map None result ./test/resources/count.csv",
             [["n", "result"], ["1", ""], ["2", ""], ["3", ""]],
         )
 
         self.assert_run(
-            "map result None --none-value none ./test/resources/count.csv",
+            "map None --none-value none result ./test/resources/count.csv",
             [["n", "result"], ["1", "none"], ["2", "none"], ["3", "none"]],
         )
 
         self.assert_run(
-            "map result True --true-value yes ./test/resources/count.csv",
+            "map True --true-value yes result ./test/resources/count.csv",
             [["n", "result"], ["1", "yes"], ["2", "yes"], ["3", "yes"]],
         )
 
         self.assert_run(
-            "map result False --false-value no ./test/resources/count.csv",
+            "map False --false-value no result ./test/resources/count.csv",
             [["n", "result"], ["1", "no"], ["2", "no"], ["3", "no"]],
         )
 
         self.assert_run(
-            "map result '[1, 2, 3]' --plural-separator '§' ./test/resources/count.csv",
+            "map '[1, 2, 3]' --plural-separator '§' result ./test/resources/count.csv",
             [["n", "result"], ["1", "1§2§3"], ["2", "1§2§3"], ["3", "1§2§3"]],
         )
 
     def test_map_ignore_errors(self):
         self.assert_run(
-            "map result ukn ./test/resources/count.csv --ignore-errors",
+            "map ukn result ./test/resources/count.csv --ignore-errors",
             [["n", "result"], ["1", ""], ["2", ""], ["3", ""]],
         )
 
     def test_map_select(self):
         self.assert_run(
-            'map result "int(cell) + 5" ./test/resources/count.csv -s n',
+            'map "int(cell) + 5" result ./test/resources/count.csv -s n',
             [["n", "result"], ["1", "6"], ["2", "7"], ["3", "8"]],
         )
 
         self.assert_run(
-            "map result -m test.cli_functions:plus_5 ./test/resources/count.csv -s n --args cell",
+            "map -m test.cli_functions:plus_5 result ./test/resources/count.csv -s n --args cell",
             [["n", "result"], ["1", "6"], ["2", "7"], ["3", "8"]],
         )
 
         self.assert_run(
-            'map result -B "name, surname = cells" "name + \'%\' + surname" ./test/resources/people.csv -s name,surname',
+            'map -B "name, surname = cells" "name + \'%\' + surname" result ./test/resources/people.csv -s name,surname',
             [
                 ["name", "surname", "result"],
                 ["John", "Matthews", "John%Matthews"],
@@ -183,7 +183,7 @@ class TestCLI(object):
         )
 
         self.assert_run(
-            "map result -m test.cli_functions:concat_name ./test/resources/people.csv -s name,surname --args cells",
+            "map -m test.cli_functions:concat_name result ./test/resources/people.csv -s name,surname --args cells",
             [
                 ["name", "surname", "result"],
                 ["John", "Matthews", "John%Matthews"],
@@ -194,7 +194,7 @@ class TestCLI(object):
 
     def test_flatmap(self):
         self.assert_run(
-            'flatmap result -B "n = int(row.n)" "[n * 2, n * 3]" ./test/resources/count.csv',
+            'flatmap -B "n = int(row.n)" "[n * 2, n * 3]" result ./test/resources/count.csv',
             [
                 ["n", "result"],
                 ["1", "2"],
