@@ -386,10 +386,17 @@ def map_reduce_action(cli_args, output_file):
                 final_result, (bytes, str)
             ):
                 serialized = serializer.serialize_row(final_result)
-                writer.writerow(["col%i" % i for i in range(1, len(serialized) + 1)])
+                if cli_args.fieldnames:
+                    writer.writerow(cli_args.fieldnames)
+                else:
+                    writer.writerow(
+                        ["col%i" % i for i in range(1, len(serialized) + 1)]
+                    )
                 writer.writerow(serialized)
             else:
-                writer.writerow(fieldnames)
+                writer.writerow(
+                    fieldnames if cli_args.fieldnames is None else cli_args.fieldnames
+                )
                 writer.writerow(serializer(final_result))
 
         else:

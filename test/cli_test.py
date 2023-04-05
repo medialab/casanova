@@ -248,6 +248,11 @@ class TestCLI(object):
         )
 
         self.assert_run(
+            "map-reduce 'int(row.n)' 'acc + current' ./test/resources/count.csv --csv -f sum",
+            [["sum"], ["6"]],
+        )
+
+        self.assert_run(
             """map-reduce -V '{"result": 0}' 'int(row.n)' '{"result": acc["result"] + current, "hello": True}' ./test/resources/count.csv --csv""",
             [["result", "hello"], ["6", "true"]],
         )
@@ -255,6 +260,11 @@ class TestCLI(object):
         self.assert_run(
             """map-reduce -V '[0, 0]' 'int(row.n)' '[acc[0] + current, acc[1] + 1]' ./test/resources/count.csv --csv""",
             [["col1", "col2"], ["6", "3"]],
+        )
+
+        self.assert_run(
+            """map-reduce -V '[0, 0]' 'int(row.n)' '[acc[0] + current, acc[1] + 1]' ./test/resources/count.csv --csv -f sum,sum+1""",
+            [["sum", "sum+1"], ["6", "3"]],
         )
 
     def test_groupby(self):

@@ -323,6 +323,12 @@ def build_commands():
         "--init-value",
         help="Python code to evaluate to initialize the accumulator's value. If not given, the initial value will be the first map result.",
     )
+    map_reduce_parser.add_argument(
+        "-f",
+        "--fieldnames",
+        help="Output CSV file fieldnames. Useful when emitting sequences without keys (e.g. lists, tuples etc.).",
+        type=SpliterType(),
+    )
 
     groupby_parser = subparsers.add_parser("groupby", formatter_class=custom_formatter)
     add_common_arguments(groupby_parser)
