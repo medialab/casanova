@@ -6,7 +6,7 @@
 #
 import sys
 import json
-from typing import Optional, Iterable, Union, List
+from typing import Optional, Iterable, Union, List, Callable, Any
 
 if sys.version_info[:2] >= (3, 10):
     from typing import get_origin, get_args
@@ -147,6 +147,7 @@ def tabular_field(
     false_value: Optional[str] = None,
     stringify_everything: Optional[bool] = None,
     as_json: Optional[bool] = None,
+    serializer: Optional[Callable[[Any], str]] = None,
     **field_kwargs
 ):
     f = field(**field_kwargs)
@@ -170,6 +171,9 @@ def tabular_field(
 
     if as_json is not None and as_json:
         f_serialization_options["as_json"] = as_json
+
+    if serializer is not None:
+        f_serialization_options["serializer"] = serializer
 
     if f_serialization_options:
         TABULAR_FIELDS[f] = f_serialization_options
@@ -326,9 +330,15 @@ class TabularRecord(object):
             if is_tabular_record_class(f.type):
                 row.extend(getattr(self, f.name).as_csv_row())
             else:
-                row.append(
-                    TABULAR_RECORD_SERIALIZER(getattr(self, f.name), **f_options)
-                )
+                custom_serializer = f_options.get("serializer")
+                v = getattr(self, f.name)
+
+                if custom_serializer is not None:
+                    s = custom_serializer(v)
+                else:
+                    s = TABULAR_RECORD_SERIALIZER(v, **f_options)
+
+                row.append(s)
 
         return row
 
@@ -346,9 +356,15 @@ class TabularRecord(object):
                 for n, v in data.items():
                     row[f.name + "_" + n] = v
             else:
-                row[f.name] = TABULAR_RECORD_SERIALIZER(
-                    getattr(self, f.name), **f_options
-                )
+                custom_serializer = f_options.get("serializer")
+                v = getattr(self, f.name)
+
+                if custom_serializer is not None:
+                    s = custom_serializer(v)
+                else:
+                    s = TABULAR_RECORD_SERIALIZER(v, **f_options)
+
+                row[f.name] = s
 
         return row
 

@@ -242,3 +242,13 @@ class TestTabularRecord(object):
         }
 
         assert Video.parse(["test", "14", "Guillaume", "Gilford"]) == video
+
+    def test_custom_serializer(self):
+        @dataclass
+        class Video(TabularRecord):
+            title: str
+            error: Exception = tabular_field(serializer=lambda e: repr(e) + " Success")
+
+        video = Video(title="Test", error=KeyError("k"))
+
+        assert video.as_csv_row() == ["Test", "KeyError('k') Success"]
