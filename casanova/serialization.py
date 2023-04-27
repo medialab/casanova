@@ -1,4 +1,4 @@
-from typing import Optional, Iterable, Mapping, Any
+from typing import Optional, Iterable, Mapping, Any, Dict, Callable, Type
 
 from json import dumps
 from datetime import date, datetime, time
@@ -6,6 +6,8 @@ from datetime import date, datetime, time
 NUMBERS = (int, float)
 DATES = (date, datetime, time)
 LISTS = (list, set, frozenset, tuple)
+
+CustomTypes = Dict[Type, Callable[[Type], str]]
 
 
 class CSVSerializer(object):
@@ -16,6 +18,7 @@ class CSVSerializer(object):
         true_value: Optional[str] = None,
         false_value: Optional[str] = None,
         stringify_everything: Optional[bool] = None,
+        custom_types: Optional[CustomTypes] = None,
     ):
         self.plural_separator = plural_separator or "|"
         self.none_value = none_value or ""
@@ -24,6 +27,7 @@ class CSVSerializer(object):
         self.stringify_everything = (
             stringify_everything if stringify_everything is not None else True
         )
+        self.custom_types = custom_types
 
     def __call__(
         self,
@@ -32,6 +36,7 @@ class CSVSerializer(object):
         none_value: Optional[str] = None,
         true_value: Optional[str] = None,
         false_value: Optional[str] = None,
+        custom_types: Optional[CustomTypes] = None,
         stringify_everything: Optional[bool] = None,
         as_json: bool = False,
     ):
@@ -43,6 +48,14 @@ class CSVSerializer(object):
             if stringify_everything is not None
             else self.stringify_everything
         )
+
+        custom_types = custom_types if custom_types is not None else self.custom_types
+
+        if custom_types is not None:
+            custom_serializer = custom_types.get(type(value))
+
+            if custom_serializer is not None:
+                return custom_serializer(value)
 
         if value is None:
             none_value = none_value if none_value is not None else self.none_value
@@ -77,6 +90,9 @@ class CSVSerializer(object):
 
         if isinstance(value, DATES):
             return value.isoformat()
+
+        if isinstance(value, BaseException):
+            return repr(value)
 
         raise NotImplementedError(
             "CSVSerializer does not support this kind of value: {}".format(

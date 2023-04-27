@@ -49,3 +49,12 @@ class TestSerialization(object):
         assert serializer.serialize_dict_row(
             {"title": "one", "not-include": False}, fieldnames=["title"]
         ) == ["one"]
+
+    def test_custom_types(self):
+        serializer = CSVSerializer(custom_types={KeyError: lambda v: "key: %s" % v})
+
+        assert serializer(KeyError("test")) == "key: 'test'"
+        assert (
+            serializer(KeyError("test"), custom_types={KeyError: lambda v: "45"})
+            == "45"
+        )
