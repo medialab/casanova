@@ -3,7 +3,7 @@ from io import StringIO
 from contextlib import redirect_stdout
 
 from casanova import Reader
-from casanova.__main__ import main
+from casanova.__main__ import run
 
 WINDOWS = "windows" in platform.system().lower()
 
@@ -20,7 +20,7 @@ class TestCLI(object):
         output = StringIO()
 
         with redirect_stdout(output):
-            main(args)
+            run(args)
 
         if raw:
             assert output.getvalue().strip() == expected

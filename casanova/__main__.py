@@ -374,7 +374,7 @@ def build_commands():
 CASANOVA_PARSER, CASANOVA_COMMANDS = build_commands()
 
 
-def main(arguments_override: Optional[str] = None):
+def run(arguments_override: Optional[str] = None):
     cli_args = CASANOVA_PARSER.parse_args(
         shlex.split(arguments_override) if arguments_override is not None else None
     )
@@ -406,7 +406,7 @@ def main(arguments_override: Optional[str] = None):
             action(cli_args, output_file)
 
 
-if __name__ == "__main__":
+def main():
     multiprocessing.freeze_support()
     multiprocessing.set_start_method("spawn")
 
@@ -414,8 +414,12 @@ if __name__ == "__main__":
         set_defaults(strip_null_bytes_on_read=True, strip_null_bytes_on_write=True)
 
     try:
-        main()
+        run()
     except (KeyboardInterrupt, BrokenPipeError):
         devnull = os.open(os.devnull, os.O_WRONLY)
         os.dup2(devnull, sys.stdout.fileno())
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
