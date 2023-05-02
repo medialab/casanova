@@ -92,6 +92,19 @@ class SpliterType:
         return string.split(self.splitchar)
 
 
+class PositiveIntegerType:
+    def __call__(self, string):
+        try:
+            number = int(string)
+        except ValueError:
+            raise ArgumentTypeError("expecting a non-zero positive integer")
+
+        if number < 1:
+            raise ArgumentTypeError("expecting a non-zero positive integer")
+
+        return number
+
+
 COMMON_ARGUMENTS = [
     (
         ("-d", "--delimiter"),
@@ -357,6 +370,9 @@ def build_commands():
     reverse_parser.add_argument(
         "file",
         help="CSV file to read in reverse. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
+    )
+    reverse_parser.add_argument(
+        "-n", "--lines", help="Number of lines to read.", type=PositiveIntegerType()
     )
 
     commands = {

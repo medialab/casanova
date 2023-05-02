@@ -307,3 +307,5 @@ class TestCLI(object):
         self.assert_run(
             "reverse ./test/resources/count.csv", [["n"], ["3"], ["2"], ["1"]]
         )
+
+        self.assert_run("reverse ./test/resources/count.csv -n 1", [["n"], ["3"]])
