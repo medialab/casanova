@@ -5,8 +5,8 @@
 # A CSV writer that is only really useful if you intend to resume its operation
 # somehow
 #
-from typing import Optional, List
-from casanova.types import AnyCSVDialect
+from typing import Optional, List, Iterable
+from casanova.types import AnyCSVDialect, AnyCSVRow
 
 import csv
 
@@ -117,15 +117,15 @@ class Writer(object):
         if self.should_write_header and write_header:
             self.writeheader()
 
-    def writerow(self, row):
+    def writerow(self, row: AnyCSVRow) -> None:
         row = coerce_row(row)
         self.__writerow(row)
 
-    def writerows(self, rows):
+    def writerows(self, rows: Iterable[AnyCSVRow]) -> None:
         for row in rows:
             self.writerow(row)
 
-    def writeheader(self):
+    def writeheader(self) -> None:
         if self.fieldnames is None:
             raise TypeError("cannot write header if fieldnames were not provided")
 
