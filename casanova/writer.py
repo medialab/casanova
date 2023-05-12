@@ -5,6 +5,9 @@
 # A CSV writer that is only really useful if you intend to resume its operation
 # somehow
 #
+from typing import Optional, List
+from casanova.types import AnyCSVDialect
+
 import csv
 
 from casanova.defaults import DEFAULTS
@@ -20,15 +23,15 @@ class Writer(object):
     def __init__(
         self,
         output_file,
-        fieldnames=None,
-        strip_null_bytes_on_write=None,
-        dialect=None,
-        delimiter=None,
-        quotechar=None,
-        quoting=None,
-        escapechar=None,
-        lineterminator=None,
-        write_header=True,
+        fieldnames: Optional[List[str]] = None,
+        strip_null_bytes_on_write: Optional[bool] = None,
+        dialect: Optional[AnyCSVDialect] = None,
+        delimiter: Optional[str] = None,
+        quotechar: Optional[str] = None,
+        quoting: Optional[int] = None,
+        escapechar: Optional[str] = None,
+        lineterminator: Optional[str] = None,
+        write_header: bool = True,
     ):
         if strip_null_bytes_on_write is None:
             strip_null_bytes_on_write = DEFAULTS.strip_null_bytes_on_write
