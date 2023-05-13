@@ -24,6 +24,7 @@ class Writer(object):
         self,
         output_file,
         fieldnames: Optional[AnyFieldnames] = None,
+        row_len: Optional[int] = None,
         strip_null_bytes_on_write: Optional[bool] = None,
         dialect: Optional[AnyCSVDialect] = None,
         delimiter: Optional[str] = None,
@@ -32,6 +33,7 @@ class Writer(object):
         escapechar: Optional[str] = None,
         lineterminator: Optional[str] = None,
         write_header: bool = True,
+        strict: bool = True,
     ):
         if strip_null_bytes_on_write is None:
             strip_null_bytes_on_write = DEFAULTS.strip_null_bytes_on_write
@@ -46,6 +48,14 @@ class Writer(object):
         self.fieldnames = coerce_fieldnames(fieldnames) if not no_headers else None
         self.headers = Headers(self.fieldnames) if not no_headers else None
         self.no_headers = no_headers
+        self.row_len = None
+
+        if row_len is not None:
+            self.row_len = row_len
+        elif self.fieldnames is not None:
+            self.row_len = len(self.fieldnames)
+
+        self.strict = strict and self.row_len is not None
 
         can_resume = False
 
@@ -126,6 +136,12 @@ class Writer(object):
 
         for part in parts:
             row.extend(coerce_row(part))
+
+        if self.strict and len(row) != self.row_len:
+            raise TypeError(
+                "casanova.writer.writerow: expected %i cells but got %i."
+                % (self.row_len, len(row))
+            )
 
         self.__writerow(row)
 

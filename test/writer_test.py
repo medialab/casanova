@@ -182,3 +182,22 @@ class TestWriter(object):
         writer.writerow([34], [67, 89], [64])
 
         assert buf.getvalue().strip() == "34,67,89,64"
+
+    def test_strict(self):
+        buf = StringIO()
+
+        writer = Writer(buf, fieldnames=["test1", "test2"])
+
+        with pytest.raises(TypeError, match="expect"):
+            writer.writerow(["one"])
+
+        with pytest.raises(TypeError, match="expect"):
+            writer.writerow(["one", "two", "three"])
+
+        writer = Writer(buf, row_len=2)
+
+        with pytest.raises(TypeError, match="expect"):
+            writer.writerow(["one"])
+
+        with pytest.raises(TypeError, match="expect"):
+            writer.writerow(["one", "two", "three"])
