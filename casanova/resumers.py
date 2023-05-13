@@ -62,7 +62,7 @@ class Resumer(object):
         with self.lock:
             self.listener(event, payload)
 
-    def get_insights_from_output(self, _):
+    def get_insights_from_output(self, enricher, **reader_kwargs):
         raise NotImplementedError
 
     def filter_row(self, i, row):
@@ -114,12 +114,17 @@ class Resumer(object):
             yield self.buffer.popleft()
 
 
+class BasicResumer(Resumer):
+    def get_insights_from_output(self, enricher, **reader_kwargs):
+        return None
+
+
 class RowCountResumer(Resumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.row_count = 0
 
-    def get_insights_from_output(self, _, **reader_kwargs):
+    def get_insights_from_output(self, enricher, **reader_kwargs):
         self.row_count = 0
 
         with self.open(mode="r") as f:
@@ -151,11 +156,13 @@ class ThreadSafeResumer(Resumer):
         super().__init__(*args, **kwargs)
         self.already_done = ContiguousRangeSet()
 
-    def get_insights_from_output(self, enricher, **reader_kwarg):
+    def get_insights_from_output(self, enricher, **reader_kwargs):
         self.already_done = ContiguousRangeSet()
 
         with self.open(mode="r") as f:
-            reader = Reader(f, **reader_kwarg)
+            reader = Reader(f, **reader_kwargs)
+
+            assert reader.headers is not None
 
             pos = reader.headers.get(enricher.index_column)
 
@@ -248,7 +255,7 @@ class LastCellResumer(Resumer):
         self.last_cell = None
         self.value_column = value_column
 
-    def get_insights_from_output(self, _, **reader_kwargs):
+    def get_insights_from_output(self, enricher, **reader_kwargs):
         self.last_cell = ReverseReader.last_cell(
             self.path, column=self.value_column, **reader_kwargs
         )

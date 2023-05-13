@@ -11,14 +11,17 @@ from casanova.types import AnyCSVDialect, AnyWritableCSVRowPart
 import csv
 
 from casanova.defaults import DEFAULTS
-from casanova.resumers import Resumer, LastCellResumer
+from casanova.resumers import Resumer, BasicResumer, LastCellResumer
 from casanova.namedrecord import coerce_row, coerce_fieldnames, AnyFieldnames
 from casanova.reader import Headers
 from casanova.utils import py310_wrap_csv_writerow, strip_null_bytes_from_row
 
 
 class Writer(object):
-    __supported_resumers__ = (LastCellResumer,)
+    __supported_resumers__ = (
+        BasicResumer,
+        LastCellResumer,
+    )
 
     def __init__(
         self,

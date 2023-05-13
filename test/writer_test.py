@@ -11,7 +11,7 @@ from test.utils import collect_csv
 
 from casanova.utils import PY_310
 from casanova.writer import Writer
-from casanova.resumers import LastCellResumer
+from casanova.resumers import BasicResumer, LastCellResumer
 from casanova.exceptions import Py310NullByteWriteError
 from casanova.namedrecord import namedrecord, TabularRecord, tabular_field
 
@@ -37,8 +37,27 @@ class TestWriter(object):
             ["Stuart", "Anderson"],
         ]
 
-    def test_resumable(self, tmpdir):
-        output_path = str(tmpdir.join("./written_resumable.csv"))
+    def test_basic_resumer(self, tmpdir):
+        output_path = str(tmpdir.join("./written_basic_resumable.csv"))
+
+        with BasicResumer(output_path) as resumer:
+            writer = Writer(resumer, ["index"])
+
+            for i in range(2):
+                writer.writerow([i])
+
+        assert collect_csv(output_path) == [["index"], ["0"], ["1"]]
+
+        with BasicResumer(output_path) as resumer:
+            writer = Writer(resumer, ["index"])
+
+            for i in range(2):
+                writer.writerow([i])
+
+        assert collect_csv(output_path) == [["index"], ["0"], ["1"], ["0"], ["1"]]
+
+    def test_last_cell_resumer(self, tmpdir):
+        output_path = str(tmpdir.join("./written_last_cell_resumable.csv"))
 
         def stream(offset=0):
             return range(offset, 6)
