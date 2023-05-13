@@ -5,6 +5,9 @@
 # A fast but comfortable CSV reader based upon csv.reader to avoid dealing
 # with csv.DictReader which is nice but very slow.
 #
+from typing import Optional, Iterator, List
+from casanova.types import AnyCSVDialect
+
 import csv
 from os import PathLike
 from collections import namedtuple
@@ -41,16 +44,16 @@ class Reader(object):
     def __init__(
         self,
         input_file,
-        no_headers=False,
-        encoding="utf-8",
-        dialect=None,
-        quotechar=None,
-        delimiter=None,
-        prebuffer_bytes=None,
-        total=None,
-        multiplex=None,
-        strip_null_bytes_on_read=None,
-        reverse=False,
+        no_headers: bool = False,
+        encoding: str = "utf-8",
+        dialect: Optional[AnyCSVDialect] = None,
+        quotechar: Optional[str] = None,
+        delimiter: Optional[str] = None,
+        prebuffer_bytes: Optional[int] = None,
+        total: Optional[int] = None,
+        multiplex: Optional[Multiplexer] = None,
+        strip_null_bytes_on_read: Optional[bool] = None,
+        reverse: bool = False,
     ):
         # Resolving global defaults
         if prebuffer_bytes is None:
@@ -255,18 +258,18 @@ class Reader(object):
         self.current_row_index = -1
         self.__iterator = self.__create_inner_rows_iterator()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "<%s>" % self.namespace
 
     @property
-    def fieldnames(self):
+    def fieldnames(self) -> Optional[List[str]]:
         if self.headers is None:
             return None
 
         return self.headers.fieldnames
 
     @property
-    def row_len(self):
+    def row_len(self) -> int:
         if self.__no_headers_row_len is not None:
             return self.__no_headers_row_len
 
@@ -294,10 +297,10 @@ class Reader(object):
             if self.row_filter(self.current_row_index, row):
                 yield row
 
-    def rows(self):
+    def rows(self) -> Iterator[List[str]]:
         return self.__iterator
 
-    def __next__(self):
+    def __next__(self) -> List[str]:
         return next(self.__iterator)
 
     def __iter__(self):
@@ -438,7 +441,7 @@ class Reader(object):
         self.close()
 
     @classmethod
-    def count(cls, input_file, max_rows=None, **kwargs):
+    def count(cls, input_file, max_rows=None, **kwargs) -> int:
         assert max_rows is None or max_rows > 0, (
             "%s.count: expected max_rows to be `None` or > 0." % cls.namespace
         )

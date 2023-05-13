@@ -21,6 +21,6 @@ class CSVDictWritable(Protocol):
         ...
 
 
-AnyCSVRow = Union[
+AnyWritableCSVRowPart = Union[
     CSVWritable, Iterator[Any], List[Any], KeysView[Any], ValuesView[Any], Tuple[Any]
 ]

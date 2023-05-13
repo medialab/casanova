@@ -6,8 +6,8 @@
 #
 import sys
 import json
-from typing import Optional, Iterable, Union, List, Callable, Any
-from casanova.types import AnyCSVRow
+from typing import Optional, Iterable, Union, List, Callable, Any, Type
+from casanova.types import AnyWritableCSVRowPart
 
 if sys.version_info[:2] >= (3, 10):
     from typing import get_origin, get_args
@@ -382,7 +382,7 @@ class TabularRecord(object):
         return self.as_csv_dict_row()
 
 
-def coerce_row(row: AnyCSVRow, consume: bool = False) -> List[Any]:
+def coerce_row(row: AnyWritableCSVRowPart, consume: bool = False) -> List[Any]:
     __csv_row__ = getattr(row, "__csv_row__", None)
 
     if callable(__csv_row__):
@@ -410,11 +410,14 @@ def tabular_fields(cls) -> List[Field]:
     return fs
 
 
-def coerce_fieldnames(cls) -> List[str]:
-    if is_tabular_record_class(cls):
-        return cls.fieldnames()
+AnyFieldnames = Union[List[str], Type[TabularRecord]]
 
-    if getattr(cls, "is_namedrecord", False):
-        return cls.fieldnames
 
-    return cls
+def coerce_fieldnames(target: AnyFieldnames) -> List[str]:
+    if is_tabular_record_class(target):
+        return target.fieldnames()
+
+    if getattr(target, "is_namedrecord", False):
+        return target.fieldnames
+
+    return target

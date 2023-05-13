@@ -5,14 +5,14 @@
 # A CSV writer that is only really useful if you intend to resume its operation
 # somehow
 #
-from typing import Optional, List, Iterable
-from casanova.types import AnyCSVDialect, AnyCSVRow
+from typing import Optional, Iterable
+from casanova.types import AnyCSVDialect, AnyWritableCSVRowPart
 
 import csv
 
 from casanova.defaults import DEFAULTS
 from casanova.resumers import Resumer, LastCellResumer
-from casanova.namedrecord import coerce_row, coerce_fieldnames
+from casanova.namedrecord import coerce_row, coerce_fieldnames, AnyFieldnames
 from casanova.reader import Headers
 from casanova.utils import py310_wrap_csv_writerow, strip_null_bytes_from_row
 
@@ -23,7 +23,7 @@ class Writer(object):
     def __init__(
         self,
         output_file,
-        fieldnames: Optional[List[str]] = None,
+        fieldnames: Optional[AnyFieldnames] = None,
         strip_null_bytes_on_write: Optional[bool] = None,
         dialect: Optional[AnyCSVDialect] = None,
         delimiter: Optional[str] = None,
@@ -117,7 +117,9 @@ class Writer(object):
         if self.should_write_header and write_header:
             self.writeheader()
 
-    def writerow(self, row: AnyCSVRow, *parts: AnyCSVRow) -> None:
+    def writerow(
+        self, row: AnyWritableCSVRowPart, *parts: AnyWritableCSVRowPart
+    ) -> None:
         has_multiple_parts = len(parts) > 0
 
         row = coerce_row(row, consume=has_multiple_parts)
@@ -127,7 +129,7 @@ class Writer(object):
 
         self.__writerow(row)
 
-    def writerows(self, rows: Iterable[AnyCSVRow]) -> None:
+    def writerows(self, rows: Iterable[AnyWritableCSVRowPart]) -> None:
         for row in rows:
             self.writerow(row)
 
