@@ -41,16 +41,16 @@ class Writer(object):
 
         self.strip_null_bytes_on_write = strip_null_bytes_on_write
 
-        fieldnames = coerce_fieldnames(fieldnames)
+        no_headers = fieldnames is None
 
-        self.fieldnames = fieldnames
-        self.headers = Headers(fieldnames) if fieldnames is not None else None
-        self.no_headers = fieldnames is None
+        self.fieldnames = coerce_fieldnames(fieldnames) if not no_headers else None
+        self.headers = Headers(self.fieldnames) if not no_headers else None
+        self.no_headers = no_headers
 
         can_resume = False
 
         if isinstance(output_file, Resumer):
-            if self.fieldnames is None:
+            if self.no_headers:
                 raise NotImplementedError
 
             resumer = output_file
@@ -117,8 +117,14 @@ class Writer(object):
         if self.should_write_header and write_header:
             self.writeheader()
 
-    def writerow(self, row: AnyCSVRow) -> None:
-        row = coerce_row(row)
+    def writerow(self, row: AnyCSVRow, *parts: AnyCSVRow) -> None:
+        has_multiple_parts = len(parts) > 0
+
+        row = coerce_row(row, consume=has_multiple_parts)
+
+        for part in parts:
+            row.extend(coerce_row(part))
+
         self.__writerow(row)
 
     def writerows(self, rows: Iterable[AnyCSVRow]) -> None:

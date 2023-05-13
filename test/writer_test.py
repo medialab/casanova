@@ -173,3 +173,12 @@ class TestWriter(object):
         writer.writerow(Video("Title", ["a", "b"]))
 
         assert buf.getvalue().strip() == "title,tags\nTitle,a&b"
+
+    def test_variadicity(self):
+        buf = StringIO()
+
+        writer = Writer(buf, lineterminator="\n")
+
+        writer.writerow([34], [67, 89], [64])
+
+        assert buf.getvalue().strip() == "34,67,89,64"
