@@ -10,6 +10,7 @@ from casanova.namedrecord import namedrecord, TabularRecord, tabular_field
 from casanova.reader import Reader, Multiplexer
 from casanova.resumers import (
     Resumer,
+    BasicResumer,
     RowCountResumer,
     ThreadSafeResumer,
     BatchResumer,
