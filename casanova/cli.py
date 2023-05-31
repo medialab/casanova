@@ -2,6 +2,7 @@ from typing import Optional, List
 
 import re
 import sys
+import gzip
 import json
 import math
 import random
@@ -30,6 +31,7 @@ class InitializerOptions:
     after_codes: List[str]
     fieldnames: Optional[List[str]] = None
     selected_indices: Optional[List[int]] = None
+    base_dir: Optional[str] = None
 
 
 # NOTE: just a thin wrapper to make sure we catch KeyboardInterrupt in
@@ -92,6 +94,28 @@ BEFORE_CODES = []
 AFTER_CODES = []
 EVALUATION_CONTEXT = {}
 ROW = None
+BASE_DIR = None
+
+
+def read(path, encoding: str = "utf-8") -> Optional[str]:
+    global BASE_DIR
+
+    if BASE_DIR is not None:
+        path = join(BASE_DIR, path)
+
+    if path.endswith(".gz"):
+        try:
+            with gzip.open(path, encoding=encoding, mode="rt") as f:
+                return f.read()
+        except FileNotFoundError:
+            return None
+
+    try:
+        with open(path, encoding="utf-8", mode="r") as f:
+            return f.read()
+    except FileNotFoundError:
+        return None
+
 
 EVALUATION_CONTEXT_LIB = {
     # lib
@@ -101,6 +125,7 @@ EVALUATION_CONTEXT_LIB = {
     "median": statistics.median,
     "random": random,
     "re": re,
+    "read": read,
     "urljoin": urljoin,
     "urlsplit": urlsplit,
     # classes
@@ -133,6 +158,7 @@ def multiprocessed_initializer(options: InitializerOptions):
     global AFTER_CODES
     global ROW
     global SELECTION
+    global BASE_DIR
 
     # Reset in case of multiple execution from same process
     CODE = None
@@ -142,6 +168,7 @@ def multiprocessed_initializer(options: InitializerOptions):
     BEFORE_CODES = []
     AFTER_CODES = []
     ROW = None
+    BASE_DIR = options.base_dir
     initialize_evaluation_context()
 
     if options.module:
@@ -270,6 +297,7 @@ def mp_iteration(cli_args, reader: Reader):
         row_len=reader.row_len,
         fieldnames=reader.fieldnames,
         selected_indices=selected_indices,
+        base_dir=cli_args.base_dir,
     )
 
     with get_pool(cli_args.processes, init_options) as pool:

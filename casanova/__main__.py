@@ -197,6 +197,10 @@ MP_ARGUMENTS = [
             "help": 'Use to select columns. First selected column value will be forwared as "cell" and selected column values as "cells".'
         },
     ),
+    (
+        ("-b", "--base-dir"),
+        {"help": 'Base directory to be used by the "read" function.'},
+    ),
 ]
 
 SERIALIZATION_ARGUMENTS = [
