@@ -12,7 +12,12 @@ import csv
 
 from casanova.defaults import DEFAULTS
 from casanova.resumers import Resumer, BasicResumer, LastCellResumer
-from casanova.namedrecord import coerce_row, coerce_fieldnames, AnyFieldnames
+from casanova.namedrecord import (
+    coerce_row,
+    coerce_fieldnames,
+    AnyFieldnames,
+    infer_fieldnames,
+)
 from casanova.reader import Headers
 from casanova.utils import py310_wrap_csv_writerow, strip_null_bytes_from_row
 
@@ -36,6 +41,7 @@ class Writer(object):
         escapechar: Optional[str] = None,
         lineterminator: Optional[str] = None,
         write_header: bool = True,
+        infer_header: bool = False,
         strict: bool = True,
     ):
         if strip_null_bytes_on_write is None:
@@ -125,7 +131,11 @@ class Writer(object):
                 strip_null_bytes_from_row(row)
             )
 
-        self.should_write_header = not can_resume and self.fieldnames is not None
+        self.should_write_header = (
+            not can_resume and self.fieldnames is not None and not infer_header
+        )
+        self.__should_infer_header = infer_header
+        self.__header_inferred = False
 
         if self.should_write_header and write_header:
             self.writeheader()
@@ -134,8 +144,27 @@ class Writer(object):
         self, row: AnyWritableCSVRowPart, *parts: AnyWritableCSVRowPart
     ) -> None:
         has_multiple_parts = len(parts) > 0
+        original_row = row
 
         row = coerce_row(row, consume=has_multiple_parts)
+
+        # TODO: this does not work with dicts as of yet, this should probably go into #.writeanyrow
+        if self.__should_infer_header:
+            if has_multiple_parts:
+                raise TypeError(
+                    "casanova.writer.writerow: cannot infer header from multipart rows"
+                )
+
+            if not self.__header_inferred:
+                self.__header_inferred = True
+                fieldnames = infer_fieldnames(original_row)
+
+                if fieldnames is not None:
+                    self.fieldnames = fieldnames
+                    self.headers = Headers(fieldnames)
+                    self.row_len = len(fieldnames)
+                elif isinstance(row, list):
+                    self.row_len = len(row)
 
         for part in parts:
             row.extend(coerce_row(part))

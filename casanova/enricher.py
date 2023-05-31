@@ -126,7 +126,7 @@ class Enricher(Reader):
             quoting=writer_quoting,
             lineterminator=writer_lineterminator,
             write_header=not can_resume and write_header,
-            strict=False,
+            strict=False,  # NOTE: not strict because we already check row length
         )
 
     def __repr__(self):
