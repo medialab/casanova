@@ -211,6 +211,11 @@ class TestCLI(object):
             'filter "int(row.n) > 2" ./test/resources/count.csv', [["n"], ["3"]]
         )
 
+        self.assert_run(
+            'filter "int(row.n) > 2" ./test/resources/count.csv -v',
+            [["n"], ["1"], ["2"]],
+        )
+
     def test_map_reduce(self):
         self.assert_run(
             "map-reduce 'int(row.n)' 'acc + current' ./test/resources/count.csv",

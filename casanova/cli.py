@@ -354,6 +354,9 @@ def flatmap_action(cli_args, output_file):
 def filter_action(cli_args, output_file):
     with Enricher(cli_args.file, output_file, delimiter=cli_args.delimiter) as enricher:
         for _, row, result in mp_iteration(cli_args, enricher):
+            if cli_args.invert_match:
+                result = not result
+
             if result:
                 enricher.writerow(row)
 

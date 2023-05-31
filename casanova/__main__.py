@@ -316,6 +316,12 @@ def build_commands():
         "file",
         help="CSV file to filter. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
     )
+    filter_parser.add_argument(
+        "-v",
+        "--invert-match",
+        help="Reverse the condition used to filter.",
+        action="store_true",
+    )
 
     map_reduce_parser = subparsers.add_parser(
         "map-reduce", formatter_class=custom_formatter
