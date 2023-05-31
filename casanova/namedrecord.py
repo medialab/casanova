@@ -15,6 +15,7 @@ else:
     from typing_extensions import get_origin, get_args
 
 from collections import OrderedDict, namedtuple
+from collections.abc import Mapping
 from dataclasses import fields, field, Field
 
 from casanova.serialization import CSVSerializer
@@ -189,7 +190,7 @@ def tabular_field(
 
 
 NoneType = type(None)
-PluralTypes = (list, set, tuple)
+PluralTypes = (list, frozenset, set, tuple)
 
 
 # TODO: deal with straightforward unions (Literal notably)
@@ -421,3 +422,16 @@ def coerce_fieldnames(target: AnyFieldnames) -> List[str]:
         return target.fieldnames
 
     return target
+
+
+def infer_fieldnames(target: Any) -> Optional[List[str]]:
+    if isinstance(target, TabularRecord):
+        return target.__class__.fieldnames()
+
+    if getattr(target.__class__, "is_namedrecord", False):
+        return target.__class__.fieldnames
+
+    if isinstance(target, Mapping):
+        return list(target.keys())
+
+    return None

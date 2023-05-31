@@ -7,7 +7,12 @@ import pytest
 from collections import OrderedDict
 from dataclasses import dataclass
 
-from casanova.namedrecord import namedrecord, TabularRecord, tabular_field
+from casanova.namedrecord import (
+    namedrecord,
+    TabularRecord,
+    tabular_field,
+    infer_fieldnames,
+)
 
 
 class TestNamedRecord(object):
@@ -252,3 +257,21 @@ class TestTabularRecord(object):
         video = Video(title="Test", error=KeyError("k"))
 
         assert video.as_csv_row() == ["Test", "KeyError('k') Success"]
+
+
+class TestMiscUtils(object):
+    def test_infer_fielndames(self):
+        @dataclass
+        class Video(TabularRecord):
+            title: str
+            duration: int
+
+        Movie = namedrecord("Movie", ["title", "year"])
+
+        assert infer_fieldnames(Video("test", 45)) == ["title", "duration"]
+        assert infer_fieldnames(Movie("test", 1965)) == ["title", "year"]
+        assert infer_fieldnames(["test", "ok"]) is None
+        assert sorted(infer_fieldnames({"title": "test", "color": "blue"})) == [
+            "color",
+            "title",
+        ]
