@@ -90,7 +90,7 @@ class Enricher(Reader):
 
         # Resuming?
         self.resumer = None
-        can_resume = False
+        self.resuming = False
 
         if isinstance(output_file, Resumer):
             if not isinstance(output_file, self.__class__.__supported_resumers__):
@@ -101,9 +101,9 @@ class Enricher(Reader):
 
             self.resumer = output_file
 
-            can_resume = self.resumer.can_resume()
+            self.resuming = self.resumer.can_resume()
 
-            if can_resume:
+            if self.resuming:
                 # NOTE: how about null bytes
                 self.resumer.get_insights_from_output(
                     self,
@@ -134,7 +134,7 @@ class Enricher(Reader):
             escapechar=writer_escapechar,
             quoting=writer_quoting,
             lineterminator=writer_lineterminator,
-            write_header=not can_resume and write_header,
+            write_header=not self.resuming and write_header,
             strict=False,  # NOTE: not strict because we already check row length
         )
 

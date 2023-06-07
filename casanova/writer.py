@@ -66,7 +66,7 @@ class Writer(object):
 
         self.strict = strict and self.row_len is not None
 
-        can_resume = False
+        self.resuming = False
 
         if isinstance(output_file, Resumer):
             if self.no_headers:
@@ -80,9 +80,9 @@ class Writer(object):
                     % (self.__class__.__name__, output_file.__class__.__name__)
                 )
 
-            can_resume = resumer.can_resume()
+            self.resuming = resumer.can_resume()
 
-            if can_resume:
+            if self.resuming:
                 # NOTE: how about null bytes
                 resumer.get_insights_from_output(
                     self,
@@ -131,7 +131,7 @@ class Writer(object):
                 strip_null_bytes_from_row(row)
             )
 
-        self.should_write_header = not can_resume and self.fieldnames is not None
+        self.should_write_header = not self.resuming and self.fieldnames is not None
 
         if self.should_write_header and write_header:
             self.writeheader()
@@ -180,3 +180,8 @@ class MagicWriter(Writer):
         BasicResumer,
         LastCellResumer,
     )
+
+    def __init__(
+        self, output_file, fieldnames: Optional[AnyFieldnames] = None, **kwargs
+    ):
+        super().__init__(output_file, fieldnames=fieldnames, **kwargs)
