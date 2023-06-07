@@ -384,6 +384,9 @@ class TabularRecord(object):
 
 
 def coerce_row(row: AnyWritableCSVRowPart, consume: bool = False) -> List[Any]:
+    if isinstance(row, (bytes, str)):
+        raise TypeError("row parts should not be strings")
+
     __csv_row__ = getattr(row, "__csv_row__", None)
 
     if callable(__csv_row__):

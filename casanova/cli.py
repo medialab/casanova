@@ -429,7 +429,7 @@ def map_reduce_action(cli_args, output_file):
                 writer.writerow(
                     fieldnames if cli_args.fieldnames is None else cli_args.fieldnames
                 )
-                writer.writerow(serializer(final_result))
+                writer.writerow([serializer(final_result)])
 
         else:
             print(final_result, file=output_file)
