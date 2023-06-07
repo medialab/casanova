@@ -295,7 +295,9 @@ class TestMiscUtils(object):
 
         assert infer_fieldnames(Video("test", 45)) == ["title", "duration"]
         assert infer_fieldnames(Movie("test", 1965)) == ["title", "year"]
-        assert infer_fieldnames(["test", "ok"]) is None
+        assert infer_fieldnames(["test", "ok"]) == ["col1", "col2"]
+        assert infer_fieldnames("test") == ["value"]
+        assert infer_fieldnames({1, 2, 3}) is None
         assert sorted(infer_fieldnames({"title": "test", "color": "blue"})) == [
             "color",
             "title",

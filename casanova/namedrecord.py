@@ -437,4 +437,10 @@ def infer_fieldnames(target: Any) -> Optional[List[str]]:
     if isinstance(target, Mapping):
         return list(target.keys())
 
+    if isinstance(target, (list, tuple)):
+        return ["col%i" % n for n in range(1, len(target) + 1)]
+
+    if isinstance(target, (str, bytes, float, int, bool)):
+        return ["value"]
+
     return None

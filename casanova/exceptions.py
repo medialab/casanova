@@ -70,5 +70,13 @@ class InvalidSelectionError(CasanovaError):
         self.reason = reason
 
 
-class NoHTTPSupport(CasanovaError):
+class NoHTTPSupportError(CasanovaError):
+    pass
+
+
+class InvalidRowTypeError(CasanovaError):
+    pass
+
+
+class MixedRowTypesError(CasanovaError):
     pass

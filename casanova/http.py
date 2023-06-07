@@ -14,7 +14,7 @@ try:
 except ImportError:
     certifi = None
 
-from casanova.exceptions import NoHTTPSupport
+from casanova.exceptions import NoHTTPSupportError
 
 urllib3_installed = urllib3 is not None
 certifi_installed = certifi is not None
@@ -35,7 +35,7 @@ if urllib3_installed:
 
 def request(url):
     if pool_manager is None:
-        raise NoHTTPSupport(
+        raise NoHTTPSupportError(
             "casanova is not able to make http calls. please install urllib3 (and certifi if you want secure HTTPS)"
         )
 

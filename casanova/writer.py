@@ -5,7 +5,7 @@
 # A CSV writer that is only really useful if you intend to resume its operation
 # somehow
 #
-from typing import Optional, Iterable, List
+from typing import Optional, Iterable
 from casanova.types import AnyCSVDialect, AnyWritableCSVRowPart
 
 import csv
@@ -21,6 +21,7 @@ from casanova.namedrecord import (
 )
 from casanova.reader import Headers
 from casanova.utils import py310_wrap_csv_writerow, strip_null_bytes_from_row
+from casanova.exceptions import MixedRowTypesError, InvalidRowTypeError
 
 
 class Writer(object):
@@ -171,10 +172,6 @@ class Writer(object):
         self.writerow(row)
 
 
-def get_default_fieldnames(count: int) -> List[str]:
-    return ["col%i" % n for n in range(1, count + 1)]
-
-
 class MagicWriter(Writer):
     __supported_resumers__ = (
         BasicResumer,
@@ -184,4 +181,37 @@ class MagicWriter(Writer):
     def __init__(
         self, output_file, fieldnames: Optional[AnyFieldnames] = None, **kwargs
     ):
-        super().__init__(output_file, fieldnames=fieldnames, **kwargs)
+        super().__init__(
+            output_file, fieldnames=fieldnames, write_header=False, **kwargs
+        )
+
+        self.serializer = CSVSerializer()
+        self.__must_infer = True
+
+        if self.resuming or self.fieldnames is not None:
+            self.__must_infer = False
+
+    def __set_fieldnames(self, fieldnames):
+        fieldnames = coerce_fieldnames(fieldnames)
+
+        self.fieldnames = fieldnames
+        self.headers = Headers(fieldnames)
+        self.row_len = len(fieldnames)
+
+        self.__must_infer = False
+
+    def write_one(self, data) -> None:
+        if self.__must_infer:
+            fieldnames = infer_fieldnames(data)
+
+            if fieldnames is None:
+                raise InvalidRowTypeError(
+                    "given data cannot be safely cast to a tabular row (e.g. a set has no defined order)"
+                )
+
+            self.__set_fieldnames(fieldnames)
+
+        else:
+            pass
+
+            # TODO: ensure consistency in this branch
