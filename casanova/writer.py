@@ -125,9 +125,9 @@ class Writer(object):
         self.__writer = csv.writer(output_file, **writer_kwargs)
 
         if not strip_null_bytes_on_write:
-            self.__writerow = py310_wrap_csv_writerow(self.__writer)
+            self._writerow = py310_wrap_csv_writerow(self.__writer)
         else:
-            self.__writerow = lambda row: self.__writer.writerow(
+            self._writerow = lambda row: self.__writer.writerow(
                 strip_null_bytes_from_row(row)
             )
 
@@ -175,7 +175,7 @@ class Writer(object):
                 % (self.row_len, len(row))
             )
 
-        self.__writerow(row)
+        self._writerow(row)
 
     def writerows(self, rows: Iterable[AnyWritableCSVRowPart]) -> None:
         for row in rows:

@@ -191,7 +191,7 @@ class Enricher(Reader):
         add: Optional[AnyWritableCSVRowPart] = None,
         *addenda: AnyWritableCSVRowPart
     ) -> None:
-        self.writer.writerow(self.__formatrow(row, add, *addenda))
+        self.writer._writerow(self.__formatrow(row, add, *addenda))
 
     def writebatch(
         self, row: AnyWritableCSVRowPart, addenda: Iterable[AnyWritableCSVRowPart]
@@ -207,7 +207,7 @@ class Enricher(Reader):
                     % (self.added_count, len(addendum))
                 )
 
-            self.writer.writerow(row + addendum)
+            self.writer._writerow(row + addendum)
 
 
 class ThreadSafeEnricher(Enricher):
