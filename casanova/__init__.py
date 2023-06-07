@@ -7,6 +7,7 @@ from casanova.defaults import set_defaults, temporary_defaults
 from casanova.enricher import Enricher, ThreadSafeEnricher, BatchEnricher
 from casanova.headers import Headers, RowWrapper
 from casanova.namedrecord import namedrecord, TabularRecord, tabular_field
+from casanova.ndjson import TabularJSONEncoder
 from casanova.reader import Reader, Multiplexer
 from casanova.resumers import (
     Resumer,

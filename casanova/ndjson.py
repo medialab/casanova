@@ -1,4 +1,14 @@
+from typing import Any
+
 import json
+import dataclasses
+
+
+class TabularJSONEncoder(json.JSONEncoder):
+    def default(self, o: Any) -> Any:
+        if dataclasses.is_dataclass(o):
+            return dataclasses.asdict(o)
+        return super().default(o)
 
 
 class writer(object):
@@ -6,7 +16,9 @@ class writer(object):
         self.__file = f
 
     def writerow(self, row):
-        self.__file.write(json.dumps(row, ensure_ascii=False, allow_nan=False))
+        self.__file.write(
+            json.dumps(row, ensure_ascii=False, allow_nan=False, cls=TabularJSONEncoder)
+        )
         self.__file.write("\n")
 
 

@@ -176,7 +176,7 @@ def get_default_fieldnames(count: int) -> List[str]:
 
 
 class MagicWriter(Writer):
-    __supprted_resumers__ = (
+    __supported_resumers__ = (
         BasicResumer,
         LastCellResumer,
     )

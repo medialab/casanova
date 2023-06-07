@@ -3,6 +3,7 @@
 # =============================================================================
 from typing import List, Optional, Tuple, Set, Dict
 
+import json
 import pytest
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -13,6 +14,7 @@ from casanova.namedrecord import (
     tabular_field,
     infer_fieldnames,
 )
+from casanova.ndjson import TabularJSONEncoder
 
 
 class TestNamedRecord(object):
@@ -257,6 +259,29 @@ class TestTabularRecord(object):
         video = Video(title="Test", error=KeyError("k"))
 
         assert video.as_csv_row() == ["Test", "KeyError('k') Success"]
+
+    def test_custom_json_encoder(self):
+        @dataclass
+        class Video(TabularRecord):
+            title: str
+            duration: int
+
+        @dataclass
+        class Document(TabularRecord):
+            name: str
+            videos: List[Video]
+            main: Video
+
+        result = json.dumps(
+            Document("doc", [Video("one", 14), Video("two", 67)], Video("three", 56)),
+            cls=TabularJSONEncoder,
+            sort_keys=True,
+        )
+
+        assert (
+            result
+            == '{"main": {"duration": 56, "title": "three"}, "name": "doc", "videos": [{"duration": 14, "title": "one"}, {"duration": 67, "title": "two"}]}'
+        )
 
 
 class TestMiscUtils(object):
