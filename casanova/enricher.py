@@ -80,6 +80,12 @@ class Enricher(Reader):
                 self.output_fieldnames += add
                 self.added_count = len(add)
 
+        self.output_headers = None
+
+        # NOTE: not forwarding writer headers to avoid resumer issues (ref. #123)
+        if self.output_fieldnames is not None:
+            self.output_headers = Headers(self.output_fieldnames)
+
         self.padding = [""] * self.added_count
 
         # Resuming?
@@ -134,10 +140,6 @@ class Enricher(Reader):
 
     def __repr__(self):
         return "<%s>" % self.__class__.__name__
-
-    @property
-    def output_headers(self):
-        return self.writer.headers
 
     @property
     def should_write_header(self):

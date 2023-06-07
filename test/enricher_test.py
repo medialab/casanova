@@ -20,6 +20,7 @@ from casanova.resumers import (
     LastCellComparisonResumer,
     RowCountResumer,
     ThreadSafeResumer,
+    BatchResumer,
 )
 from casanova.namedrecord import namedrecord, TabularRecord, tabular_field
 from casanova.exceptions import Py310NullByteWriteError
@@ -662,3 +663,13 @@ class TestEnricher(object):
             enricher.writerow(index, row, None)
 
         assert buf.getvalue().strip() == "name,index,count\nJohn,0,"
+
+    def test_batch_enricher_resumer(self, tmpdir):
+        output_path = str(tmpdir.join("./batch_enricher_resumer.csv"))
+
+        with open(output_path, "w") as f:
+            f.write("name,cursor\njohn,,")
+
+        # NOTE: this should not raise, as per issue #123
+        with BatchResumer(output_path, value_column="name") as resumer:
+            casanova.batch_enricher(StringIO("name\njohn\nmary"), resumer)

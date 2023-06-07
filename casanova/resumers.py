@@ -208,7 +208,7 @@ class BatchResumer(Resumer):
             end_symbol=enricher.end_symbol,
             **reader_kwargs
         )
-        self.value_pos = enricher.output_headers[self.value_column]
+        self.value_pos = enricher.headers[self.value_column]
         self.last_cursor = None
         self.values_to_skip = None
 
