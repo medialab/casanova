@@ -5,6 +5,8 @@
 # A CSV reader/writer combo that can be used to read an input CSV file and
 # easily ouput a similar CSV file while editing, adding and filtering cell_count.
 #
+from typing import Optional, Iterable
+
 from ebbe import with_is_last
 
 from casanova.resumers import (
@@ -19,6 +21,7 @@ from casanova.reader import Reader
 from casanova.writer import Writer
 from casanova.namedrecord import coerce_row, coerce_fieldnames
 from casanova.defaults import DEFAULTS
+from casanova.types import AnyWritableCSVRowPart
 
 
 class Enricher(Reader):
@@ -177,13 +180,20 @@ class Enricher(Reader):
 
         return formatted_row
 
-    def writeheader(self):
+    def writeheader(self) -> None:
         self.writer.writeheader()
 
-    def writerow(self, row, add=None, *addenda):
+    def writerow(
+        self,
+        row: AnyWritableCSVRowPart,
+        add: Optional[AnyWritableCSVRowPart] = None,
+        *addenda: AnyWritableCSVRowPart
+    ) -> None:
         self.writer.writerow(self.__formatrow(row, add, *addenda))
 
-    def writebatch(self, row, addenda):
+    def writebatch(
+        self, row: AnyWritableCSVRowPart, addenda: Iterable[AnyWritableCSVRowPart]
+    ):
         row = self.__filterrow(row)
 
         for addendum in addenda:
@@ -221,7 +231,13 @@ class ThreadSafeEnricher(Enricher):
     def records(self, *shape, with_rows=False):
         return self.enumerate_records(*shape, with_rows=with_rows)
 
-    def writerow(self, index, row, add=None, *addenda):
+    def writerow(
+        self,
+        index: int,
+        row: AnyWritableCSVRowPart,
+        add: Optional[AnyWritableCSVRowPart] = None,
+        *addenda: AnyWritableCSVRowPart
+    ):
         if add is None:
             super().writerow(row, [index] + self.padding[:-1])
         else:
@@ -249,7 +265,12 @@ class BatchEnricher(Enricher):
         # Inheritance
         super().__init__(input_file, output_file, add=add, **kwargs)
 
-    def writebatch(self, row, addenda, cursor=None):
+    def writebatch(
+        self,
+        row: AnyWritableCSVRowPart,
+        addenda: Iterable[AnyWritableCSVRowPart],
+        cursor: Optional[str] = None,
+    ):
         if cursor is None:
             cursor = self.end_symbol
 
