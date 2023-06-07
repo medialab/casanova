@@ -122,6 +122,18 @@ class TestWriter(object):
 
         assert output.getvalue().strip() == "JohnTest,15,,Ok"
 
+        @dataclass
+        class Video(TabularRecord):
+            name: str
+
+        output = StringIO()
+
+        writer = Writer(output, strip_null_bytes_on_write=True, lineterminator="\n")
+
+        writer.writerow(Video("John\x00"))
+
+        assert output.getvalue().strip() == "John"
+
     def test_py310_wrapper(self):
         if not PY_310:
             return
