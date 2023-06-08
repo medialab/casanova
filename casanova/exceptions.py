@@ -78,5 +78,5 @@ class InvalidRowTypeError(CasanovaError):
     pass
 
 
-class MixedRowTypesError(CasanovaError):
+class InconsistentRowTypesError(CasanovaError):
     pass

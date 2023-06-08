@@ -5,13 +5,13 @@
 # A CSV writer that is only really useful if you intend to resume its operation
 # somehow
 #
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Iterator, Mapping
 from casanova.types import AnyCSVDialect, AnyWritableCSVRowPart
 
 import csv
 
 from casanova.defaults import DEFAULTS
-from casanova.serialization import CSVSerializer
+from casanova.serialization import CSVSerializer, CustomTypes
 from casanova.resumers import Resumer, BasicResumer, LastCellResumer
 from casanova.namedrecord import (
     coerce_row,
@@ -21,7 +21,7 @@ from casanova.namedrecord import (
 )
 from casanova.reader import Headers
 from casanova.utils import py310_wrap_csv_writerow, strip_null_bytes_from_row
-from casanova.exceptions import MixedRowTypesError, InvalidRowTypeError
+from casanova.exceptions import InconsistentRowTypesError, InvalidRowTypeError
 
 
 class Writer(object):
@@ -179,13 +179,32 @@ class MagicWriter(Writer):
     )
 
     def __init__(
-        self, output_file, fieldnames: Optional[AnyFieldnames] = None, **kwargs
+        self,
+        output_file,
+        fieldnames: Optional[AnyFieldnames] = None,
+        plural_separator: Optional[str] = None,
+        none_value: Optional[str] = None,
+        true_value: Optional[str] = None,
+        false_value: Optional[str] = None,
+        stringify_everything: Optional[bool] = None,
+        custom_types: Optional[CustomTypes] = None,
+        **kwargs
     ):
         super().__init__(
             output_file, fieldnames=fieldnames, write_header=False, **kwargs
         )
 
-        self.serializer = CSVSerializer()
+        # Own serializer
+        self.serializer = CSVSerializer(
+            plural_separator=plural_separator,
+            none_value=none_value,
+            true_value=true_value,
+            false_value=false_value,
+            stringify_everything=stringify_everything,
+            custom_types=custom_types,
+        )
+
+        # Lifecycle
         self.__must_infer = True
 
         if self.resuming or self.fieldnames is not None:
@@ -200,18 +219,32 @@ class MagicWriter(Writer):
 
         self.__must_infer = False
 
-    def write_one(self, data) -> None:
-        if self.__must_infer:
-            fieldnames = infer_fieldnames(data)
+    def write(self, data) -> None:
+        # Casting to iterator
+        if not isinstance(data, Iterator) and not isinstance(data, list):
+            data = iter([data])
 
-            if fieldnames is None:
-                raise InvalidRowTypeError(
-                    "given data cannot be safely cast to a tabular row (e.g. a set has no defined order)"
-                )
+        for item in data:
+            if self.__must_infer:
+                fieldnames = infer_fieldnames(item)
 
-            self.__set_fieldnames(fieldnames)
+                if fieldnames is None:
+                    raise InvalidRowTypeError(
+                        "given data cannot be safely cast to a tabular row (e.g. a set has no defined order)"
+                    )
 
-        else:
-            pass
+                self.__set_fieldnames(fieldnames)
+                self.writeheader()
 
-            # TODO: ensure consistency in this branch
+            if isinstance(item, Mapping):
+                row = [item[k] for k in self.fieldnames]
+            elif isinstance(item, (list, tuple)):
+                row = [self.serializer(v) for v in item]
+            else:
+                row = [self.serializer(item)]
+
+            if len(row) != self.row_len:
+                raise InconsistentRowTypesError
+
+            # TODO: scalars, list of scalars, collections, tabularrecord, namedrecord, list of those, iterables
+            self._writerow(row)
