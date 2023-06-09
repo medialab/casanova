@@ -2,7 +2,7 @@
 # Casanova Resumer Unit Tests
 # =============================================================================
 import casanova
-from casanova.resumers import Resumer, RowCountResumer
+from casanova.resumers import RowCountResumer
 
 
 class TestResumer(object):

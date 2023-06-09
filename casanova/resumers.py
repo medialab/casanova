@@ -9,7 +9,6 @@ from typing import Set, Optional
 
 from threading import Lock
 from os.path import isfile, getsize
-from collections import namedtuple
 from dataclasses import dataclass
 
 from casanova.reader import Reader
