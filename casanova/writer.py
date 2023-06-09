@@ -172,7 +172,7 @@ class Writer(object):
         self.writerow(row)
 
 
-class MagicWriter(Writer):
+class InferringWriter(Writer):
     __supported_resumers__ = (
         BasicResumer,
         LastCellResumer,
@@ -205,10 +205,12 @@ class MagicWriter(Writer):
         )
 
         # Lifecycle
-        self.__must_infer = True
+        self.__must_infer = self.fieldnames is None
 
-        if self.resuming or self.fieldnames is not None:
+        if self.resuming:
             self.__must_infer = False
+        elif self.fieldnames is not None:
+            self.writeheader()
 
     def __set_fieldnames(self, fieldnames):
         fieldnames = coerce_fieldnames(fieldnames)
@@ -219,32 +221,36 @@ class MagicWriter(Writer):
 
         self.__must_infer = False
 
-    def write(self, data) -> None:
-        # Casting to iterator
-        if not isinstance(data, Iterator) and not isinstance(data, list):
-            data = iter([data])
+    def writerow(self, data) -> None:
+        if isinstance(data, (Iterator, range)):
+            data = list(data)
 
-        for item in data:
-            if self.__must_infer:
-                fieldnames = infer_fieldnames(item)
+        if self.__must_infer:
+            fieldnames = infer_fieldnames(data)
 
-                if fieldnames is None:
-                    raise InvalidRowTypeError(
-                        "given data cannot be safely cast to a tabular row (e.g. a set has no defined order)"
-                    )
+            if fieldnames is None:
+                raise InvalidRowTypeError(
+                    'given data type "%s" cannot be safely cast to a tabular row (e.g. a set has no defined order)'
+                    % data.__class__.__name__
+                )
 
-                self.__set_fieldnames(fieldnames)
-                self.writeheader()
+            self.__set_fieldnames(fieldnames)
+            self.writeheader()
 
-            if isinstance(item, Mapping):
-                row = [item[k] for k in self.fieldnames]
-            elif isinstance(item, (list, tuple)):
-                row = [self.serializer(v) for v in item]
-            else:
-                row = [self.serializer(item)]
+        # NOTE: coercing after inferrence not to lose fieldnames info
+        __csv_row__ = getattr(data, "__csv_row__", None)
 
-            if len(row) != self.row_len:
-                raise InconsistentRowTypesError
+        if callable(__csv_row__):
+            data = __csv_row__()
 
-            # TODO: scalars, list of scalars, collections, tabularrecord, namedrecord, list of those, iterables
-            self._writerow(row)
+        if isinstance(data, Mapping):
+            row = [data[k] for k in self.fieldnames]
+        elif isinstance(data, (list, tuple)):
+            row = [self.serializer(v) for v in data]
+        else:
+            row = [self.serializer(data)]
+
+        if len(row) != self.row_len:
+            raise InconsistentRowTypesError
+
+        self._writerow(row)

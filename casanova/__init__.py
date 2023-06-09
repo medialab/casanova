@@ -21,7 +21,7 @@ from casanova.resumers import (
 from casanova.reverse_reader import ReverseReader, Batch
 from casanova.serialization import CSVSerializer
 from casanova.utils import CsvCellIO, CsvRowIO, CsvIO
-from casanova.writer import Writer, MagicWriter
+from casanova.writer import Writer, InferringWriter
 
 headers = Headers
 reader = Reader
@@ -30,7 +30,7 @@ threadsafe_enricher = ThreadSafeEnricher
 batch_enricher = BatchEnricher
 reverse_reader = ReverseReader
 writer = Writer
-magic_writer = MagicWriter
+inferring_writer = InferringWriter
 
 # Re-exporting statics
 count = reader.count
