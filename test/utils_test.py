@@ -9,6 +9,7 @@ from casanova.utils import (
     CsvCellIO,
     CsvRowIO,
     CsvIO,
+    PeekableIterator,
 )
 
 
@@ -91,3 +92,30 @@ class TestUtils(object):
             .strip()
             == "John,Matthews\nLisa,Orange"
         )
+
+    def test_peekable_iterator(self):
+        it = PeekableIterator([])
+
+        assert it.peek() is None
+        assert next(it, None) is None
+
+        it = PeekableIterator(range(1))
+
+        assert it.peek() == 0
+        assert next(it) == 0
+        assert it.peek() is None
+        assert next(it, None) is None
+        assert next(it, None) is None
+
+        it = PeekableIterator(range(3))
+
+        assert it.peek() == 0
+        assert next(it) == 0
+        assert it.peek() == 1
+        assert next(it) == 1
+        assert it.peek() == 2
+        assert next(it) == 2
+        assert it.peek() is None
+        assert next(it, None) is None
+        assert next(it, None) is None
+        assert next(it, None) is None

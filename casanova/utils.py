@@ -4,6 +4,8 @@
 #
 # Miscellaneous utility functions.
 #
+from typing import Iterator, Iterable, Mapping, TypeVar, Generic, Optional, cast
+
 import re
 import csv
 import gzip
@@ -13,7 +15,6 @@ from os.path import splitext
 from io import StringIO, DEFAULT_BUFFER_SIZE
 from platform import python_version_tuple
 from file_read_backwards.file_read_backwards import FileReadBackwardsIterator
-from collections.abc import Mapping, Iterable
 
 from casanova.exceptions import Py310NullByteWriteError, LtPy311ByteReadError
 
@@ -286,3 +287,47 @@ def create_csv_aware_backwards_lines_iterator(
             yield acc
 
     return backwards_file, correctly_escaped_backwards_iterator()
+
+
+T = TypeVar("T")
+
+
+class PeekableIterator(Generic[T]):
+    iterator: Iterator[T]
+    finished: bool
+    consumed: bool
+    current: Optional[T]
+
+    def __init__(self, iterable: Iterable[T]):
+        self.iterator = iter(iterable)
+        self.finished = False
+        self.consumed = False
+        self.current = None
+
+        try:
+            self.current = next(self.iterator)
+        except StopIteration:
+            self.consumed = True
+            self.finished = True
+
+    def peek(self) -> Optional[T]:
+        return self.current
+
+    def __next__(self) -> T:
+        if self.consumed:
+            raise StopIteration
+
+        # NOTE:
+        current = cast(T, self.current)
+
+        if self.finished:
+            self.consumed = True
+            return current
+
+        try:
+            self.current = next(self.iterator)
+        except StopIteration:
+            self.finished = True
+            self.current = None
+
+        return current
