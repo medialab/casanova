@@ -120,8 +120,6 @@ class Enricher(Reader):
 
             if hasattr(self.resumer, "filter"):
                 self.row_filter = self.resumer.filter_row
-            else:
-                self.prelude_rows = self.resumer
 
         # Instantiating writer
         self.writer = Writer(

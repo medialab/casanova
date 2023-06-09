@@ -253,7 +253,6 @@ class Reader(object):
         self.__buffered_rows.reverse()
 
         # Iteration state
-        self.prelude_rows = None
         self.row_filter = None
         self.current_row_index = -1
         self.__iterator = self.__create_inner_rows_iterator()
@@ -277,11 +276,6 @@ class Reader(object):
 
     def __create_inner_rows_iterator(self):
         def chained():
-            if self.prelude_rows is not None:
-                for row in self.prelude_rows:
-                    self.current_row_index += 1
-                    yield row
-
             while self.__buffered_rows:
                 self.current_row_index += 1
                 yield self.__buffered_rows.pop()
