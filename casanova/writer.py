@@ -169,7 +169,7 @@ class Writer(object):
         if self.strip_null_bytes_on_write:
             row = strip_null_bytes_from_row(row)
 
-        self.writerow(row)
+        self._writerow(row)
 
 
 class InferringWriter(Writer):
@@ -244,7 +244,7 @@ class InferringWriter(Writer):
             data = __csv_row__()
 
         if isinstance(data, Mapping):
-            row = [data[k] for k in self.fieldnames]
+            row = [self.serializer(data.get(k)) for k in self.fieldnames]
         elif isinstance(data, (list, tuple)):
             row = [self.serializer(v) for v in data]
         else:

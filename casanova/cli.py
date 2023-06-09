@@ -16,7 +16,15 @@ from dataclasses import dataclass
 from collections import Counter, defaultdict, deque, OrderedDict
 from collections.abc import Mapping, Iterable
 
-from casanova import Reader, Enricher, CSVSerializer, RowWrapper, Headers, Writer
+from casanova import (
+    Reader,
+    Enricher,
+    CSVSerializer,
+    RowWrapper,
+    Headers,
+    Writer,
+    InferringWriter,
+)
 from casanova.utils import import_function, flatmap
 
 
@@ -78,6 +86,17 @@ def get_pool(n: int, options: InitializerOptions):
 
 def get_csv_serializer(cli_args):
     return CSVSerializer(
+        plural_separator=cli_args.plural_separator,
+        none_value=cli_args.none_value,
+        true_value=cli_args.true_value,
+        false_value=cli_args.false_value,
+    )
+
+
+def get_inferring_writer(output_file, cli_args):
+    return InferringWriter(
+        output_file,
+        fieldnames=cli_args.fieldnames,
         plural_separator=cli_args.plural_separator,
         none_value=cli_args.none_value,
         true_value=cli_args.true_value,
@@ -405,32 +424,8 @@ def map_reduce_action(cli_args, output_file):
             )
             print(file=output_file)
         elif cli_args.csv:
-            writer = Writer(output_file)
-
-            serializer = get_csv_serializer(cli_args)
-            fieldnames = ["value"]
-
-            if isinstance(final_result, Mapping):
-                fieldnames = list(final_result.keys())
-                writer.writerow(fieldnames)
-                writer.writerow(serializer.serialize_dict_row(final_result, fieldnames))
-            elif isinstance(final_result, Iterable) and not isinstance(
-                final_result, (bytes, str)
-            ):
-                serialized = serializer.serialize_row(final_result)
-                if cli_args.fieldnames:
-                    writer.writerow(cli_args.fieldnames)
-                else:
-                    writer.writerow(
-                        ["col%i" % i for i in range(1, len(serialized) + 1)]
-                    )
-                writer.writerow(serialized)
-            else:
-                writer.writerow(
-                    fieldnames if cli_args.fieldnames is None else cli_args.fieldnames
-                )
-                writer.writerow([serializer(final_result)])
-
+            writer = get_inferring_writer(output_file, cli_args)
+            writer.writerow(final_result)
         else:
             print(final_result, file=output_file)
 

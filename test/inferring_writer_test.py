@@ -29,6 +29,15 @@ class TestInferringWriter(object):
             writer.writerow((1, 2))
             writer.writerow((3, 4, 5))
 
+    def test_partial_dict(self):
+        output = StringIO()
+        writer = InferringWriter(output, none_value="none")
+
+        writer.writerow({"one": 1})
+        writer.writerow({"two": 2})
+
+        assert collect_csv(output) == [["one"], ["1"], ["none"]]
+
     def test_basics(self):
         self.assert_writerow("john", [["value"], ["john"]])
         self.assert_writerow(34, [["value"], ["34"]])
@@ -36,6 +45,7 @@ class TestInferringWriter(object):
         self.assert_writerow(4.5, [["value"], ["4.5"]])
         self.assert_writerow(None, [["value"], ["none"]])
         self.assert_writerow({"one": 1, "two": 2}, [["one", "two"], ["1", "2"]])
+        self.assert_writerow({"one": True}, [["one"], ["true"]])
         self.assert_writerow([1, 2, 3], [["col1", "col2", "col3"], ["1", "2", "3"]])
         self.assert_writerow((1, 2, 3), [["col1", "col2", "col3"], ["1", "2", "3"]])
         self.assert_writerow(range(3), [["col1", "col2", "col3"], ["0", "1", "2"]])
