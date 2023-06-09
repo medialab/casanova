@@ -292,6 +292,7 @@ class Reader(object):
 
         if self.row_filter is None:
             yield from chained()
+            return
 
         for row in chained():
             if self.row_filter(self.current_row_index, row):
