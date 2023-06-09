@@ -292,6 +292,7 @@ def create_csv_aware_backwards_lines_iterator(
 T = TypeVar("T")
 
 
+# TODO: transfer this to `ebbe`
 class PeekableIterator(Generic[T]):
     iterator: Iterator[T]
     finished: bool

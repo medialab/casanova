@@ -256,6 +256,10 @@ class Reader(object):
         self.row_filter = None
         self.current_row_index = -1
 
+        # Peeking state
+        self.peeked_row = None
+        self.peeked = False
+
     def __repr__(self) -> str:
         return "<%s>" % self.namespace
 
@@ -273,8 +277,28 @@ class Reader(object):
 
         return len(self.headers)
 
+    def peek(self) -> Optional[List[str]]:
+        if self.peeked:
+            return self.peeked_row
+
+        try:
+            self.peeked_row = next(self)
+        except StopIteration:
+            self.peeked_row = None
+
+        self.peeked = True
+        return self.peeked_row
+
     def __next__(self) -> List[str]:
         while True:
+            if self.peeked:
+                if self.peeked_row is None:
+                    raise StopIteration
+
+                row = self.peeked_row
+                self.peeked = False
+                return row
+
             if self.__buffered_rows:
                 row = self.__buffered_rows.pop()
             else:

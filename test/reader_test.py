@@ -464,3 +464,30 @@ class TestReader(object):
             people = list(casanova.reader(f))
 
             assert people == [["Harry", "Golding"], ["James", "Henry"]]
+
+    def test_peek(self):
+        with open("./test/resources/people.csv") as f:
+            reader = casanova.reader(f)
+
+            assert reader.peek() == ["John", "Matthews"]
+            assert reader.peek() == ["John", "Matthews"]
+
+            next(reader)
+
+            assert reader.peek() == ["Mary", "Sue"]
+
+            next(reader)
+
+            assert reader.peek() == ["Julia", "Stone"]
+
+            next(reader)
+
+            # NOTE: yes I am a bit paranoid
+            assert reader.peek() is None
+            assert reader.peek() is None
+
+            with pytest.raises(StopIteration):
+                next(reader)
+
+            assert reader.peek() is None
+            assert reader.peek() is None
