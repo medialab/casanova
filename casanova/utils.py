@@ -80,18 +80,22 @@ def ensure_open(p, mode="r", encoding="utf-8", newline=None):
     return open(p, encoding=encoding, mode=mode, newline=newline)
 
 
-def parse_module_and_function(path):
+def parse_module_and_target(path, default: str = "main"):
     if ":" in path:
         s = path.rsplit(":", 1)
         return s[0], s[1]
 
-    return path, "main"
+    return path, default
 
 
-def import_function(path):
-    module_name, function_name = parse_module_and_function(path)
+def import_target(path, default: str = "main"):
+    module_name, function_name = parse_module_and_target(path, default=default)
     m = importlib.import_module(module_name)
-    return getattr(m, function_name)
+
+    try:
+        return getattr(m, function_name)
+    except AttributeError:
+        raise ImportError
 
 
 def infer_delimiter_or_type(file_or_path):

@@ -2,7 +2,7 @@
 # Casanova Utils Unit Tests
 # =============================================================================
 from casanova.utils import (
-    parse_module_and_function,
+    parse_module_and_target,
     size_of_row_in_memory,
     size_of_row_in_file,
     flatmap,
@@ -14,12 +14,12 @@ from casanova.utils import (
 
 
 class TestUtils(object):
-    def test_parse_module_and_function(self):
-        assert parse_module_and_function("casanova.module") == (
+    def test_parse_module_and_target(self):
+        assert parse_module_and_target("casanova.module") == (
             "casanova.module",
             "main",
         )
-        assert parse_module_and_function("casanova.module:fn") == (
+        assert parse_module_and_target("casanova.module:fn") == (
             "casanova.module",
             "fn",
         )

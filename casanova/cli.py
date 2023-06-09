@@ -25,7 +25,7 @@ from casanova import (
     Writer,
     InferringWriter,
 )
-from casanova.utils import import_function, flatmap
+from casanova.utils import import_target, flatmap
 
 
 @dataclass
@@ -191,7 +191,7 @@ def multiprocessed_initializer(options: InitializerOptions):
     initialize_evaluation_context()
 
     if options.module:
-        FUNCTION = import_function(options.code)
+        FUNCTION = import_target(options.code)
         ARGS = options.args
     else:
         CODE = options.code
@@ -384,7 +384,7 @@ def map_reduce_action(cli_args, output_file):
     acc_fn = None
 
     if cli_args.module:
-        acc_fn = import_function(cli_args.accumulator)
+        acc_fn = import_target(cli_args.accumulator)
 
     with Reader(
         cli_args.file,
@@ -457,7 +457,7 @@ def groupby_action(cli_args, output_file):
     agg_fn = None
 
     if cli_args.module:
-        agg_fn = import_function(cli_args.aggregator)
+        agg_fn = import_target(cli_args.aggregator)
 
     with Reader(
         cli_args.file,
