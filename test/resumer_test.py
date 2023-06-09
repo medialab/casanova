@@ -6,16 +6,6 @@ from casanova.resumers import Resumer, RowCountResumer
 
 
 class TestResumer(object):
-    def test_buffer(self, tmpdir):
-        output_path = str(tmpdir.join("./resumer_test.csv"))
-
-        resumer = Resumer(output_path)
-
-        resumer.buffer.append(list(range(2)))
-
-        assert list(resumer) == [[0, 1]]
-        assert list(resumer) == []
-
     def test_encoding(self):
         output_file = "./test/resources/latin_1_encoding.csv"
 

@@ -5,9 +5,12 @@
 # A collection of process resuming strategies acknowledged by casanova
 # enrichers.
 #
+from typing import Set, Optional
+
 from threading import Lock
 from os.path import isfile, getsize
-from collections import deque, namedtuple
+from collections import namedtuple
+from dataclasses import dataclass
 
 from casanova.reader import Reader
 from casanova.reverse_reader import ReverseReader
@@ -27,7 +30,6 @@ class Resumer(object):
         self.output_file = None
         self.lock = Lock()
         self.popped = False
-        self.buffer = deque()
 
         self.listener = None
 
@@ -106,13 +108,6 @@ class Resumer(object):
     def already_done_count(self):
         raise NotImplementedError
 
-    def __iter__(self):
-        if hasattr(self, "filter"):
-            raise NotImplementedError
-
-        while self.buffer:
-            yield self.buffer.popleft()
-
 
 class BasicResumer(Resumer):
     def get_insights_from_output(self, enricher, **reader_kwargs):
@@ -186,9 +181,10 @@ class ThreadSafeResumer(Resumer):
         return len(self.already_done)
 
 
-BatchResumerContext = namedtuple(
-    "BatchResumerContext", ["last_cursor", "values_to_skip"]
-)
+@dataclass
+class BatchResumerContext:
+    last_cursor: Optional[str]
+    values_to_skip: Optional[Set[str]]
 
 
 class BatchResumer(Resumer):
@@ -221,10 +217,8 @@ class BatchResumer(Resumer):
         if last_batch is None:
             return
 
-        iterator = iter(enricher)
-
         while True:
-            row = next(iterator, None)
+            row = enricher.peek()
 
             if row is None:
                 raise NotResumableError
@@ -235,16 +229,17 @@ class BatchResumer(Resumer):
 
             # We haven't reached our batch yet
             if value != last_batch.value:
+                next(enricher)
                 continue
 
             # Last batch was completely finished
             elif last_batch.finished:
+                next(enricher)
                 break
 
             # Here we need to record additional information
             self.last_cursor = last_batch.cursor
             self.values_to_skip = set(row[self.value_pos] for row in last_batch.rows)
-            self.buffer.append(row)
 
             break
 
