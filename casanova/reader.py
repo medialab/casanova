@@ -255,7 +255,6 @@ class Reader(object):
         # Iteration state
         self.row_filter = None
         self.current_row_index = -1
-        self.__iterator = self.__create_inner_rows_iterator()
 
     def __repr__(self) -> str:
         return "<%s>" % self.namespace
@@ -274,30 +273,30 @@ class Reader(object):
 
         return len(self.headers)
 
-    def __create_inner_rows_iterator(self):
-        def chained():
-            while self.__buffered_rows:
-                self.current_row_index += 1
-                yield self.__buffered_rows.pop()
+    def __next__(self) -> List[str]:
+        while True:
+            if self.__buffered_rows:
+                row = self.__buffered_rows.pop()
+            else:
+                row = next(self.reader)
 
-            for row in self.reader:
-                self.current_row_index += 1
-                yield row
+            self.current_row_index += 1
 
-        if self.row_filter is None:
-            yield from chained()
-            return
-
-        for row in chained():
-            if self.row_filter(self.current_row_index, row):
-                yield row
+            if self.row_filter is not None:
+                if self.row_filter(self.current_row_index, row):
+                    return row
+            else:
+                return row
 
     def rows(self) -> Iterator[List[str]]:
-        return self.__iterator
+        while True:
+            try:
+                yield self.__next__()
+            except StopIteration:
+                return
 
-    def __next__(self) -> List[str]:
-        return next(self.__iterator)
-
+    # NOTE: it is important for enricher inheritance to implement #.__iter__ as
+    # relying on #.rows & not the other way around.
     def __iter__(self):
         return self.rows()
 
