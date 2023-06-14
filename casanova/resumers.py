@@ -194,6 +194,7 @@ class BatchResumer(Resumer):
         self.value_pos = None
         self.last_cursor = None
         self.values_to_skip = None
+        self.read_count = 0
 
     def get_insights_from_output(self, enricher, **reader_kwargs):
         self.last_batch = ReverseReader.last_batch(
@@ -209,6 +210,9 @@ class BatchResumer(Resumer):
 
     def get_state(self):
         return BatchResumerContext(self.last_cursor, self.values_to_skip)
+
+    def already_done_count(self) -> int:
+        return self.read_count
 
     def resume(self, enricher):
         last_batch = self.last_batch
@@ -229,11 +233,13 @@ class BatchResumer(Resumer):
             # We haven't reached our batch yet
             if value != last_batch.value:
                 next(enricher)
+                self.read_count += 1
                 continue
 
             # Last batch was completely finished
             elif last_batch.finished:
                 next(enricher)
+                self.read_count += 1
                 break
 
             # Here we need to record additional information
