@@ -163,13 +163,7 @@ class Writer(object):
             raise TypeError("cannot write header if fieldnames were not provided")
 
         self.should_write_header = False
-
-        row = self.fieldnames
-
-        if self.strip_null_bytes_on_write:
-            row = strip_null_bytes_from_row(row)
-
-        self._writerow(row)
+        self._writerow(self.fieldnames)
 
 
 class InferringWriter(Writer):
@@ -182,6 +176,7 @@ class InferringWriter(Writer):
         self,
         output_file,
         fieldnames: Optional[AnyFieldnames] = None,
+        add: Optional[AnyFieldnames] = None,
         plural_separator: Optional[str] = None,
         none_value: Optional[str] = None,
         true_value: Optional[str] = None,
@@ -190,6 +185,13 @@ class InferringWriter(Writer):
         custom_types: Optional[CustomTypes] = None,
         **kwargs
     ):
+        self.added_fieldnames = None
+        self.added_count = 0
+
+        if add is not None:
+            self.added_fieldnames = coerce_fieldnames(add)
+            self.added_count = len(add)
+
         super().__init__(
             output_file, fieldnames=fieldnames, write_header=False, **kwargs
         )
