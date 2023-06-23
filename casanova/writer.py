@@ -190,7 +190,7 @@ class InferringWriter(Writer):
 
         if add is not None:
             self.added_fieldnames = coerce_fieldnames(add)
-            self.added_count = len(add)
+            self.added_count = len(self.added_fieldnames)
 
         super().__init__(
             output_file, fieldnames=fieldnames, write_header=False, **kwargs
@@ -214,6 +214,20 @@ class InferringWriter(Writer):
         elif self.fieldnames is not None:
             self.writeheader()
 
+    # NOTE: this could be more DRY wrt Writer inheritance
+    def writeheader(self) -> None:
+        if self.fieldnames is None:
+            raise TypeError("cannot write header if fieldnames were not provided")
+
+        self.should_write_header = False
+
+        row = self.fieldnames
+
+        if self.added_fieldnames is not None:
+            row = row + self.added_fieldnames
+
+        self._writerow(row)
+
     def __set_fieldnames(self, fieldnames):
         fieldnames = coerce_fieldnames(fieldnames)
 
@@ -223,7 +237,7 @@ class InferringWriter(Writer):
 
         self.__must_infer = False
 
-    def writerow(self, data) -> None:
+    def writerow(self, data, add: Optional[AnyWritableCSVRowPart] = None) -> None:
         if isinstance(data, (Iterator, range)):
             data = list(data)
 
@@ -254,5 +268,16 @@ class InferringWriter(Writer):
 
         if len(row) != self.row_len:
             raise InconsistentRowTypesError
+
+        if add is not None:
+            if self.added_fieldnames is None:
+                raise TypeError("not expecting additional information")
+
+            add = coerce_row(add)
+
+            if len(add) != self.added_count:
+                raise TypeError("inconsistent addition len")
+
+            row += add
 
         self._writerow(row)

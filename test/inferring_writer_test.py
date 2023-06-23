@@ -70,3 +70,26 @@ class TestInferringWriter(object):
         self.assert_writerow(
             Document("test", False), [["name", "is_relevant"], ["test", "false"]]
         )
+
+    def test_add(self):
+        output = StringIO()
+        writer = InferringWriter(output, add=["n"])
+        writer.writerow("one", [1])
+        writer.writerow("two", [2])
+        writer.writerow("three", [3])
+
+        assert collect_csv(output) == [
+            ["value", "n"],
+            ["one", "1"],
+            ["two", "2"],
+            ["three", "3"],
+        ]
+
+        output = StringIO()
+        writer = InferringWriter(output, add=["n"], fieldnames=["letters"])
+        writer.writerow("one", [1])
+
+        assert collect_csv(output) == [
+            ["letters", "n"],
+            ["one", "1"],
+        ]
