@@ -70,7 +70,10 @@ class Writer(object):
         self.resuming = False
 
         if isinstance(output_file, Resumer):
-            if self.no_headers:
+            # NOTE: basic resumer does not need to know the headers
+            # TODO: at one point header knowledge could be refactored
+            # as Resumer interface
+            if self.no_headers and not isinstance(output_file, BasicResumer):
                 raise NotImplementedError
 
             resumer = output_file
@@ -207,11 +210,11 @@ class InferringWriter(Writer):
         )
 
         # Lifecycle
+        # NOTE: we must infer even when resuming to ensure
+        # row len consistency etc.
         self.__must_infer = self.fieldnames is None
 
-        if self.resuming:
-            self.__must_infer = False
-        elif self.fieldnames is not None:
+        if not self.resuming and self.fieldnames is not None:
             self.writeheader()
 
     # NOTE: this could be more DRY wrt Writer inheritance
