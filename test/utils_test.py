@@ -136,3 +136,23 @@ class TestUtils(object):
         r = ReversedFile(f, offset=6)
 
         assert r.read(20) == "dlrow"
+
+        r = ReversedFile(StringIO(""))
+
+        assert list(r) == []
+
+        r = ReversedFile(StringIO("al\nbl"))
+
+        assert list(r) == ["lb\n", "la"]
+
+        r = ReversedFile(StringIO("al\nbl"), buffer_size=1)
+
+        assert list(r) == ["lb\n", "la"]
+
+        r = ReversedFile(StringIO("al\nbl"), buffer_size=2)
+
+        assert list(r) == ["lb\n", "la"]
+
+        r = ReversedFile(StringIO("al\nbl"), buffer_size=3)
+
+        assert list(r) == ["lb\n", "la"]

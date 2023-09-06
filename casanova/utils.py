@@ -260,7 +260,7 @@ class CsvIO(CsvIOBase):
 
 
 class ReversedFile:
-    def __init__(self, f, offset: int = 0):
+    def __init__(self, f, offset: int = 0, buffer_size: int = DEFAULT_BUFFER_SIZE):
         self.f = f
 
         self.f.seek(0, SEEK_END)
@@ -268,6 +268,7 @@ class ReversedFile:
 
         self.cursor = size
         self.offset = offset
+        self.buffer_size = buffer_size
 
     def read(self, size=-1):
         if size < 0:
@@ -287,6 +288,28 @@ class ReversedFile:
         data = self.f.read(size)
 
         return data[::-1]
+
+    def __iter__(self):
+        buffer = ""
+
+        while True:
+            data = self.read(self.buffer_size)
+
+            if not data:
+                break
+
+            buffer += data
+
+            try:
+                i = buffer.index("\n")
+            except ValueError:
+                continue
+
+            yield buffer[: i + 1]
+            buffer = buffer[i + 1 :]
+
+        if buffer:
+            yield buffer
 
 
 def create_csv_aware_backwards_lines_iterator(
