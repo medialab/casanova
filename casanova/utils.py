@@ -10,7 +10,7 @@ import re
 import csv
 import gzip
 import importlib
-from os import PathLike
+from os import PathLike, SEEK_END
 from os.path import splitext
 from io import StringIO, DEFAULT_BUFFER_SIZE
 from platform import python_version_tuple
@@ -257,6 +257,36 @@ class CsvIO(CsvIOBase):
             self.writer.writerow(row)
 
         self.seek(0)
+
+
+class ReversedFile:
+    def __init__(self, f, offset: int = 0):
+        self.f = f
+
+        self.f.seek(0, SEEK_END)
+        size = self.f.tell()
+
+        self.cursor = size
+        self.offset = offset
+
+    def read(self, size=-1):
+        if size < 0:
+            raise NotImplementedError
+
+        assert self.cursor >= self.offset
+
+        # Already finished
+        if self.cursor == self.offset:
+            return ""
+
+        if self.cursor - size < self.offset:
+            size = self.cursor - self.offset
+
+        self.cursor -= size
+        self.f.seek(self.cursor)
+        data = self.f.read(size)
+
+        return data[::-1]
 
 
 def create_csv_aware_backwards_lines_iterator(

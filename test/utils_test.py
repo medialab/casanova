@@ -1,6 +1,8 @@
 # =============================================================================
 # Casanova Utils Unit Tests
 # =============================================================================
+from io import StringIO
+
 from casanova.utils import (
     parse_module_and_target,
     size_of_row_in_memory,
@@ -10,6 +12,7 @@ from casanova.utils import (
     CsvRowIO,
     CsvIO,
     PeekableIterator,
+    ReversedFile,
 )
 
 
@@ -119,3 +122,17 @@ class TestUtils(object):
         assert next(it, None) is None
         assert next(it, None) is None
         assert next(it, None) is None
+
+    def test_reversed_file(self):
+        f = StringIO("hello world")
+        r = ReversedFile(f)
+
+        assert r.read(1) == "d"
+        assert r.read(4) == "lrow"
+        assert r.read(20) == " olleh"
+        assert r.read(5) == ""
+
+        f = StringIO("hello world")
+        r = ReversedFile(f, offset=6)
+
+        assert r.read(20) == "dlrow"
