@@ -307,3 +307,8 @@ class TestCLI(object):
             """groupby 'None' 'stats.mean(int(row.n) for row in group)' ./test/resources/count.csv --none-value all""",
             [["group", "value"], ["all", "2"]],
         )
+
+        self.assert_run(
+            """groupby '"count"' 'group.key, len(group)' ./test/resources/count.csv""",
+            [["group", "col1", "col2"], ["count", "count", "3"]],
+        )

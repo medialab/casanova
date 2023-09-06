@@ -217,7 +217,7 @@ def select(row):
     if SELECTION is None:
         return
 
-    cells = [row[i] for i in SELECTION]
+    cells = tuple(row[i] for i in SELECTION)
     EVALUATION_CONTEXT["cells"] = cells
     EVALUATION_CONTEXT["cell"] = cells[0]
 
@@ -429,18 +429,18 @@ def map_reduce_action(cli_args, output_file):
 
 
 class GroupWrapper:
-    __slots__ = ("__name", "__rows", "__wrapper")
+    __slots__ = ("__key", "__rows", "__wrapper")
 
     def __init__(self, fieldnames):
         self.__wrapper = RowWrapper(Headers(fieldnames), range(len(fieldnames)))
 
     def _replace(self, name, rows):
-        self.__name = name
+        self.__key = name
         self.__rows = rows
 
     @property
-    def name(self):
-        return self.__name
+    def key(self):
+        return self.__key
 
     def __len__(self):
         return len(self.__rows)

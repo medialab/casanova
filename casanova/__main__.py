@@ -6,7 +6,8 @@ import shlex
 import shutil
 import platform
 import multiprocessing
-from argparse import ArgumentParser, HelpFormatter, ArgumentTypeError
+from textwrap import dedent
+from argparse import ArgumentParser, RawDescriptionHelpFormatter, ArgumentTypeError
 from functools import partial
 
 from casanova.defaults import set_defaults
@@ -46,7 +47,7 @@ def die(*args):
     sys.exit(1)
 
 
-class SortingHelpFormatter(HelpFormatter):
+class SortingHelpFormatter(RawDescriptionHelpFormatter):
     def add_arguments(self, actions) -> None:
         actions = sorted(
             actions, key=lambda a: tuple(s.lower() for s in a.option_strings)
@@ -262,18 +263,143 @@ add_mp_arguments = partial(add_arguments, arguments=MP_ARGUMENTS)
 add_serialization_arguments = partial(add_arguments, arguments=SERIALIZATION_ARGUMENTS)
 add_format_arguments = partial(add_arguments, arguments=FORMAT_ARGUMENTS)
 
+EVALUATION_CONTEXT_HELP = """
+Evaluation variables:
+
+    - (fieldnames): List[str] - list of the CSV file fieldnames
+        if the file has headers.
+
+    - (headers): Headers - casanova representation of the CSV
+        file headers if any.
+        https://github.com/medialab/casanova#headers
+
+    - (index): int - zero-based index of the current row.
+
+    - (row): Row - wrapper class representing the current row.
+        It behaves like a python list, but can also be indexed
+        like a dict where keys are column names or like an object
+        where attributes are column names. It can also be indexed using a
+        (str, int) tuple when dealing with CSV files having
+        duplicate column names.
+
+        Examples: row[1], row.name, row["name"], row[("name", 1)]
+
+        Note that cell values are always strings. So don't forget
+        to parse them if you want to process them as numbers,
+        for instance.
+
+        Example: int(row.age)
+
+    - (cells): tuple[str, ...] - tuple containing specific cells
+        from the current row that were selected using -s/--select.
+
+    - (cell): str - shorthand for "cells[0]".
+"""
+
+MAP_REDUCE_EVALUATION_CONTEXT_HELP = """
+Reduce evaluation variables:
+
+    - (acc): Any - accumulated value.
+
+    - (current): Any - value for the current row, as
+        returned by the mapped python expression.
+"""
+
+GROUPBY_EVALUATION_CONTEXT_HELP = """
+Grouping evaluation variables:
+
+    - (group): Group: wrapper class representing
+        a group of CSV rows. You can get its length,
+        its key and iterate over its rows.
+
+        Examples:
+            len(group)
+            group.key
+            sum(int(row.count) for row in group)
+
+"""
+
+EVALUATION_LIB_HELP = """
+Available libraries and helpers:
+
+    - (Counter): shorthand for collections.Counter.
+        https://docs.python.org/fr/3/library/collections.html#collections.Counter
+
+    - (defaultdict): shorthand for collections.defaultdict.
+        https://docs.python.org/fr/3/library/collections.html#collections.defaultdict
+
+    - (deque): shorthand for collections.deque.
+        https://docs.python.org/fr/3/library/collections.html#collections.deque
+
+    - (join): shorthand for os.path.join.
+        https://docs.python.org/3/library/os.path.html#os.path.join
+
+    - (math): python math module.
+        https://docs.python.org/3/library/math.html
+
+    - (random): python random module.
+        https://docs.python.org/3/library/random.html
+
+    - (re): python re module (regular expressions).
+        https://docs.python.org/3/library/re.html
+
+    - (read): helper function taking a file path and returning
+        the file's contents as a str or None if the file
+        was not found. Note that it will automatically uncompress
+        files with a path ending in ".gz". Optionally takes
+        a second argument for the encoding (defaults to "utf-8").
+
+    - (stats): python statistics module.
+        https://docs.python.org/3/library/statistics.html
+
+    - (urljoin): shorthand for urllib.parse.urljoin.
+        https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urljoin
+
+    - (urlsplit): shorthand for urllib.parse.urlsplit.
+        https://docs.python.org/3/library/urllib.parse.html#urllib.parse.urlsplit
+"""
+
 
 def build_commands():
     parser = ArgumentParser(
         "casanova",
-        description="Casanova command line utilities such as mapping, filtering, reducing columns of a given CSV files.",
+        description=dedent(
+            """
+            Casanova command line tool that can be used to mangle CSV files using python
+            expressions.
+
+            Available commands:
+
+                - (map): evaluate a python expression for each row of a CSV file
+                    and save the result as a new column.
+
+                - (flatmap): same as "map" but will iterate over an iterable
+                    returned by the python expression to output one row per
+                    yielded item.
+
+                - (filter): evaluate a python expression for each row of a CSV
+                    file and keep it only if expression returns a truthy value.
+
+                - (map-reduce): evaluate a python expression for each
+                    row of a CSV file then aggregate the result using
+                    another python expression.
+
+                - (groupby): group each row of a CSV file using a python
+                    expression then output some aggregated information
+                    per group using another python expression.
+            """
+        ),
         formatter_class=custom_formatter,
     )
     add_common_arguments(parser)
 
     subparsers = parser.add_subparsers(dest="action", help="Command to execute.")
 
-    map_parser = subparsers.add_parser("map", formatter_class=custom_formatter)
+    map_parser = subparsers.add_parser(
+        "map",
+        formatter_class=custom_formatter,
+        epilog=EVALUATION_CONTEXT_HELP + EVALUATION_LIB_HELP,
+    )
     add_common_arguments(map_parser)
     add_mp_arguments(map_parser)
     add_serialization_arguments(map_parser)
@@ -289,7 +415,11 @@ def build_commands():
         help="CSV file to map. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
     )
 
-    flatmap_parser = subparsers.add_parser("flatmap", formatter_class=custom_formatter)
+    flatmap_parser = subparsers.add_parser(
+        "flatmap",
+        formatter_class=custom_formatter,
+        epilog=EVALUATION_CONTEXT_HELP + EVALUATION_LIB_HELP,
+    )
     add_common_arguments(flatmap_parser)
     add_mp_arguments(flatmap_parser)
     add_serialization_arguments(flatmap_parser)
@@ -305,7 +435,11 @@ def build_commands():
         help="CSV file to flatmap. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
     )
 
-    filter_parser = subparsers.add_parser("filter", formatter_class=custom_formatter)
+    filter_parser = subparsers.add_parser(
+        "filter",
+        formatter_class=custom_formatter,
+        epilog=EVALUATION_CONTEXT_HELP + EVALUATION_LIB_HELP,
+    )
     add_common_arguments(filter_parser)
     add_mp_arguments(filter_parser)
     filter_parser.add_argument(
@@ -323,7 +457,11 @@ def build_commands():
     )
 
     map_reduce_parser = subparsers.add_parser(
-        "map-reduce", formatter_class=custom_formatter
+        "map-reduce",
+        formatter_class=custom_formatter,
+        epilog=EVALUATION_CONTEXT_HELP
+        + EVALUATION_LIB_HELP
+        + MAP_REDUCE_EVALUATION_CONTEXT_HELP,
     )
     add_common_arguments(map_reduce_parser)
     add_mp_arguments(map_reduce_parser)
@@ -352,7 +490,13 @@ def build_commands():
         type=SpliterType(),
     )
 
-    groupby_parser = subparsers.add_parser("groupby", formatter_class=custom_formatter)
+    groupby_parser = subparsers.add_parser(
+        "groupby",
+        formatter_class=custom_formatter,
+        epilog=EVALUATION_CONTEXT_HELP
+        + GROUPBY_EVALUATION_CONTEXT_HELP
+        + EVALUATION_LIB_HELP,
+    )
     add_common_arguments(groupby_parser)
     add_mp_arguments(groupby_parser)
     add_serialization_arguments(groupby_parser)
