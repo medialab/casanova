@@ -139,11 +139,10 @@ EVALUATION_CONTEXT_LIB = {
     # lib
     "join": join,
     "math": math,
-    "mean": statistics.mean,
-    "median": statistics.median,
     "random": random,
     "re": re,
     "read": read,
+    "stats": statistics,
     "urljoin": urljoin,
     "urlsplit": urlsplit,
     # classes

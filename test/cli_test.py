@@ -304,6 +304,6 @@ class TestCLI(object):
         )
 
         self.assert_run(
-            """groupby 'None' 'mean(int(row.n) for row in group)' ./test/resources/count.csv --none-value all""",
+            """groupby 'None' 'stats.mean(int(row.n) for row in group)' ./test/resources/count.csv --none-value all""",
             [["group", "value"], ["all", "2"]],
         )
