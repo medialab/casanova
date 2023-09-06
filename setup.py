@@ -17,7 +17,7 @@ setup(
     python_requires=">=3.7",
     packages=find_packages(exclude=["benchmark", "test"]),
     package_data={"docs": ["README.md"]},
-    install_requires=["ebbe>=1.11.0,<2", "file-read-backwards>=2.0.0,<3"],
+    install_requires=["ebbe>=1.11.0,<2"],
     extras_require={
         ":python_version<'3.10'": ["typing_extensions"],
         "http": ["urllib3", "certifi"],

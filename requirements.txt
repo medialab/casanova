@@ -1,5 +1,4 @@
 ebbe==1.11.0
-file-read-backwards==2.0.0
 typing_extensions; python_version < '3.10'
 
 # Dev Dependenciesy

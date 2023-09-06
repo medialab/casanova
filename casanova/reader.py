@@ -25,10 +25,10 @@ from casanova.utils import (
     size_of_row_in_file,
     lines_without_null_bytes,
     rows_without_null_bytes,
-    create_csv_aware_backwards_lines_iterator,
     ltpy311_csv_reader,
     looks_like_url,
     infer_delimiter_or_type,
+    ReversedFile,
 )
 from casanova.http import request
 from casanova.exceptions import MissingColumnError, NoHeadersError
@@ -36,6 +36,11 @@ from casanova.exceptions import MissingColumnError, NoHeadersError
 Multiplexer = namedtuple(
     "Multiplexer", ["column", "separator", "new_column"], defaults=["|", None]
 )
+
+
+def flip_rows(reader):
+    for row in reader:
+        yield [cell[::-1] for cell in reversed(row)]
 
 
 class Reader(object):
@@ -106,7 +111,6 @@ class Reader(object):
 
         self.input_type = input_type
         self.input_file = None
-        self.backward_file = None
 
         if self.input_type == "iterable":
             if strip_null_bytes_on_read:
@@ -165,26 +169,27 @@ class Reader(object):
                     self.empty = True
 
         # Reversing
+        # NOTE: fun fact, a CSV file read in reverse byte order is still
+        # a valid CSV file.
         if reverse and not self.empty:
             if self.input_file is None or self.input_type == "url":
                 raise NotImplementedError
 
             self.__buffered_rows.clear()
-            (
-                self.backward_file,
-                backwards_lines_iterator,
-            ) = create_csv_aware_backwards_lines_iterator(
-                self.input_file,
-                quotechar=quotechar,
-                strip_null_bytes_on_read=strip_null_bytes_on_read,
-            )
 
-            self.reader = (
-                ltpy311_csv_reader if not strip_null_bytes_on_read else csv.reader
-            )(backwards_lines_iterator, **reader_kwargs)
+            reversed_file = ReversedFile(self.input_file)
+
+            if strip_null_bytes_on_read:
+                self.reader = csv.reader(
+                    lines_without_null_bytes(reversed_file), **reader_kwargs
+                )
+            else:
+                self.reader = ltpy311_csv_reader(reversed_file, **reader_kwargs)
 
             if not no_headers:
                 self.reader = without_last(self.reader)
+
+            self.reader = flip_rows(self.reader)
 
         # Multiplexing
         if multiplex is not None:
@@ -448,9 +453,6 @@ class Reader(object):
 
         if self.input_file is not None and hasattr(self.input_file, "close"):
             self.input_file.close()
-
-        if self.backward_file is not None:
-            self.backward_file.close()
 
     def __enter__(self):
         return self
