@@ -10,8 +10,10 @@ import re
 import csv
 import gzip
 import importlib
+import os
+import sys
 from os import PathLike, SEEK_END
-from os.path import splitext
+from os.path import splitext, abspath, relpath, dirname
 from io import StringIO, DEFAULT_BUFFER_SIZE
 from platform import python_version_tuple
 
@@ -87,9 +89,25 @@ def parse_module_and_target(path, default: str = "main"):
     return path, default
 
 
-def import_target(path, default: str = "main"):
-    module_name, function_name = parse_module_and_target(path, default=default)
-    m = importlib.import_module(module_name)
+def import_target(path: str, default: str = "main"):
+    module_path_or_name, function_name = parse_module_and_target(path, default=default)
+
+    # NOTE: we normalize to a path, so we can add dir to sys.path
+    if not module_path_or_name.endswith(".py"):
+        module_path_or_name = module_path_or_name.replace(".", os.sep) + ".py"
+
+    module_path = abspath(module_path_or_name)
+    module_directory = dirname(module_path)
+
+    if module_directory not in sys.path:
+        sys.path.append(module_directory)
+
+    # NOTE: we renormalize to a module
+    module = relpath(module_path)[:-3].replace(os.sep, ".")
+
+    m = importlib.import_module(module)
+
+    sys.path.remove(module_directory)
 
     try:
         return getattr(m, function_name)
