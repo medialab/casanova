@@ -7,7 +7,6 @@ import json
 import math
 import random
 import statistics
-from itertools import islice
 from types import GeneratorType
 from os.path import join
 from urllib.parse import urlsplit, urljoin
@@ -526,16 +525,3 @@ def groupby_action(cli_args, output_file):
                     writer.writerow(fieldnames + ["value"])
                     header_emitted = True
                 writer.writerow([name, serializer(result)])
-
-
-def reverse_action(cli_args, output_file):
-    with Enricher(
-        cli_args.file, output_file, delimiter=cli_args.delimiter, reverse=True
-    ) as enricher:
-        it = enricher
-
-        if cli_args.lines is not None:
-            it = islice(enricher, cli_args.lines)
-
-        for row in it:
-            enricher.writerow(row)

@@ -17,7 +17,6 @@ from casanova.cli import (
     filter_action,
     map_reduce_action,
     groupby_action,
-    reverse_action,
 )
 
 
@@ -375,23 +374,12 @@ def build_commands():
         type=SpliterType(),
     )
 
-    reverse_parser = subparsers.add_parser("reverse", formatter_class=custom_formatter)
-    add_common_arguments(reverse_parser)
-    reverse_parser.add_argument(
-        "file",
-        help="CSV file to read in reverse. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
-    )
-    reverse_parser.add_argument(
-        "-n", "--lines", help="Number of lines to read.", type=PositiveIntegerType()
-    )
-
     commands = {
         "map": (map_parser, map_action),
         "flatmap": (flatmap_parser, flatmap_action),
         "filter": (filter_parser, filter_action),
         "map-reduce": (map_reduce_parser, map_reduce_action),
         "groupby": (groupby_parser, groupby_action),
-        "reverse": (reverse_parser, reverse_action),
     }
 
     return parser, commands
