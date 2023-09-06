@@ -264,7 +264,7 @@ add_serialization_arguments = partial(add_arguments, arguments=SERIALIZATION_ARG
 add_format_arguments = partial(add_arguments, arguments=FORMAT_ARGUMENTS)
 
 EVALUATION_CONTEXT_HELP = """
-Evaluation variables:
+evaluation variables:
 
     - (fieldnames): List[str] - list of the CSV file fieldnames
         if the file has headers.
@@ -297,7 +297,7 @@ Evaluation variables:
 """
 
 MAP_REDUCE_EVALUATION_CONTEXT_HELP = """
-Reduce evaluation variables:
+reduce evaluation variables:
 
     - (acc): Any - accumulated value.
 
@@ -306,7 +306,7 @@ Reduce evaluation variables:
 """
 
 GROUPBY_EVALUATION_CONTEXT_HELP = """
-Grouping evaluation variables:
+grouping evaluation variables:
 
     - (group): Group: wrapper class representing
         a group of CSV rows. You can get its length,
@@ -316,11 +316,10 @@ Grouping evaluation variables:
             len(group)
             group.key
             sum(int(row.count) for row in group)
-
 """
 
 EVALUATION_LIB_HELP = """
-Available libraries and helpers:
+available libraries and helpers:
 
     - (Counter): shorthand for collections.Counter.
         https://docs.python.org/fr/3/library/collections.html#collections.Counter
@@ -398,7 +397,29 @@ def build_commands():
     map_parser = subparsers.add_parser(
         "map",
         formatter_class=custom_formatter,
-        epilog=EVALUATION_CONTEXT_HELP + EVALUATION_LIB_HELP,
+        description=dedent(
+            """
+            Casanova map command evaluates a python expression
+            for each row of the given CSV file and writes
+            a CSV file identical to the input but with an
+            added column containing the result of the beforementioned
+            expression.
+
+            The evaluation of this python expression can
+            easily be parallelized if required, using the
+            -p/--processes flag.
+            """
+        ),
+        epilog=EVALUATION_CONTEXT_HELP
+        + EVALUATION_LIB_HELP
+        + dedent(
+            """
+                Examples:
+
+                . Concatenating two columns:
+                    $ casanova map 'row.name + " " + row.surname' full_name file.csv > result.csv
+            """
+        ),
     )
     add_common_arguments(map_parser)
     add_mp_arguments(map_parser)
