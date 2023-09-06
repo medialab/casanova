@@ -156,3 +156,15 @@ class TestUtils(object):
         r = ReversedFile(StringIO("al\nbl"), buffer_size=3)
 
         assert list(r) == ["lb\n", "la"]
+
+        r = ReversedFile(StringIO("a\n\nb\nc\n"))
+
+        assert list(r) == ["c\n", "b\n", "\n", "a"]
+
+        r = ReversedFile(StringIO("a\n\nb\nc\n"), buffer_size=1)
+
+        assert list(r) == ["c\n", "b\n", "\n", "a"]
+
+        r = ReversedFile(StringIO("a\n\nb\nc\n"), buffer_size=2)
+
+        assert list(r) == ["c\n", "b\n", "\n", "a"]

@@ -291,22 +291,31 @@ class ReversedFile:
 
     def __iter__(self):
         buffer = ""
+        first = True
 
         while True:
-            data = self.read(self.buffer_size)
-
-            if not data:
-                break
-
-            buffer += data
-
             try:
+                # NOTE: we could start searching from last buffer size
+                # for better performance but who has time for that?
                 i = buffer.index("\n")
             except ValueError:
+                data = self.read(self.buffer_size)
+
+                if not data:
+                    break
+
+                buffer += data
+
                 continue
 
-            yield buffer[: i + 1]
+            part = buffer[: i + 1]
             buffer = buffer[i + 1 :]
+
+            if first and part == "\n":
+                first = False
+                continue
+
+            yield part
 
         if buffer:
             yield buffer
