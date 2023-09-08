@@ -206,6 +206,11 @@ class TestCLI(object):
             ],
         )
 
+        self.assert_run(
+            'flatmap "(int(row.n) + 1,)" n1 -r n ./test/resources/count.csv',
+            [["n1"], ["2"], ["3"], ["4"]],
+        )
+
     def test_filter(self):
         self.assert_run(
             'filter "int(row.n) > 2" ./test/resources/count.csv', [["n"], ["3"]]

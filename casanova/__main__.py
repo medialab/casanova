@@ -367,7 +367,7 @@ def build_commands():
             Casanova command line tool that can be used to mangle CSV files using python
             expressions.
 
-            Available commands:
+            available commands:
 
                 - (map): evaluate a python expression for each row of a CSV file
                     and save the result as a new column.
@@ -386,6 +386,16 @@ def build_commands():
                 - (groupby): group each row of a CSV file using a python
                     expression then output some aggregated information
                     per group using another python expression.
+
+            To perform more generic tasks on CSV files that don't specifically
+            require executing python code, we recommend using the excellent
+            and very performant "xsv" tool instead:
+
+            https://github.com/BurntSushi/xsv
+
+            or our own fork of the tool:
+
+            https://github.com/medialab/xsv
             """
         ),
         formatter_class=custom_formatter,
@@ -399,15 +409,30 @@ def build_commands():
         formatter_class=custom_formatter,
         description=dedent(
             """
-            Casanova map command evaluates a python expression
+            The map command evaluates a python expression
             for each row of the given CSV file and writes
             a CSV file identical to the input but with an
             added column containing the result of the beforementioned
             expression.
 
-            The evaluation of this python expression can
-            easily be parallelized if required, using the
-            -p/--processes flag.
+            For instance, given the following CSV file:
+
+            a,b
+            1,4
+            5,2
+
+            The following command:
+
+            $ casanova map 'int(row.a) + int(row.b)' c
+
+            Will produce the following result:
+
+            a,b,c
+            1,4,5
+            5,2,7
+
+            The evaluation of the python expression can easily
+            be parallelized using the -p/--processes flag.
             """
         ),
         epilog=EVALUATION_CONTEXT_HELP
@@ -439,6 +464,42 @@ def build_commands():
     flatmap_parser = subparsers.add_parser(
         "flatmap",
         formatter_class=custom_formatter,
+        description=dedent(
+            """
+            The flatmap command evaluates a python expression
+            for each row of the given CSV file. This expression
+            is expected to return a python iterable value that
+            will be consumed to output one CSV row per yielded item,
+            containing an additional column with said item, or replacing
+            a column of your choice (using the -r/--replace flag).
+
+            For instance, given the following CSV file:
+
+            name,colors
+            John,blue
+            Mary,yellow|red
+
+            The following command:
+            $ casanova flatmap 'row.colors.split("|")' color -r colors
+
+            Will produce the following result:
+
+            name,color
+            John,blue
+            Mary,yellow
+            Mary,red
+
+            It is very useful for tokenization, for instance, or
+            any purpose where any row in the input must generate
+            many rows (or no rows altogether) in the output.
+
+            This way, flatmap is sometimes used as a combination
+            of filter and map in a single pass over the file.
+
+            The evaluation of the python expression can easily
+            be parallelized using the -p/--processes flag.
+            """
+        ),
         epilog=EVALUATION_CONTEXT_HELP + EVALUATION_LIB_HELP,
     )
     add_common_arguments(flatmap_parser)
@@ -454,6 +515,11 @@ def build_commands():
     flatmap_parser.add_argument(
         "file",
         help="CSV file to flatmap. Can be gzip-compressed, and can also be a URL. Will consider `-` as stdin.",
+    )
+    flatmap_parser.add_argument(
+        "-r",
+        "--replace",
+        help="What column to optionally replace with the item one in the output CSV file.",
     )
 
     filter_parser = subparsers.add_parser(

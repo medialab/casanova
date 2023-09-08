@@ -357,15 +357,39 @@ def map_action(cli_args, output_file):
 def flatmap_action(cli_args, output_file):
     serialize = get_csv_serializer(cli_args)
 
+    select = None
+    add = [cli_args.new_column]
+
+    if cli_args.replace is not None:
+        add = None
+
     with Enricher(
         cli_args.file,
         output_file,
-        add=[cli_args.new_column],
+        add=add,
         delimiter=cli_args.delimiter,
+        select=select,
+        write_header=False,
     ) as enricher:
+        replaced_column_idx = None
+
+        if cli_args.replace is not None and enricher.headers is not None:
+            replaced_column_idx = enricher.headers[cli_args.replace]
+            enricher.writerow(
+                Headers.rename(
+                    enricher.headers, cli_args.replace, cli_args.new_column
+                ).fieldnames
+            )
+        else:
+            enricher.writeheader()
+
         for _, row, result in mp_iteration(cli_args, enricher):
             for value in flatmap(result):
-                enricher.writerow(row, [serialize(value)])
+                if cli_args.replace is None:
+                    enricher.writerow(row, [serialize(value)])
+                else:
+                    row[replaced_column_idx] = serialize(value)
+                    enricher.writerow(row)
 
 
 def filter_action(cli_args, output_file):
