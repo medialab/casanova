@@ -443,6 +443,9 @@ def build_commands():
 
                 . Concatenating two columns:
                     $ casanova map 'row.name + " " + row.surname' full_name file.csv > result.csv
+
+                . Computing a cumulative sum:
+                    $ casanova map -I 's = 0' -B 's += int(row.count)' s cumsum file.csv > result.csv
             """
         ),
     )
@@ -489,18 +492,26 @@ def build_commands():
             Mary,yellow
             Mary,red
 
-            It is very useful for tokenization, for instance, or
-            any purpose where any row in the input must generate
-            many rows (or no rows altogether) in the output.
-
-            This way, flatmap is sometimes used as a combination
-            of filter and map in a single pass over the file.
+            Note that if the python expression returns an empty
+            iterable (like an empty tuple), no row will be emitted
+            in the output. This way, flatmap is sometimes used
+            as a combination of a filter and a map in a single
+            pass over the file.
 
             The evaluation of the python expression can easily
             be parallelized using the -p/--processes flag.
             """
         ),
-        epilog=EVALUATION_CONTEXT_HELP + EVALUATION_LIB_HELP,
+        epilog=EVALUATION_CONTEXT_HELP
+        + EVALUATION_LIB_HELP
+        + dedent(
+            """
+                Examples:
+
+                . Exploding a column:
+                    $ casanova flatmap 'row.urls.split("|")' url -r urls file.csv > result.csv
+            """
+        ),
     )
     add_common_arguments(flatmap_parser)
     add_mp_arguments(flatmap_parser)
@@ -525,7 +536,44 @@ def build_commands():
     filter_parser = subparsers.add_parser(
         "filter",
         formatter_class=custom_formatter,
-        epilog=EVALUATION_CONTEXT_HELP + EVALUATION_LIB_HELP,
+        description=dedent(
+            """
+            The filter command evaluates a python expression
+            for each row of the given CSV file and only write
+            it to the output if beforementioned expression
+            returns a truthy value (where bool(value) is True).
+
+            For instance, given the following CSV file:
+
+            number
+            4
+            5
+            2
+
+            The following command:
+
+            $ casanova filter 'int(row.number) >= 4'
+
+            Will produce the following result:
+
+            number
+            4
+            5
+
+            The evaluation of the python expression can easily
+            be parallelized using the -p/--processes flag.
+            """
+        ),
+        epilog=EVALUATION_CONTEXT_HELP
+        + EVALUATION_LIB_HELP
+        + dedent(
+            """
+                Examples:
+
+                . Filtering rows numerically:
+                    $ casanova filter 'float(row.weight) >= 0.5' file.csv > result.csv
+            """
+        ),
     )
     add_common_arguments(filter_parser)
     add_mp_arguments(filter_parser)
@@ -546,9 +594,50 @@ def build_commands():
     map_reduce_parser = subparsers.add_parser(
         "map-reduce",
         formatter_class=custom_formatter,
+        description=dedent(
+            """
+            The map-reduce command first evaluates a python
+            expression for each row of the given CSV file,
+            then accumulates a final result by evaluating
+            another python expression on the results of the first.
+
+            The result will be printed as a single raw value in
+            the terminal but can also be formatted as CSV or JSON
+            using the --csv and --json flags respectively.
+
+            For instance, given the following CSV file:
+
+            number
+            4
+            5
+            2
+
+            The following command:
+
+            $ casanova map-reduce 'int(row.number)' 'acc + current'
+
+            Will produce the following result:
+
+            11
+
+            The evaluation of the python expression can easily
+            be parallelized using the -p/--processes flag.
+
+            Note that only the map expression will be parallelized,
+            not the reduce one.
+            """
+        ),
         epilog=EVALUATION_CONTEXT_HELP
+        + MAP_REDUCE_EVALUATION_CONTEXT_HELP
         + EVALUATION_LIB_HELP
-        + MAP_REDUCE_EVALUATION_CONTEXT_HELP,
+        + dedent(
+            """
+                Examples:
+
+                . Summing a column:
+                    $ casanova map-reduce 'int(row.number)' 'acc + current' file.csv
+            """
+        ),
     )
     add_common_arguments(map_reduce_parser)
     add_mp_arguments(map_reduce_parser)
@@ -580,9 +669,55 @@ def build_commands():
     groupby_parser = subparsers.add_parser(
         "groupby",
         formatter_class=custom_formatter,
+        description=dedent(
+            """
+            The groupby command first evaluates a python
+            expression for each row of the given CSV file.
+            This first python expression must return a key
+            that will be used to add the row to a group.
+            Then the command will evaluate a second python
+            expression for each of the accumulated groups
+            in order to output a resulting row for each one
+            of them.
+
+            Note that this command needs to load the full
+            CSV file into memory to work.
+
+            For instance, given the following CSV file:
+
+            name,surname
+            John,Davis
+            Mary,Sue
+            Marcus,Davis
+
+            The following command:
+
+            $ casanova groupby 'row.surname' 'len(group)' -f count
+
+            Will produce the following result:
+
+            group,count
+            Davis,2
+            Sue,1
+
+            The evaluation of the python expression can easily
+            be parallelized using the -p/--processes flag.
+
+            Note that only the grouping expression will be parallelized,
+            not the one aggregating a value for each group.
+            """
+        ),
         epilog=EVALUATION_CONTEXT_HELP
         + GROUPBY_EVALUATION_CONTEXT_HELP
-        + EVALUATION_LIB_HELP,
+        + EVALUATION_LIB_HELP
+        + dedent(
+            """
+                Examples:
+
+                . Computing a mean by group:
+                    $ casanova groupby 'row.city' 'stats.mean(int(row.count) for row in group)' file.csv > result.csv
+            """
+        ),
     )
     add_common_arguments(groupby_parser)
     add_mp_arguments(groupby_parser)
