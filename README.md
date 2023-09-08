@@ -20,7 +20,13 @@ casanova.reader: 25s
 - Have the possibility to resume said enrichment if your process exited
 - Do so in a threadsafe fashion, and be able to resume even if your output does not have the same order as the input
 
-`casanova` also packs exotic utilities able to read csv files in reverse (without loading the whole file into memory and in regular `O(n)` time), so you can, for instance, fetch useful information to restart some aborted process.
+`casanova` also packs exotic utilities able to read csv files in reverse (without loading the whole file into memory and in regular `O(n)` time), so you can, for instance, fetch useful information at the end of a file to restart some aborted process.
+
+Finally, `casanova` can be used as a command line tool able to evaluate python expressions (that can be parallelized if required) for each row of a given CSV file to produce typical results such as adding a column based on others etc.
+
+The command line tool documentation can be found [here](./docs/cli.md).
+
+For more generic task that don't require python evaluation, we recommend the very performant [`xsv`](https://github.com/BurntSushi/xsv) tool instead, or our own [fork](https://github.com/medialab/xsv) of the tool.
 
 ## Installation
 
