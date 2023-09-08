@@ -601,6 +601,14 @@ def build_commands():
             then accumulates a final result by evaluating
             another python expression on the results of the first.
 
+            The reducing operation works like with any programming
+            language, i.e. an accumulated value (set to an arbitrary
+            value using the -V/--init-value flag, or defaulting
+            to the first value returned by the mapping expression)
+            is passed to the reducing expression to be combined with
+            the current mapped value to produce the next value of
+            the accumulator.
+
             The result will be printed as a single raw value in
             the terminal but can also be formatted as CSV or JSON
             using the --csv and --json flags respectively.
@@ -614,11 +622,11 @@ def build_commands():
 
             The following command:
 
-            $ casanova map-reduce 'int(row.number)' 'acc + current'
+            $ casanova map-reduce 'int(row.number)' 'acc * current'
 
             Will produce the following result:
 
-            11
+            40
 
             The evaluation of the python expression can easily
             be parallelized using the -p/--processes flag.
@@ -634,8 +642,8 @@ def build_commands():
             """
                 Examples:
 
-                . Summing a column:
-                    $ casanova map-reduce 'int(row.number)' 'acc + current' file.csv
+                . Computing the product of a column:
+                    $ casanova map-reduce 'int(row.number)' 'acc * current' file.csv
             """
         ),
     )
@@ -676,9 +684,8 @@ def build_commands():
             This first python expression must return a key
             that will be used to add the row to a group.
             Then the command will evaluate a second python
-            expression for each of the accumulated groups
-            in order to output a resulting row for each one
-            of them.
+            expression for each of the groups in order to
+            output a resulting row for each one of them.
 
             Note that this command needs to load the full
             CSV file into memory to work.
@@ -704,7 +711,7 @@ def build_commands():
             be parallelized using the -p/--processes flag.
 
             Note that only the grouping expression will be parallelized,
-            not the one aggregating a value for each group.
+            not the one producing a resulting row for each group.
             """
         ),
         epilog=EVALUATION_CONTEXT_HELP
