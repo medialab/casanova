@@ -56,7 +56,9 @@ class Enricher(Reader):
         self.strip_null_bytes_on_write = strip_null_bytes_on_write
 
         self.selected_indices = None
-        self.output_fieldnames = self.fieldnames
+        self.output_fieldnames = (
+            list(self.fieldnames) if self.fieldnames is not None else None
+        )
         self.added_count = 0
 
         if select is not None:

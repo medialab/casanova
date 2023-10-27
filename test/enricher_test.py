@@ -673,3 +673,23 @@ class TestEnricher(object):
         # NOTE: this should not raise, as per issue #123
         with BatchResumer(output_path, value_column="name") as resumer:
             casanova.batch_enricher(StringIO("name\njohn\nmary"), resumer)
+
+    def test_input_fieldnames_validity(self):
+        enricher = casanova.enricher(
+            StringIO("name,surname\njohn,mary"),
+            StringIO(),
+            add=("age",),
+        )
+
+        assert enricher.fieldnames == ["name", "surname"]
+        assert enricher.output_fieldnames == ["name", "surname", "age"]
+
+        enricher = casanova.enricher(
+            StringIO("name,surname\njohn,mary"),
+            StringIO(),
+            add=("age",),
+            select=("name",),
+        )
+
+        assert enricher.fieldnames == ["name", "surname"]
+        assert enricher.output_fieldnames == ["name", "age"]
