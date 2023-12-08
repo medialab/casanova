@@ -19,7 +19,7 @@ class ContiguousRangeSet(object):
     """
 
     def __init__(self):
-        # NOTE: replace this by `blist` if not performany enough
+        # NOTE: replace this by `blist` if not performant enough
         self.intervals = []
         self.current_stateful_interval = 0
         self.length = 0
@@ -89,7 +89,7 @@ class ContiguousRangeSet(object):
     def stateful_contains(self, point):
         """
         Method returning whether the given point is found in the set. This
-        method is stateful and assumes we will ask for points in a monotonic
+        method is stateful and assumes we will ask for points in a monotonically
         increasing order.
         """
 

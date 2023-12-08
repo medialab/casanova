@@ -4,6 +4,8 @@
 #
 # Global mutable defaults used by casanova classes.
 #
+from typing import Optional
+
 from contextlib import contextmanager
 
 
@@ -15,7 +17,7 @@ class CasanovaDefaults(object):
     ]
 
     def __init__(self):
-        self.prebuffer_bytes = None
+        self.prebuffer_bytes: Optional[int] = None
         self.strip_null_bytes_on_read = False
         self.strip_null_bytes_on_write = False
 
@@ -35,10 +37,6 @@ def set_defaults(
     prebuffer_bytes=NOT_GIVEN,
     strip_null_bytes_on_read=NOT_GIVEN,
     strip_null_bytes_on_write=NOT_GIVEN,
-    plural_separator=NOT_GIVEN,
-    none_value=NOT_GIVEN,
-    true_value=NOT_GIVEN,
-    false_value=NOT_GIVEN,
 ):
     global DEFAULTS
 
@@ -65,8 +63,8 @@ def set_defaults(
 
 @contextmanager
 def temporary_defaults(**kwargs):
+    original = DEFAULTS.save()
     try:
-        original = DEFAULTS.save()
         set_defaults(**kwargs)
         yield
     finally:
