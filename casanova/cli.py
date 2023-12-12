@@ -7,6 +7,7 @@ import json
 import math
 import random
 import statistics
+from threading import Lock
 from types import GeneratorType
 from os.path import join
 from urllib.parse import urlsplit, urljoin
@@ -322,15 +323,22 @@ def mp_iteration(cli_args, reader: Reader):
         # to avoid serializing them back with worker result.
         worked_rows = {}
 
+        # NOTE: payloads are not depiled in the main thread as the loop body
+        # when using multiprocessing. dict methods are mostly atomic but
+        # let's make sure of this with a lock, alright?
+        worked_rows_lock = Lock()
+
         def payloads():
             for t in reader.enumerate():
-                worked_rows[t[0]] = t[1]
+                with worked_rows_lock:
+                    worked_rows[t[0]] = t[1]
                 yield t
 
         mapper = pool.imap if not cli_args.unordered else pool.imap_unordered
 
         for exc, i, result in mapper(worker, payloads(), chunksize=cli_args.chunk_size):
-            row = worked_rows.pop(i)
+            with worked_rows_lock:
+                row = worked_rows.pop(i)
 
             if exc is not None:
                 if cli_args.ignore_errors:
