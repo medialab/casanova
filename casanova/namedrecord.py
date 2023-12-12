@@ -4,15 +4,9 @@
 #
 # CSV-aware improvement over python's namedtuple.
 #
-import sys
 import json
 from typing import Optional, Iterable, Union, List, Callable, Any, Type
-from casanova.types import AnyWritableCSVRowPart
-
-if sys.version_info[:2] >= (3, 10):
-    from typing import get_origin, get_args
-else:
-    from typing_extensions import get_origin, get_args
+from casanova.types import AnyWritableCSVRowPart, get_args, get_origin
 
 from collections import OrderedDict, namedtuple
 from collections.abc import Mapping
