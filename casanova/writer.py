@@ -180,7 +180,8 @@ class InferringWriter(Writer):
         self,
         output_file,
         fieldnames: Optional[AnyFieldnames] = None,
-        add: Optional[AnyFieldnames] = None,
+        prepend: Optional[AnyFieldnames] = None,
+        append: Optional[AnyFieldnames] = None,
         plural_separator: Optional[str] = None,
         none_value: Optional[str] = None,
         true_value: Optional[str] = None,
@@ -189,12 +190,12 @@ class InferringWriter(Writer):
         custom_types: Optional[CustomTypes] = None,
         **kwargs
     ):
-        self.added_fieldnames = None
-        self.added_count = 0
+        self.appended_fieldnames = None
+        self.appended_count = 0
 
-        if add is not None:
-            self.added_fieldnames = coerce_fieldnames(add)
-            self.added_count = len(self.added_fieldnames)
+        if append is not None:
+            self.appended_fieldnames = coerce_fieldnames(append)
+            self.appended_count = len(self.appended_fieldnames)
 
         super().__init__(
             output_file, fieldnames=fieldnames, write_header=False, **kwargs
@@ -227,8 +228,8 @@ class InferringWriter(Writer):
 
         row = self.fieldnames
 
-        if self.added_fieldnames is not None:
-            row = row + self.added_fieldnames
+        if self.appended_fieldnames is not None:
+            row = row + self.appended_fieldnames
 
         self._writerow(row)
 
@@ -277,12 +278,12 @@ class InferringWriter(Writer):
             raise InconsistentRowTypesError
 
         if add is not None:
-            if self.added_fieldnames is None:
+            if self.appended_fieldnames is None:
                 raise TypeError("not expecting additional information")
 
             add = coerce_row(add)
 
-            if len(add) != self.added_count:
+            if len(add) != self.appended_count:
                 raise TypeError("inconsistent addition len")
 
             row += add

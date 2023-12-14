@@ -76,7 +76,7 @@ class TestInferringWriter(object):
 
     def test_add(self):
         output = StringIO()
-        writer = InferringWriter(output, add=["n"])
+        writer = InferringWriter(output, append=["n"])
         writer.writerow("one", [1])
         writer.writerow("two", [2])
         writer.writerow("three", [3])
@@ -89,7 +89,7 @@ class TestInferringWriter(object):
         ]
 
         output = StringIO()
-        writer = InferringWriter(output, add=["n"], fieldnames=["letters"])
+        writer = InferringWriter(output, append=["n"], fieldnames=["letters"])
         writer.writerow("one", [1])
 
         assert collect_csv(output) == [
