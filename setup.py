@@ -19,7 +19,7 @@ setup(
     package_data={"docs": ["README.md"]},
     install_requires=["ebbe>=1.11.0,<2"],
     extras_require={
-        ":python_version<'3.10'": ["typing_extensions"],
+        ":python_version<'3.11'": ["typing_extensions"],
         "http": ["urllib3", "certifi"],
     },
     entry_points={
