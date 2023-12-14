@@ -194,6 +194,20 @@ class TestWriter(object):
 
         assert buf.getvalue().strip() == "title,tags\nTitle,a&b"
 
+    def test_write_dataclass(self):
+        @dataclass
+        class Video:
+            title: str
+            tags: List[str]
+
+        buf = StringIO()
+
+        writer = Writer(buf, lineterminator="\n", fieldnames=Video)
+
+        writer.writerow(Video("Title", ["a", "b"]))
+
+        assert buf.getvalue().strip() == "title,tags\nTitle,a|b"
+
     def test_variadicity(self):
         buf = StringIO()
 

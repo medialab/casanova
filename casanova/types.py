@@ -1,4 +1,14 @@
-from typing import Union, List, Tuple, Dict, Iterator, KeysView, ValuesView, Any
+from typing import (
+    Union,
+    List,
+    Tuple,
+    Dict,
+    Iterator,
+    KeysView,
+    ValuesView,
+    Any,
+    ClassVar,
+)
 
 import sys
 import csv
@@ -31,6 +41,10 @@ class CSVDictWritable(Protocol):
         ...
 
 
+class IsDataclass(Protocol):
+    __dataclass_fields__ = ClassVar[Dict]
+
+
 AnyWritableCSVRowPart = Union[
     CSVWritable,
     Iterator[Any],
@@ -38,4 +52,5 @@ AnyWritableCSVRowPart = Union[
     KeysView[Any],
     ValuesView[Any],
     Tuple[Any, ...],
+    IsDataclass,
 ]

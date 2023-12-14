@@ -65,6 +65,15 @@ class TestInferringWriter(object):
             Document("test", False), [["name", "is_relevant"], ["test", "false"]]
         )
 
+        @dataclass
+        class RawDocument:
+            name: str
+            is_relevant: bool
+
+        self.assert_writerow(
+            RawDocument("test", False), [["name", "is_relevant"], ["test", "false"]]
+        )
+
     def test_add(self):
         output = StringIO()
         writer = InferringWriter(output, add=["n"])

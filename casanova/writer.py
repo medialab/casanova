@@ -9,6 +9,7 @@ from typing import Optional, Iterable, Iterator, Mapping
 from casanova.types import AnyCSVDialect, AnyWritableCSVRowPart
 
 import csv
+from dataclasses import fields, is_dataclass
 
 from casanova.defaults import DEFAULTS
 from casanova.serialization import CSVSerializer, CustomTypes
@@ -261,6 +262,9 @@ class InferringWriter(Writer):
 
         if callable(__csv_row__):
             data = __csv_row__()
+
+        elif is_dataclass(data):
+            data = [getattr(data, f.name) for f in fields(data)]
 
         if isinstance(data, Mapping):
             row = [self.serializer(data.get(k)) for k in self.fieldnames]

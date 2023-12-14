@@ -5,11 +5,18 @@
 # CSV-aware improvement over python's namedtuple.
 #
 from typing import Optional, Union, List, Callable, Any, Type, Dict, TypeVar, Tuple
-from casanova.types import AnyWritableCSVRowPart, get_args, get_origin, TypeGuard, Self
+from casanova.types import (
+    AnyWritableCSVRowPart,
+    get_args,
+    get_origin,
+    TypeGuard,
+    Self,
+    IsDataclass,
+)
 
 import json
 from collections.abc import Mapping
-from dataclasses import fields, field, Field
+from dataclasses import fields, field, Field, is_dataclass
 
 from casanova.serialization import CSVSerializer
 
@@ -29,7 +36,7 @@ def tabular_field(
     stringify_everything: Optional[bool] = None,
     as_json: Optional[bool] = None,
     serializer: Optional[Callable[[Any], str]] = None,
-    **field_kwargs
+    **field_kwargs,
 ) -> Field:
     f_serialization_options = {}
 
@@ -271,6 +278,9 @@ def coerce_row(row: AnyWritableCSVRowPart, consume: bool = False) -> List[Any]:
     if callable(__csv_row__):
         return __csv_row__()
 
+    if is_dataclass(row):
+        return [TABULAR_RECORD_SERIALIZER(getattr(row, f.name)) for f in fields(row)]
+
     return list(row) if consume else row  # type: ignore
 
 
@@ -293,12 +303,15 @@ def tabular_fields(cls) -> List[Field]:
     return fs
 
 
-AnyFieldnames = Union[List[str], Type[TabularRecord]]
+AnyFieldnames = Union[List[str], Type[TabularRecord], Type[IsDataclass]]
 
 
 def coerce_fieldnames(target: AnyFieldnames) -> List[str]:
     if is_tabular_record_class(target):
         return target.fieldnames()
+
+    if is_dataclass(target):
+        return [f.name for f in fields(target)]
 
     return target  # type: ignore
 
@@ -306,6 +319,9 @@ def coerce_fieldnames(target: AnyFieldnames) -> List[str]:
 def infer_fieldnames(target: Any) -> Optional[List[str]]:
     if isinstance(target, TabularRecord):
         return target.__class__.fieldnames()
+
+    if is_dataclass(target):
+        return [f.name for f in fields(target)]
 
     if isinstance(target, Mapping):
         return list(target.keys())
