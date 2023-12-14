@@ -18,7 +18,7 @@ from ebbe import without_last
 
 from casanova.defaults import DEFAULTS
 from casanova.headers import Headers
-from casanova.namedrecord import is_tabular_record_class
+from casanova.record import is_tabular_record_class
 from casanova.utils import (
     ensure_open,
     suppress_BOM,

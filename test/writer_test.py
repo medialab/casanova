@@ -13,7 +13,7 @@ from casanova.utils import PY_310
 from casanova.writer import Writer
 from casanova.resumers import BasicResumer, LastCellResumer
 from casanova.exceptions import Py310NullByteWriteError
-from casanova.namedrecord import namedrecord, TabularRecord, tabular_field
+from casanova.record import TabularRecord, tabular_field
 
 
 class TestWriter(object):
@@ -179,17 +179,6 @@ class TestWriter(object):
         writer.writerow(["John", "Dandy"])
 
         assert buf.getvalue().strip() == "John;Dandy"
-
-    def test_write_namedrecord(self):
-        Video = namedrecord("Video", ["title", "tags"])
-
-        buf = StringIO()
-
-        writer = Writer(buf, lineterminator="\n", fieldnames=Video)
-
-        writer.writerow(Video("Title", ["a", "b"]))
-
-        assert buf.getvalue().strip() == "title,tags\nTitle,a|b"
 
     def test_write_tabular_record(self):
         @dataclass

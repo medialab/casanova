@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from casanova.defaults import set_defaults
 from casanova.headers import RowWrapper, Headers
 from casanova.reader import Multiplexer
-from casanova.namedrecord import namedrecord, TabularRecord
+from casanova.record import TabularRecord
 from casanova.exceptions import (
     MissingColumnError,
     LtPy311ByteReadError,
@@ -64,6 +64,7 @@ class TestReader(object):
             reader = casanova.reader(f)
 
             assert reader.row_len == 2
+            assert reader.headers is not None
 
             assert reader.headers.name == 0
             assert reader.headers.surname == 1
@@ -127,28 +128,6 @@ class TestReader(object):
             people = list(reader.records("surname", "name"))
 
             assert people == [("Matthews", "John"), ("Sue", "Mary"), ("Stone", "Julia")]
-
-    def test_namedrecord_records(self):
-        People = namedrecord("People", ["name", "surname"])
-
-        with open("./test/resources/people.csv") as f:
-            reader = casanova.reader(f)
-
-            records = list(reader.records(People))
-
-            assert records == [
-                People("John", "Matthews"),
-                People("Mary", "Sue"),
-                People("Julia", "Stone"),
-            ]
-
-        with open("./test/resources/people_unordered.csv") as f:
-            reader = casanova.reader(f)
-
-            with pytest.raises(TypeError):
-                reader.records(People)
-
-            reader.records(People, ignore_headers=True)
 
     def test_tabular_records_records(self):
         @dataclass

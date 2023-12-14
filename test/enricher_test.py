@@ -22,7 +22,7 @@ from casanova.resumers import (
     ThreadSafeResumer,
     BatchResumer,
 )
-from casanova.namedrecord import namedrecord, TabularRecord, tabular_field
+from casanova.record import TabularRecord, tabular_field
 from casanova.exceptions import Py310NullByteWriteError
 from casanova.utils import PY_310, CsvIO
 
@@ -560,22 +560,6 @@ class TestEnricher(object):
                 ["Mary", "1"],
                 ["Julia", "2"],
             ]
-
-    def test_write_namedrecord(self):
-        Video = namedrecord("Video", ["title", "tags"])
-        buf = StringIO()
-
-        enricher = casanova.enricher(
-            CsvIO([["John"]], ["name"]),
-            buf,
-            add=Video,
-            writer_lineterminator="\n",
-        )
-
-        for row in enricher:
-            enricher.writerow(row, Video("Title", ["a", "b"]))
-
-        assert buf.getvalue().strip() == "name,title,tags\nJohn,Title,a|b"
 
     def test_write_tabular_record(self):
         @dataclass

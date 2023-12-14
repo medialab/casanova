@@ -13,7 +13,7 @@ import csv
 from casanova.defaults import DEFAULTS
 from casanova.serialization import CSVSerializer, CustomTypes
 from casanova.resumers import Resumer, BasicResumer, LastCellResumer
-from casanova.namedrecord import (
+from casanova.record import (
     coerce_row,
     coerce_fieldnames,
     AnyFieldnames,

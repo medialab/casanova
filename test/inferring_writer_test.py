@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from test.utils import collect_csv
 
 from casanova.writer import InferringWriter
-from casanova.namedrecord import namedrecord, TabularRecord
+from casanova.record import TabularRecord
 from casanova.exceptions import InvalidRowTypeError, InconsistentRowTypesError
 
 
@@ -55,12 +55,6 @@ class TestInferringWriter(object):
             fieldnames=["one", "two", "three"],
         )
         self.assert_writerow([True, False], [["col1", "col2"], ["true", "false"]])
-
-        Video = namedrecord("Video", ["title", "duration"])
-
-        self.assert_writerow(
-            Video("Jaws", 145), [["title", "duration"], ["Jaws", "145"]]
-        )
 
         @dataclass
         class Document(TabularRecord):

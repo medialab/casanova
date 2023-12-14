@@ -19,7 +19,7 @@ from casanova.resumers import (
 from casanova.headers import Headers
 from casanova.reader import Reader
 from casanova.writer import Writer
-from casanova.namedrecord import coerce_row, coerce_fieldnames
+from casanova.record import coerce_row, coerce_fieldnames
 from casanova.defaults import DEFAULTS
 from casanova.types import AnyWritableCSVRowPart
 
