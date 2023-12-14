@@ -13,6 +13,11 @@ if sys.version_info >= (3, 10):
 else:
     from typing_extensions import TypeGuard, get_args, get_origin
 
+if sys.version_info >= (3, 11):
+    from typing import Self
+else:
+    from typing_extensions import Self
+
 AnyCSVDialect = Union[str, csv.Dialect]
 
 

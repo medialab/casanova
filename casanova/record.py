@@ -4,8 +4,8 @@
 #
 # CSV-aware improvement over python's namedtuple.
 #
-from typing import Optional, Union, List, Callable, Any, Type
-from casanova.types import AnyWritableCSVRowPart, get_args, get_origin, TypeGuard
+from typing import Optional, Union, List, Callable, Any, Type, Dict, TypeVar, Tuple
+from casanova.types import AnyWritableCSVRowPart, get_args, get_origin, TypeGuard, Self
 
 import json
 from collections.abc import Mapping
@@ -18,6 +18,7 @@ TABULAR_RECORD_SERIALIZER = CSVSerializer()
 # NOTE: keeping a mention to CSV data in the method is still relevant because we
 # are in fact serializing to a flavor of string. We could add row casting methods
 # also for tabular format that are not CSV (e.g. ndjson)
+
 
 def tabular_field(
     *,
@@ -53,9 +54,9 @@ def tabular_field(
     if serializer is not None:
         f_serialization_options["serializer"] = serializer
 
-    metadata = field_kwargs.get('metadata', {})
+    metadata = field_kwargs.get("metadata", {})
     metadata["serialization_options"] = f_serialization_options
-    field_kwargs['metadata'] = metadata
+    field_kwargs["metadata"] = metadata
 
     return field(**field_kwargs)
 
@@ -65,7 +66,7 @@ PluralTypes = (list, frozenset, set, tuple)
 
 
 # TODO: deal with straightforward unions (Literal notably)
-def parse(
+def parse_value(
     string,
     t,
     plural_separator: str = "|",
@@ -97,7 +98,7 @@ def parse(
 
     if origin in PluralTypes:
         values = (
-            parse(s, args[0], none_value=none_value, true_value=true_value)
+            parse_value(s, args[0], none_value=none_value, true_value=true_value)
             for s in string.split(plural_separator)
         )
 
@@ -112,7 +113,7 @@ def parse(
         if string == none_value:
             return None
 
-        return parse(
+        return parse_value(
             string,
             args[0],
             plural_separator=plural_separator,
@@ -121,6 +122,52 @@ def parse(
         )
 
     raise NotImplementedError("cannot parse arbitrary types")
+
+
+C = TypeVar("C", bound="TabularRecord")
+
+
+def parse(cls: Type[C], row, offset=0) -> Tuple[int, C]:
+    parsed = []
+    fs = _cached_fields(cls)
+
+    options = cls._serializer_options
+
+    i = offset
+
+    while i < len(row):
+        v = row[i]
+        f = fs[i - offset]
+
+        f_options = {**options, **f.metadata.get("serialization_options", {})}
+
+        if is_tabular_record_class(f.type):
+            i, sub_record = parse(f.type, row, offset=i)
+            parsed.append(sub_record)
+        else:
+            parsed.append(
+                parse_value(
+                    v,
+                    f.type,
+                    plural_separator=f_options["plural_separator"],
+                    none_value=f_options["none_value"],
+                    true_value=f_options["true_value"],
+                    as_json=f_options.get("as_json", False),
+                )
+            )
+            i += 1
+
+    try:
+        record = cls(*parsed)
+    except TypeError:
+        raise TypeError(
+            "mismatch between length of rows and number of properties held by tabular record"
+        )
+
+    if offset > 0:
+        return i, record
+
+    return 0, record
 
 
 def _cached_fields(cls):
@@ -156,55 +203,16 @@ class TabularRecord:
         return names
 
     @classmethod
-    def parse(cls, row, _offset=0):
-        parsed = []
-        fs = _cached_fields(cls)
+    def parse(cls, row) -> Self:
+        return parse(cls, row)[1]
 
-        options = cls._serializer_options
-
-        i = _offset
-
-        while i < len(row):
-            v = row[i]
-            f = fs[i - _offset]
-
-            f_options = {**options, **f.metadata.get('serialization_options', {})}
-
-            if is_tabular_record_class(f.type):
-                i, sub_record = f.type.parse(row, _offset=i)
-                parsed.append(sub_record)
-            else:
-                parsed.append(
-                    parse(
-                        v,
-                        f.type,
-                        plural_separator=f_options["plural_separator"],
-                        none_value=f_options["none_value"],
-                        true_value=f_options["true_value"],
-                        as_json=f_options.get("as_json", False),
-                    )
-                )
-                i += 1
-
-        try:
-            record = cls(*parsed)
-        except TypeError:
-            raise TypeError(
-                "mismatch between length of rows and number of properties held by tabular record"
-            )
-
-        if _offset > 0:
-            return i, record
-
-        return record
-
-    def as_csv_row(self):
+    def as_csv_row(self) -> List:
         row = []
 
         options = self._serializer_options
 
         for f in _cached_fields(self):
-            f_options = {**options, **f.metadata.get('serialization_options', {})}
+            f_options = {**options, **f.metadata.get("serialization_options", {})}
 
             if is_tabular_record_class(f.type):
                 row.extend(getattr(self, f.name).as_csv_row())
@@ -221,16 +229,16 @@ class TabularRecord:
 
         return row
 
-    def __csv_row__(self):
+    def __csv_row__(self) -> List:
         return self.as_csv_row()
 
-    def as_csv_dict_row(self):
+    def as_csv_dict_row(self) -> Dict[str, Any]:
         row = {}
 
         options = self._serializer_options
 
         for f in _cached_fields(self):
-            f_options = {**options, **f.metadata.get('serialization_options', {})}
+            f_options = {**options, **f.metadata.get("serialization_options", {})}
 
             if is_tabular_record_class(f.type):
                 data = getattr(self, f.name).as_csv_dict_row()
@@ -250,7 +258,7 @@ class TabularRecord:
 
         return row
 
-    def __csv_dict_row__(self):
+    def __csv_dict_row__(self) -> Dict[str, Any]:
         return self.as_csv_dict_row()
 
 
