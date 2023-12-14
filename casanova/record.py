@@ -15,6 +15,9 @@ from casanova.serialization import CSVSerializer
 
 TABULAR_RECORD_SERIALIZER = CSVSerializer()
 
+# NOTE: keeping a mention to CSV data in the method is still relevant because we
+# are in fact serializing to a flavor of string. We could add row casting methods
+# also for tabular format that are not CSV (e.g. ndjson)
 
 def tabular_field(
     *,
