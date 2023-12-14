@@ -1,4 +1,4 @@
-from typing import Optional, Iterable, Mapping, Any, Dict, Callable, Type
+from typing import Optional, Iterable, Mapping, Any, Dict, Callable, Type, List
 
 from json import dumps
 from datetime import date, datetime, time
@@ -100,10 +100,10 @@ class CSVSerializer(object):
             )
         )
 
-    def serialize_row(self, row: Iterable, **kwargs):
+    def serialize_row(self, row: Iterable, **kwargs) -> List:
         return [self(value, **kwargs) for value in row]
 
     def serialize_dict_row(
         self, row: Mapping[str, Any], fieldnames: Iterable[str], **kwargs
-    ):
+    ) -> List:
         return [self(row.get(field), **kwargs) for field in fieldnames]
