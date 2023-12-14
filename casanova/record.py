@@ -14,7 +14,6 @@ from dataclasses import fields, field, Field
 from casanova.serialization import CSVSerializer
 
 TABULAR_RECORD_SERIALIZER = CSVSerializer()
-TABULAR_FIELDS = {}
 
 
 def tabular_field(
@@ -27,9 +26,7 @@ def tabular_field(
     as_json: Optional[bool] = None,
     serializer: Optional[Callable[[Any], str]] = None,
     **field_kwargs
-):
-    f = field(**field_kwargs)
-
+) -> Field:
     f_serialization_options = {}
 
     if plural_separator is not None:
@@ -53,10 +50,11 @@ def tabular_field(
     if serializer is not None:
         f_serialization_options["serializer"] = serializer
 
-    if f_serialization_options:
-        TABULAR_FIELDS[f] = f_serialization_options
+    metadata = field_kwargs.get('metadata', {})
+    metadata["serialization_options"] = f_serialization_options
+    field_kwargs['metadata'] = metadata
 
-    return f
+    return field(**field_kwargs)
 
 
 NoneType = type(None)
@@ -132,7 +130,7 @@ def _cached_fields(cls):
     return fs
 
 
-class TabularRecord(object):
+class TabularRecord:
     _cached_fields = None
     _serializer_options = {
         "plural_separator": "|",
@@ -143,7 +141,7 @@ class TabularRecord(object):
     }
 
     @classmethod
-    def fieldnames(cls, prefix: str = ""):
+    def fieldnames(cls, prefix: str = "") -> List[str]:
         names = []
 
         for f in _cached_fields(cls):
@@ -167,7 +165,7 @@ class TabularRecord(object):
             v = row[i]
             f = fs[i - _offset]
 
-            f_options = {**options, **TABULAR_FIELDS.get(f, {})}
+            f_options = {**options, **f.metadata.get('serialization_options', {})}
 
             if is_tabular_record_class(f.type):
                 i, sub_record = f.type.parse(row, _offset=i)
@@ -203,7 +201,7 @@ class TabularRecord(object):
         options = self._serializer_options
 
         for f in _cached_fields(self):
-            f_options = {**options, **TABULAR_FIELDS.get(f, {})}
+            f_options = {**options, **f.metadata.get('serialization_options', {})}
 
             if is_tabular_record_class(f.type):
                 row.extend(getattr(self, f.name).as_csv_row())
@@ -229,7 +227,7 @@ class TabularRecord(object):
         options = self._serializer_options
 
         for f in _cached_fields(self):
-            f_options = {**options, **TABULAR_FIELDS.get(f, {})}
+            f_options = {**options, **f.metadata.get('serialization_options', {})}
 
             if is_tabular_record_class(f.type):
                 data = getattr(self, f.name).as_csv_dict_row()
