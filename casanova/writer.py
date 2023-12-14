@@ -198,6 +198,7 @@ class InferringWriter(Writer):
         false_value: Optional[str] = None,
         stringify_everything: Optional[bool] = None,
         custom_types: Optional[CustomTypes] = None,
+        buffer_optionals: bool = False,
         **kwargs
     ):
         self.prepended_fieldnames = None
@@ -227,6 +228,11 @@ class InferringWriter(Writer):
             stringify_everything=stringify_everything,
             custom_types=custom_types,
         )
+
+        # Optionals buffering
+        self.buffering_optionals = buffer_optionals
+        self.__buffer_flushed = False
+        self.__buffer = []
 
         # Lifecycle
         # NOTE: we must infer even when resuming to ensure
@@ -262,6 +268,21 @@ class InferringWriter(Writer):
 
         self.__must_infer = False
 
+    def __flush_optionals(self) -> None:
+        if not self.buffering_optionals or self.__buffer_flushed:
+            return
+
+        # NOTE: this is important to avoid endless recursion
+        self.__buffer_flushed = True
+
+        for p in self.__buffer:
+            self.writerow(*p)
+
+        self.__buffer.clear()
+
+    def __del__(self):
+        self.__flush_optionals()
+
     def writerow(self, *parts: AnyWritableCSVRowPart) -> None:
         data = None
         prepend = None
@@ -286,6 +307,11 @@ class InferringWriter(Writer):
             data = list(data)
 
         if self.__must_infer:
+            if self.buffering_optionals:
+                if data is None:
+                    self.__buffer.append(parts)
+                    return
+
             fieldnames = infer_fieldnames(data)
 
             if fieldnames is None:
@@ -297,6 +323,8 @@ class InferringWriter(Writer):
             self.__set_fieldnames(fieldnames)
             self.writeheader()
 
+        self.__flush_optionals()
+
         # NOTE: coercing after inferrence not to lose fieldnames info
         __csv_row__ = getattr(data, "__csv_row__", None)
 
@@ -305,6 +333,9 @@ class InferringWriter(Writer):
 
         elif is_dataclass(data):
             data = [getattr(data, f.name) for f in fields(data)]
+
+        elif self.buffering_optionals and data is None:
+            data = [None] * self.row_len
 
         if isinstance(data, Mapping):
             row = [self.serializer(data.get(k)) for k in self.fieldnames]

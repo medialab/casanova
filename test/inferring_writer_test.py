@@ -133,3 +133,34 @@ class TestInferringWriter(object):
             ["2", "two", "5"],
             ["3", "three", "6"],
         ]
+
+    def test_buffer_optionals(self):
+        output = StringIO()
+        writer = InferringWriter(output, buffer_optionals=True)
+        writer.writerow(None)
+        writer.writerow(None)
+        writer.writerow(("John", "Lucy"))
+        writer.writerow(None)
+        writer.writerow()
+
+        assert collect_csv(output) == [
+            ["col1", "col2"],
+            ["", ""],
+            ["", ""],
+            ["John", "Lucy"],
+            ["", ""],
+            ["", ""],
+        ]
+
+        output = StringIO()
+        writer = InferringWriter(output, buffer_optionals=True, prepend=["color"])
+        writer.writerow(["red"])
+        writer.writerow()
+        writer.writerow(["yellow"], ("John", "Lucy"))
+
+        assert collect_csv(output) == [
+            ["color", "col1", "col2"],
+            ["red", "", ""],
+            ["", "", ""],
+            ["yellow", "John", "Lucy"],
+        ]
