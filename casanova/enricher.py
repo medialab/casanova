@@ -19,9 +19,10 @@ from casanova.resumers import (
 )
 from casanova.headers import Headers
 from casanova.reader import Reader
-from casanova.writer import Writer
+from casanova.writer import Writer, InferringWriter
 from casanova.record import coerce_row, coerce_fieldnames, AnyFieldnames
 from casanova.defaults import DEFAULTS
+from casanova.serialization import CustomTypes
 
 
 class Enricher(Reader):
@@ -278,3 +279,112 @@ class BatchEnricher(Enricher):
 
         for is_last, addendum in with_is_last(addenda):
             self.writerow(row, [cursor if is_last else None], addendum)
+
+
+class InferringEnricher(Reader):
+    __supported_resumers__ = (RowCountResumer, LastCellComparisonResumer)
+
+    def __init__(
+        self,
+        input_file,
+        output_file,
+        select: Optional[Union[str, Iterable[str]]] = None,
+        strip_null_bytes_on_write: Optional[bool] = None,
+        writer_dialect: Optional[AnyCSVDialect] = None,
+        writer_delimiter: Optional[str] = None,
+        writer_quotechar: Optional[str] = None,
+        writer_escapechar: Optional[str] = None,
+        writer_quoting: Optional[int] = None,
+        writer_lineterminator: Optional[str] = None,
+        plural_separator: Optional[str] = None,
+        none_value: Optional[str] = None,
+        true_value: Optional[str] = None,
+        false_value: Optional[str] = None,
+        stringify_everything: Optional[bool] = None,
+        custom_types: Optional[CustomTypes] = None,
+        buffer_optionals: bool = False,
+        mapping_sample_size: Optional[int] = None,
+        **kwargs
+    ):
+        # Inheritance
+        super().__init__(input_file, **kwargs)
+
+        if strip_null_bytes_on_write is None:
+            strip_null_bytes_on_write = DEFAULTS.strip_null_bytes_on_write
+
+        if not isinstance(strip_null_bytes_on_write, bool):
+            raise TypeError('expecting a boolean as "strip_null_bytes_on_write" kwarg')
+
+        self.strip_null_bytes_on_write = strip_null_bytes_on_write
+
+        assert self.fieldnames is not None
+        assert self.headers is not None
+
+        self.selected_indices = None
+
+        if select is not None:
+            self.selected_indices = self.headers.select(select)
+            prepend = [self.fieldnames[i] for i in self.selected_indices]
+        else:
+            prepend = list(self.fieldnames)
+
+        # Resuming?
+        self.resumer = None
+        self.resuming = False
+
+        if isinstance(output_file, Resumer):
+            if not isinstance(output_file, self.__class__.__supported_resumers__):
+                raise TypeError(
+                    "%s: does not support %s!"
+                    % (self.__class__.__name__, output_file.__class__.__name__)
+                )
+
+            self.resumer = output_file
+
+            self.resuming = self.resumer.can_resume()
+
+            if self.resuming:
+                # NOTE: how about null bytes
+                self.resumer.get_insights_from_output(
+                    self,
+                    dialect=writer_dialect,
+                    quotechar=writer_quotechar,
+                    delimiter=writer_delimiter,
+                )
+
+                if hasattr(self.resumer, "resume"):
+                    self.resumer.resume(self)
+
+            output_file = self.resumer.open_output_file()
+
+            if hasattr(self.resumer, "filter"):
+                self.row_filter = self.resumer.filter_row
+
+        # Instantiating writer
+        self.writer = InferringWriter(
+            output_file,
+            prepend=prepend,
+            strip_null_bytes_on_write=strip_null_bytes_on_write,
+            dialect=writer_dialect,
+            delimiter=writer_delimiter,
+            quotechar=writer_quotechar,
+            escapechar=writer_escapechar,
+            quoting=writer_quoting,
+            lineterminator=writer_lineterminator,
+            plural_separator=plural_separator,
+            none_value=none_value,
+            true_value=true_value,
+            false_value=false_value,
+            stringify_everything=stringify_everything,
+            custom_types=custom_types,
+            buffer_optionals=buffer_optionals,
+            mapping_sample_size=mapping_sample_size,
+        )
+
+    def writerow(self, row: AnyWritableCSVRowPart, data) -> None:
+        row = coerce_row(row)
+
+        if self.selected_indices is not None:
+            row = [row[i] for i in self.selected_indices]
+
+        self.writer.writerow(row, data)

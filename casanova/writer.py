@@ -319,7 +319,7 @@ class InferringWriter(Writer):
     def __del__(self):
         self.close()
 
-    def writerow(self, *parts: AnyWritableCSVRowPart) -> None:
+    def writerow(self, *parts) -> None:
         data = None
         prepend = None
         append = None

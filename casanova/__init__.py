@@ -4,7 +4,12 @@
 #
 from casanova.contiguous_range_set import ContiguousRangeSet
 from casanova.defaults import set_defaults, temporary_defaults
-from casanova.enricher import Enricher, IndexedEnricher, BatchEnricher
+from casanova.enricher import (
+    Enricher,
+    IndexedEnricher,
+    BatchEnricher,
+    InferringEnricher,
+)
 from casanova.headers import Headers, RowWrapper
 from casanova.record import (
     TabularRecord,
@@ -33,6 +38,7 @@ reader = Reader
 enricher = Enricher
 indexed_enricher = IndexedEnricher
 batch_enricher = BatchEnricher
+inferring_enricher = InferringEnricher
 reverse_reader = ReverseReader
 writer = Writer
 inferring_writer = InferringWriter
