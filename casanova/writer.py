@@ -5,7 +5,7 @@
 # A CSV writer that is only really useful if you intend to resume its operation
 # somehow
 #
-from typing import Optional, Iterable, Iterator, Mapping
+from typing import Optional, Iterable, Iterator, Mapping, TypeVar, Tuple
 from casanova.types import AnyCSVDialect, AnyWritableCSVRowPart
 
 import csv
@@ -170,6 +170,16 @@ class Writer(object):
         self._writerow(self.fieldnames)
 
 
+T = TypeVar("T")
+
+
+def get(l: Tuple[T, ...], i: int) -> Optional[T]:
+    try:
+        return l[i]
+    except IndexError:
+        return
+
+
 class InferringWriter(Writer):
     __supported_resumers__ = (
         BasicResumer,
@@ -190,6 +200,13 @@ class InferringWriter(Writer):
         custom_types: Optional[CustomTypes] = None,
         **kwargs
     ):
+        self.prepended_fieldnames = None
+        self.prepended_count = 0
+
+        if prepend is not None:
+            self.prepended_fieldnames = coerce_fieldnames(prepend)
+            self.prepended_count = len(self.prepended_fieldnames)
+
         self.appended_fieldnames = None
         self.appended_count = 0
 
@@ -228,6 +245,9 @@ class InferringWriter(Writer):
 
         row = self.fieldnames
 
+        if self.prepended_fieldnames is not None:
+            row = self.prepended_fieldnames + row
+
         if self.appended_fieldnames is not None:
             row = row + self.appended_fieldnames
 
@@ -242,7 +262,26 @@ class InferringWriter(Writer):
 
         self.__must_infer = False
 
-    def writerow(self, data, add: Optional[AnyWritableCSVRowPart] = None) -> None:
+    def writerow(self, *parts: AnyWritableCSVRowPart) -> None:
+        data = None
+        prepend = None
+        append = None
+
+        if self.prepended_fieldnames is None:
+            if self.appended_fieldnames is None:
+                data = get(parts, 0)
+            else:
+                data = get(parts, 0)
+                append = get(parts, 1)
+        else:
+            if self.appended_fieldnames is None:
+                prepend = get(parts, 0)
+                data = get(parts, 1)
+            else:
+                prepend = get(parts, 0)
+                data = get(parts, 1)
+                append = get(parts, 2)
+
         if isinstance(data, (Iterator, range)):
             data = list(data)
 
@@ -277,15 +316,30 @@ class InferringWriter(Writer):
         if len(row) != self.row_len:
             raise InconsistentRowTypesError
 
-        if add is not None:
-            if self.appended_fieldnames is None:
-                raise TypeError("not expecting additional information")
+        if self.prepended_fieldnames is not None:
+            if prepend is not None:
+                prepend = coerce_row(prepend)
 
-            add = coerce_row(add)
+                if len(prepend) != self.prepended_count:
+                    raise TypeError("inconsistent prepend len")
+            else:
+                prepend = [None] * self.prepended_count
 
-            if len(add) != self.appended_count:
-                raise TypeError("inconsistent addition len")
+            row = prepend + row
+        elif prepend is not None:
+            raise TypeError("not expecting prepended information")
 
-            row += add
+        if self.appended_fieldnames is not None:
+            if append is not None:
+                append = coerce_row(append)
+
+                if len(append) != self.appended_count:
+                    raise TypeError("inconsistent append len")
+            else:
+                append = [None] * self.appended_count
+
+            row += append
+        elif append is not None:
+            raise TypeError("not expecting appended information")
 
         self._writerow(row)

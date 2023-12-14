@@ -74,7 +74,7 @@ class TestInferringWriter(object):
             RawDocument("test", False), [["name", "is_relevant"], ["test", "false"]]
         )
 
-    def test_add(self):
+    def test_append(self):
         output = StringIO()
         writer = InferringWriter(output, append=["n"])
         writer.writerow("one", [1])
@@ -95,4 +95,41 @@ class TestInferringWriter(object):
         assert collect_csv(output) == [
             ["letters", "n"],
             ["one", "1"],
+        ]
+
+    def test_prepend(self):
+        output = StringIO()
+        writer = InferringWriter(output, prepend=["n"])
+        writer.writerow([1], "one")
+        writer.writerow([2], "two")
+        writer.writerow([3], "three")
+
+        assert collect_csv(output) == [
+            ["n", "value"],
+            ["1", "one"],
+            ["2", "two"],
+            ["3", "three"],
+        ]
+
+        output = StringIO()
+        writer = InferringWriter(output, prepend=["n"], fieldnames=["letters"])
+        writer.writerow([1], "one")
+
+        assert collect_csv(output) == [
+            ["n", "letters"],
+            ["1", "one"],
+        ]
+
+    def test_prepend_append(self):
+        output = StringIO()
+        writer = InferringWriter(output, prepend=["n"], append=["n2"])
+        writer.writerow([1], "one", [4])
+        writer.writerow([2], "two", [5])
+        writer.writerow([3], "three", [6])
+
+        assert collect_csv(output) == [
+            ["n", "value", "n2"],
+            ["1", "one", "4"],
+            ["2", "two", "5"],
+            ["3", "three", "6"],
         ]
