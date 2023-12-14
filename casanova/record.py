@@ -37,7 +37,7 @@ def tabular_field(
     as_json: Optional[bool] = None,
     serializer: Optional[Callable[[Any], str]] = None,
     **field_kwargs,
-) -> Field:
+):
     f_serialization_options = {}
 
     if plural_separator is not None:
