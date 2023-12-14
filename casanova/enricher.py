@@ -13,7 +13,7 @@ from casanova.resumers import (
     LastCellComparisonResumer,
     Resumer,
     RowCountResumer,
-    ThreadSafeResumer,
+    IndexedResumer,
     BatchResumer,
 )
 from casanova.headers import Headers
@@ -210,8 +210,8 @@ class Enricher(Reader):
             self.writer._writerow(row + addendum)
 
 
-class ThreadSafeEnricher(Enricher):
-    __supported_resumers__ = (ThreadSafeResumer,)
+class IndexedEnricher(Enricher):
+    __supported_resumers__ = (IndexedResumer,)
 
     def __init__(
         self, input_file, output_file, add=None, index_column="index", **kwargs

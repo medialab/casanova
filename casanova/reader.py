@@ -331,7 +331,7 @@ class Reader(object):
 
     # NOTE: this function exists because it takes into
     # account rows skipped by resumers, which is
-    # essential for threadsafe operations etc.
+    # essential for indexed operations etc.
     def enumerate(self, start=0):
         for row in self.rows():
             yield self.current_row_index + start, row
@@ -341,7 +341,7 @@ class Reader(object):
 
     # NOTE: the underlying cell iterator is protected so
     # it remains easy to override it and reimplement it
-    # when inheriting (check the threadsafe_enricher)
+    # when inheriting (check the indexed_enricher)
     # for such an example.
     def __cells(self, column, with_rows=False):
         if not isinstance(column, (str, int)):
@@ -388,7 +388,7 @@ class Reader(object):
 
     # NOTE: the underlying records iterator is protected so
     # it remains easy to override it and reimplement it
-    # when inheriting (check the threadsafe_enricher)
+    # when inheriting (check the indexed_enricher)
     # for such an example.
     def __records(self, *shape, with_rows=False, ignore_headers=False):
         if len(shape) < 1:

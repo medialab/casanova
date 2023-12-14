@@ -4,7 +4,7 @@
 #
 from casanova.contiguous_range_set import ContiguousRangeSet
 from casanova.defaults import set_defaults, temporary_defaults
-from casanova.enricher import Enricher, ThreadSafeEnricher, BatchEnricher
+from casanova.enricher import Enricher, IndexedEnricher, BatchEnricher
 from casanova.headers import Headers, RowWrapper
 from casanova.record import (
     TabularRecord,
@@ -18,7 +18,7 @@ from casanova.resumers import (
     Resumer,
     BasicResumer,
     RowCountResumer,
-    ThreadSafeResumer,
+    IndexedResumer,
     BatchResumer,
     LastCellResumer,
     LastCellComparisonResumer,
@@ -31,7 +31,7 @@ from casanova.writer import Writer, InferringWriter
 headers = Headers
 reader = Reader
 enricher = Enricher
-threadsafe_enricher = ThreadSafeEnricher
+indexed_enricher = IndexedEnricher
 batch_enricher = BatchEnricher
 reverse_reader = ReverseReader
 writer = Writer

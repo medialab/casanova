@@ -145,7 +145,7 @@ class RowCountResumer(Resumer):
         return self.row_count
 
 
-class ThreadSafeResumer(Resumer):
+class IndexedResumer(Resumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.already_done = ContiguousRangeSet()

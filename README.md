@@ -18,7 +18,7 @@ casanova.reader: 25s
 - Stream large CSV files without running out of memory
 - Enrich the same CSV files by outputing a similar file, all while adding, filtering and editing cells.
 - Have the possibility to resume said enrichment if your process exited
-- Do so in a threadsafe fashion, and be able to resume even if your output does not have the same order as the input
+- Resume even if your output does not have the same order as the input
 
 `casanova` also packs exotic utilities able to read csv files in reverse (without loading the whole file into memory and in regular `O(n)` time), so you can, for instance, fetch useful information at the end of a file to restart some aborted process.
 
@@ -53,11 +53,11 @@ pip install casanova[http]
 - [headers](#headers)
 - [writer](#writer)
 - [enricher](#enricher)
-- [threadsafe_enricher](#threadsafe_enricher)
+- [indexed_enricher](#indexed_enricher)
 - [batch_enricher](#batch_enricher)
 - [resumers](#resumers)
   - [RowCountResumer](#rowcountresumer)
-  - [ThreadSafeResumer](#threadsaferesumer)
+  - [IndexedResumer](#indexedresumer)
   - [BatchResumer](#batchresumer)
   - [LastCellResumer](#lastcellresumer)
   - [LastCellComparisonResumer](#lastcellcomparisonresumer)
@@ -433,13 +433,13 @@ _Resuming_
 
 A `casanova.enricher` is able to resume through a [`RowCountResumer`](#rowcountresumer) or a [`LastCellComparisonResumer`](#lastcellcomparisonresumer).
 
-## threadsafe_enricher
+## indexed_enricher
 
 Sometimes, you might want to process multiple input rows concurrently. This can mean that you will emit rows in an arbitrary order, different from the input one.
 
-This is fine, of course, but if you still want to be able to resume an aborted process efficiently (using the [`ThreadSafeResumer](#threadsaferesumer)), your output will need specific additions for it to work, namely a column containing the index of an output row in the original input.
+This is fine, of course, but if you still want to be able to resume an aborted process efficiently (using the [`IndexedResumer](#indexedresumer)), your output will need specific additions for it to work, namely a column containing the index of an output row in the original input.
 
-`casanova.threadsafe_enricher` makes it simpler by providing a tailored `writerow` method and iterators always provided the index of a row safely.
+`casanova.indexed_enricher` makes it simpler by providing a tailored `writerow` method and iterators always provided the index of a row safely.
 
 Note that such resuming is only possible if one row in the input will produce exactly one row in the output.
 
@@ -449,7 +449,7 @@ import casanova
 with open('./people.csv') as f, \
      open('./enriched-people.csv', 'w') as of:
 
-    enricher = casanova.threadsafe_enricher(f, of, add=['age', 'hair'])
+    enricher = casanova.indexed_enricher(f, of, add=['age', 'hair'])
 
     for index, row in enricher:
         enricher.writerow(index, row, ['67', 'blond'])
@@ -469,7 +469,7 @@ Everything from [`casanova.enricher`](#enricher) plus:
 
 _Resuming_
 
-A `casanova.threadsafe_enricher` is able to resume through a [`ThreadSafeResumer`](#threadsaferesumer).
+A `casanova.indexed_enricher` is able to resume through a [`IndexedResumer`](#indexedresumer).
 
 ## batch_enricher
 
@@ -544,13 +544,13 @@ with open('input.csv') as input_file, \
     enricher = casanova.enricher(input_file, resumer)
 ```
 
-### ThreadSafeResumer
+### IndexedResumer
 
-`casanova` exports a threadsafe resumer that allows row to be processed concurrently and emitted in a different order.
+`casanova` exports an indexed resumer that allows row to be processed concurrently and emitted in a different order.
 
 In this precise case, couting the rows is not enough and we need to be smarter.
 
-One way to proceed is to leverage the index column added by the threadsafe enricher to compute a set of already processed row while reading the output. Then we can just skip the input rows whose indices are in this set.
+One way to proceed is to leverage the index column added by the indexed enricher to compute a set of already processed row while reading the output. Then we can just skip the input rows whose indices are in this set.
 
 The issue here is that this consumes up to `O(n)` memory, which is prohibitive in some use cases.
 
@@ -562,13 +562,13 @@ You can read more about this data structure in [this](http://yomguithereal.githu
 
 Note finally this resumer can only work in 1-to-1 scenarios where you only emit a single row per input row.
 
-It is supported by [`casanova.threadsafe_enricher`](#threadsafe_enricher) only.
+It is supported by [`casanova.indexed_enricher`](#indexed_enricher) only.
 
 ```python
 import casanova
 
 with open('input.csv') as input_file, \
-     casanova.ThreadSafeResumer('output.csv') as resumer:
+     casanova.IndexedResumer('output.csv') as resumer:
 
     # Want to know if we can resume?
     resumer.can_resume()
@@ -577,7 +577,7 @@ with open('input.csv') as input_file, \
     resumer.already_done_count()
 
     # Giving the resumer to an enricher as if it was the output file
-    enricher = casanova.threadsafe_enricher(input_file, resumer)
+    enricher = casanova.indexed_enricher(input_file, resumer)
 
 # If you want to use casanova ContiguousRangeSet for whatever reason
 from casanova import ContiguousRangeSet

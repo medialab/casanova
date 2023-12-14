@@ -19,7 +19,7 @@ from test.utils import collect_csv
 from casanova.resumers import (
     LastCellComparisonResumer,
     RowCountResumer,
-    ThreadSafeResumer,
+    IndexedResumer,
     BatchResumer,
 )
 from casanova.record import TabularRecord, tabular_field
@@ -32,7 +32,7 @@ class TestEnricher(object):
         output_path = str(tmpdir.join("./wrong_resumer.csv"))
 
         with pytest.raises(TypeError):
-            resumer = ThreadSafeResumer(output_path)
+            resumer = IndexedResumer(output_path)
             with open("./test/resources/people.csv") as f, resumer:
                 casanova.enricher(f, resumer)
 
@@ -239,7 +239,7 @@ class TestEnricher(object):
 
         assert log == {"input.row.filter": [["John", "Matthews"]]}
 
-    def test_threadsafe(self, tmpdir):
+    def test_indexed(self, tmpdir):
         def job(payload):
             i, row = payload
             s = int(row[2])
@@ -247,13 +247,11 @@ class TestEnricher(object):
 
             return i, row
 
-        output_path = str(tmpdir.join("./enriched_resumable_threadsafe.csv"))
+        output_path = str(tmpdir.join("./enriched_resumable_indexed.csv"))
         with open("./test/resources/people_unordered.csv") as f, open(
             output_path, "w", newline=""
         ) as of:
-            enricher = casanova.threadsafe_enricher(
-                f, of, add=("x2",), select=("name",)
-            )
+            enricher = casanova.indexed_enricher(f, of, add=("x2",), select=("name",))
 
             for i, row in imap_unordered(enricher, job, 3):
                 enricher.writerow(i, row, [(i + 1) * 2])
@@ -270,14 +268,12 @@ class TestEnricher(object):
             ]
         )
 
-    def test_threadsafe_cells(self, tmpdir):
-        output_path = str(tmpdir.join("./enriched_resumable_threadsafe.csv"))
+    def test_indexed_cells(self, tmpdir):
+        output_path = str(tmpdir.join("./enriched_resumable_indexed.csv"))
         with open("./test/resources/people_unordered.csv") as f, open(
             output_path, "a+"
         ) as of:
-            enricher = casanova.threadsafe_enricher(
-                f, of, add=("x2",), select=("name",)
-            )
+            enricher = casanova.indexed_enricher(f, of, add=("x2",), select=("name",))
 
             names = [t for t in enricher.cells("name")]
 
@@ -286,15 +282,13 @@ class TestEnricher(object):
         with open("./test/resources/people_unordered.csv") as f, open(
             output_path, "a+"
         ) as of:
-            enricher = casanova.threadsafe_enricher(
-                f, of, add=("x2",), select=("name",)
-            )
+            enricher = casanova.indexed_enricher(f, of, add=("x2",), select=("name",))
 
             names = [(i, v) for i, row, v in enricher.cells("name", with_rows=True)]
 
         assert names == [(0, "John"), (1, "Mary"), (2, "Julia")]
 
-    def test_threadsafe_resumable(self, tmpdir):
+    def test_indexed_resumable(self, tmpdir):
         log = defaultdict(list)
 
         def listener(name, row):
@@ -307,12 +301,12 @@ class TestEnricher(object):
 
             return i, row
 
-        output_path = str(tmpdir.join("./enriched_resumable_threadsafe.csv"))
+        output_path = str(tmpdir.join("./enriched_resumable_indexed.csv"))
 
-        resumer = ThreadSafeResumer(output_path, listener=listener)
+        resumer = IndexedResumer(output_path, listener=listener)
 
         with open("./test/resources/people_unordered.csv") as f, resumer:
-            enricher = casanova.threadsafe_enricher(
+            enricher = casanova.indexed_enricher(
                 f, resumer, add=("x2",), select=("name",)
             )
 
@@ -330,7 +324,7 @@ class TestEnricher(object):
         )
 
         with open("./test/resources/people_unordered.csv") as f, resumer:
-            enricher = casanova.threadsafe_enricher(
+            enricher = casanova.indexed_enricher(
                 f, resumer, add=("x2",), select=("name",)
             )
 
@@ -353,13 +347,13 @@ class TestEnricher(object):
             [["Mary", "Sue", "1"], ["Julia", "Stone", "2"]]
         )
 
-    def test_threadsafe_resuming_soundness(self, tmpdir):
-        output_path = str(tmpdir.join("./threadsafe_resuming_soundness.csv"))
+    def test_indexed_resuming_soundness(self, tmpdir):
+        output_path = str(tmpdir.join("./indexed_resuming_soundness.csv"))
 
         with open("./test/resources/more_people.csv") as f, open(
             output_path, "w", newline=""
         ) as of:
-            enricher = casanova.threadsafe_enricher(f, of)
+            enricher = casanova.indexed_enricher(f, of)
 
             for index, row in enricher:
                 enricher.writerow(index, row)
@@ -367,8 +361,8 @@ class TestEnricher(object):
                 if index >= 2:
                     break
 
-        resumer = ThreadSafeResumer(output_path)
-        with casanova.threadsafe_enricher(
+        resumer = IndexedResumer(output_path)
+        with casanova.indexed_enricher(
             "./test/resources/more_people.csv", resumer
         ) as enricher, resumer:
             for index, row in enricher:
@@ -581,10 +575,10 @@ class TestEnricher(object):
 
         assert buf.getvalue().strip() == "name,title,tags\nJohn,Title,a&b"
 
-    def test_threadsafe_writerow_without_addendum(self):
+    def test_indexed_writerow_without_addendum(self):
         buf = StringIO()
 
-        enricher = casanova.threadsafe_enricher(
+        enricher = casanova.indexed_enricher(
             CsvIO([["John"]], ["name"]), buf, add=["count"], writer_lineterminator="\n"
         )
 
@@ -636,10 +630,10 @@ class TestEnricher(object):
 
         assert buf.getvalue().strip() == "name,count\nJohn,"
 
-        # threadsafe
+        # indexed
         buf = StringIO()
 
-        enricher = casanova.threadsafe_enricher(
+        enricher = casanova.indexed_enricher(
             CsvIO([["John"]], ["name"]), buf, add=["count"], writer_lineterminator="\n"
         )
 
