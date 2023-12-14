@@ -5,7 +5,7 @@
 # CSV-aware improvement over python's namedtuple.
 #
 from typing import Optional, Union, List, Callable, Any, Type
-from casanova.types import AnyWritableCSVRowPart, get_args, get_origin
+from casanova.types import AnyWritableCSVRowPart, get_args, get_origin, TypeGuard
 
 import json
 from collections.abc import Mapping
@@ -265,7 +265,7 @@ def coerce_row(row: AnyWritableCSVRowPart, consume: bool = False) -> List[Any]:
     return list(row) if consume else row # type: ignore
 
 
-def is_tabular_record_class(cls) -> bool:
+def is_tabular_record_class(cls) -> TypeGuard[Type[TabularRecord]]:
     try:
         return issubclass(cls, TabularRecord)
     except TypeError:
@@ -291,7 +291,7 @@ def coerce_fieldnames(target: AnyFieldnames) -> List[str]:
     if is_tabular_record_class(target):
         return target.fieldnames()
 
-    return target
+    return target # type: ignore
 
 
 def infer_fieldnames(target: Any) -> Optional[List[str]]:
