@@ -10,6 +10,7 @@ from casanova.types import AnyCSVDialect, AnyWritableCSVRowPart
 
 import csv
 from dataclasses import fields, is_dataclass
+from collections import OrderedDict
 
 from casanova.defaults import DEFAULTS
 from casanova.serialization import CSVSerializer, CustomTypes
@@ -199,6 +200,7 @@ class InferringWriter(Writer):
         stringify_everything: Optional[bool] = None,
         custom_types: Optional[CustomTypes] = None,
         buffer_optionals: bool = False,
+        mapping_sample_size: Optional[int] = None,
         strip_null_bytes_on_write: Optional[bool] = None,
         dialect: Optional[AnyCSVDialect] = None,
         delimiter: Optional[str] = None,
@@ -246,6 +248,15 @@ class InferringWriter(Writer):
 
         # Optionals buffering
         self.buffering_optionals = buffer_optionals
+
+        # Mapping samples
+        if mapping_sample_size is not None and mapping_sample_size < 1:
+            raise TypeError("mapping_sample_size should be > 0")
+
+        self.mapping_sample_size = mapping_sample_size
+        self.__mappings_sampled = 0
+        self.__union_of_keys = OrderedDict()
+
         self.__buffer_flushed = False
         self.__buffer = []
 
@@ -283,8 +294,8 @@ class InferringWriter(Writer):
 
         self.__must_infer = False
 
-    def __flush_optionals(self) -> None:
-        if not self.buffering_optionals or self.__buffer_flushed:
+    def __flush_buffer(self) -> None:
+        if self.__buffer_flushed:
             return
 
         # NOTE: this is important to avoid endless recursion
@@ -296,15 +307,14 @@ class InferringWriter(Writer):
         self.__buffer.clear()
 
     def close(self) -> None:
-        if (
-            self.buffering_optionals
-            and not self.__buffer_flushed
-            and self.__buffer
-            and self.__must_infer
-        ):
-            self.__set_fieldnames(['col1'])
+        if not self.__buffer_flushed and self.__buffer and self.__must_infer:
+            if self.mapping_sample_size is not None:
+                self.__set_fieldnames(list(self.__union_of_keys.keys()))
+            elif self.buffering_optionals:
+                self.__set_fieldnames(["col1"])
+
             self.writeheader()
-            self.__flush_optionals()
+            self.__flush_buffer()
 
     def __del__(self):
         self.close()
@@ -333,8 +343,10 @@ class InferringWriter(Writer):
             data = list(data)
 
         if self.__must_infer:
-            if self.buffering_optionals:
-                if data is None:
+            if self.buffering_optionals and data is None:
+                if self.mapping_sample_size is not None:
+                    data = {}
+                else:
                     self.__buffer.append(parts)
                     return
 
@@ -346,10 +358,24 @@ class InferringWriter(Writer):
                     % data.__class__.__name__
                 )
 
+            if self.mapping_sample_size is not None:
+                if self.__mappings_sampled < self.mapping_sample_size and isinstance(
+                    data, Mapping
+                ):
+                    self.__buffer.append(parts)
+                    self.__mappings_sampled += 1
+
+                    for k in data.keys():
+                        self.__union_of_keys[k] = True
+
+                    return
+
+                fieldnames = list(self.__union_of_keys.keys())
+
             self.__set_fieldnames(fieldnames)
             self.writeheader()
 
-        self.__flush_optionals()
+        self.__flush_buffer()
 
         # NOTE: coercing after inferrence not to lose fieldnames info
         __csv_row__ = getattr(data, "__csv_row__", None)

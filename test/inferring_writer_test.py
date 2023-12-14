@@ -173,3 +173,59 @@ class TestInferringWriter(object):
         del writer
 
         assert collect_csv(output) == [["col1"], [""], [""]]
+
+    def test_mapping_sample_size(self):
+        output = StringIO()
+        writer = InferringWriter(output, mapping_sample_size=3)
+        writer.writerow({})
+        writer.writerow({"name": "John"})
+        writer.writerow({"surname": "Darcy"})
+        writer.writerow({"name": "Lucy"})
+
+        assert collect_csv(output) == [
+            ["name", "surname"],
+            ["", ""],
+            ["John", ""],
+            ["", "Darcy"],
+            ["Lucy", ""],
+        ]
+
+        output = StringIO()
+        writer = InferringWriter(output, mapping_sample_size=10)
+        writer.writerow({"name": "John"})
+        writer.writerow({"surname": "Darcy"})
+
+        del writer
+
+        assert collect_csv(output) == [["name", "surname"], ["John", ""], ["", "Darcy"]]
+
+    def test_mapping_sample_size_and_buffer_optionals(self):
+        output = StringIO()
+        writer = InferringWriter(output, mapping_sample_size=3, buffer_optionals=True)
+        writer.writerow(None)
+        writer.writerow({"name": "John"})
+        writer.writerow({"surname": "Darcy"})
+        writer.writerow({"name": "Lucy"})
+
+        assert collect_csv(output) == [
+            ["name", "surname"],
+            ["", ""],
+            ["John", ""],
+            ["", "Darcy"],
+            ["Lucy", ""],
+        ]
+
+        output = StringIO()
+        writer = InferringWriter(output, mapping_sample_size=10, buffer_optionals=True)
+        writer.writerow(None)
+        writer.writerow({"name": "John"})
+        writer.writerow({"surname": "Darcy"})
+
+        del writer
+
+        assert collect_csv(output) == [
+            ["name", "surname"],
+            ["", ""],
+            ["John", ""],
+            ["", "Darcy"],
+        ]
