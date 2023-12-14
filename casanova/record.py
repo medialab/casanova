@@ -262,7 +262,7 @@ def coerce_row(row: AnyWritableCSVRowPart, consume: bool = False) -> List[Any]:
     if callable(__csv_row__):
         return __csv_row__()
 
-    return list(row) if consume else row # type: ignore
+    return list(row) if consume else row  # type: ignore
 
 
 def is_tabular_record_class(cls) -> TypeGuard[Type[TabularRecord]]:
@@ -291,7 +291,7 @@ def coerce_fieldnames(target: AnyFieldnames) -> List[str]:
     if is_tabular_record_class(target):
         return target.fieldnames()
 
-    return target # type: ignore
+    return target  # type: ignore
 
 
 def infer_fieldnames(target: Any) -> Optional[List[str]]:
