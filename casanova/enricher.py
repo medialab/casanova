@@ -5,7 +5,8 @@
 # A CSV reader/writer combo that can be used to read an input CSV file and
 # easily ouput a similar CSV file while editing, adding and filtering cell_count.
 #
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Union
+from casanova.types import AnyWritableCSVRowPart, AnyCSVDialect
 
 from ebbe import with_is_last
 
@@ -19,9 +20,8 @@ from casanova.resumers import (
 from casanova.headers import Headers
 from casanova.reader import Reader
 from casanova.writer import Writer
-from casanova.record import coerce_row, coerce_fieldnames
+from casanova.record import coerce_row, coerce_fieldnames, AnyFieldnames
 from casanova.defaults import DEFAULTS
-from casanova.types import AnyWritableCSVRowPart
 
 
 class Enricher(Reader):
@@ -31,17 +31,17 @@ class Enricher(Reader):
         self,
         input_file,
         output_file,
-        no_headers=False,
-        select=None,
-        add=None,
-        strip_null_bytes_on_write=None,
-        writer_dialect=None,
-        writer_delimiter=None,
-        writer_quotechar=None,
-        writer_escapechar=None,
-        writer_quoting=None,
-        writer_lineterminator=None,
-        write_header=True,
+        no_headers: bool = False,
+        select: Optional[Union[str, Iterable[str]]] = None,
+        add: Optional[AnyFieldnames] = None,
+        strip_null_bytes_on_write: Optional[bool] = None,
+        writer_dialect: Optional[AnyCSVDialect] = None,
+        writer_delimiter: Optional[str] = None,
+        writer_quotechar: Optional[str] = None,
+        writer_escapechar: Optional[str] = None,
+        writer_quoting: Optional[int] = None,
+        writer_lineterminator: Optional[str] = None,
+        write_header: bool = True,
         **kwargs
     ):
         # Inheritance
