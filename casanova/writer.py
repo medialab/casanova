@@ -199,7 +199,13 @@ class InferringWriter(Writer):
         stringify_everything: Optional[bool] = None,
         custom_types: Optional[CustomTypes] = None,
         buffer_optionals: bool = False,
-        **kwargs
+        strip_null_bytes_on_write: Optional[bool] = None,
+        dialect: Optional[AnyCSVDialect] = None,
+        delimiter: Optional[str] = None,
+        quotechar: Optional[str] = None,
+        quoting: Optional[int] = None,
+        escapechar: Optional[str] = None,
+        lineterminator: Optional[str] = None,
     ):
         self.prepended_fieldnames = None
         self.prepended_count = 0
@@ -216,7 +222,16 @@ class InferringWriter(Writer):
             self.appended_count = len(self.appended_fieldnames)
 
         super().__init__(
-            output_file, fieldnames=fieldnames, write_header=False, **kwargs
+            output_file,
+            fieldnames=fieldnames,
+            write_header=False,
+            strip_null_bytes_on_write=strip_null_bytes_on_write,
+            dialect=dialect,
+            delimiter=delimiter,
+            quotechar=quotechar,
+            quoting=quoting,
+            escapechar=escapechar,
+            lineterminator=lineterminator,
         )
 
         # Own serializer
@@ -280,8 +295,19 @@ class InferringWriter(Writer):
 
         self.__buffer.clear()
 
+    def close(self) -> None:
+        if (
+            self.buffering_optionals
+            and not self.__buffer_flushed
+            and self.__buffer
+            and self.__must_infer
+        ):
+            self.__set_fieldnames(['col1'])
+            self.writeheader()
+            self.__flush_optionals()
+
     def __del__(self):
-        self.__flush_optionals()
+        self.close()
 
     def writerow(self, *parts: AnyWritableCSVRowPart) -> None:
         data = None
