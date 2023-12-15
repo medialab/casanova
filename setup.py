@@ -5,7 +5,7 @@ with open("./README.md", "r") as f:
 
 setup(
     name="casanova",
-    version="2.0.0",
+    version="2.0.1",
     description="Specialized & performant CSV readers, writers and enrichers for python.",
     long_description=long_description,
     long_description_content_type="text/markdown",
