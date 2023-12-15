@@ -4,10 +4,11 @@
 #
 # Utility class representing a CSV file's headers
 #
+from typing import List, Union, Tuple, Optional, Iterator, Iterable
+
 import re
 from ebbe import with_next
 from collections import namedtuple, defaultdict
-from collections.abc import Iterable
 from functools import wraps
 
 from casanova.exceptions import (
@@ -279,20 +280,28 @@ def walk_row(node, row):
     raise NotImplementedError
 
 
+RowKey = Union[str, int, Tuple[str, int]]
+
+
 class RowWrapper(object):
     __slots__ = ("__headers", "__row")
 
-    def __init__(self, headers, row):
+    def __init__(self, headers: "Headers", row: List[str]):
         self.__headers = headers
         self.__row = row
 
-    def _replace(self, row):
+    def _replace(self, row: List[str]) -> None:
         self.__row = row
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: RowKey) -> str:
         return self.__row[self.__headers[key]]
 
-    def get(self, key, default=None, index=None):
+    def get(
+        self,
+        key: RowKey,
+        default: Optional[str] = None,
+        index: Optional[int] = None,
+    ) -> Optional[str]:
         idx = self.__headers.get(key, index=index)
 
         if idx is None:
@@ -300,24 +309,26 @@ class RowWrapper(object):
 
         return self.__row[idx]
 
-    def __contains__(self, key):
+    def __contains__(self, key: RowKey) -> bool:
         return key in self.__headers
 
-    def __getattr__(self, key):
+    def __getattr__(self, key: str) -> str:
         return self.__getitem__(key)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         yield from self.__row
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.__row)
 
-    def cells(self):
+    def cells(self) -> Iterator[Tuple[str, str]]:
         yield from zip(self.__headers.fieldnames, self.__row)
 
 
 class Headers(object):
-    def __init__(self, fieldnames):
+    fieldnames: List[str]
+
+    def __init__(self, fieldnames: List[str]):
         self.fieldnames = list(fieldnames)
 
         self.__mapping = defaultdict(list)
@@ -328,13 +339,13 @@ class Headers(object):
             self.__mapping[h].append(i)
             self.__flat_mapping[h] = i
 
-    def __eq__(self, other):
+    def __eq__(self, other: "Headers") -> bool:
         return self.fieldnames == other.fieldnames
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.fieldnames)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: RowKey) -> int:
         if isinstance(key, int):
             if key >= len(self):
                 raise ColumnOutOfRangeError(key)
@@ -364,10 +375,10 @@ class Headers(object):
 
         return indices[0]
 
-    def __getattr__(self, key):
+    def __getattr__(self, key: str) -> int:
         return self.__getitem__(key)
 
-    def __contains__(self, key):
+    def __contains__(self, key: RowKey) -> bool:
         if isinstance(key, int):
             return key < len(self)
 
@@ -384,16 +395,18 @@ class Headers(object):
 
         return key in self.__mapping
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         yield from self.fieldnames
 
-    def nth(self, index):
+    def nth(self, index: int) -> str:
         try:
             return self.fieldnames[index]
         except IndexError:
             raise ColumnOutOfRangeError(index)
 
-    def get(self, key, default=None, index=None):
+    def get(
+        self, key: RowKey, default: Optional[int] = None, index: Optional[int] = None
+    ) -> Optional[int]:
         if isinstance(key, tuple):
             if len(key) != 2:
                 raise TypeError("expecting a str, a int or a (str, int) tuple")
@@ -428,7 +441,9 @@ class Headers(object):
         return indices[0]
 
     @redirect_errors_as_invalid_selection
-    def select(self, selection):
+    def select(
+        self, selection: Union[Selection, RowKey, Iterable[RowKey]]
+    ) -> List[int]:
         indices = []
 
         if not isinstance(selection, (str, Selection)):
@@ -569,7 +584,7 @@ class Headers(object):
 
         return projection
 
-    def wrap(self, row, transient=False):
+    def wrap(self, row: List[str], transient: bool = False) -> RowWrapper:
         if len(row) != len(self.fieldnames):
             raise TypeError("len mismatch for row and headers")
 
@@ -595,7 +610,7 @@ class Headers(object):
         return representation
 
     @classmethod
-    def select_no_headers(cls, count, selection):
+    def select_no_headers(cls, count: int, selection) -> List[int]:
         if isinstance(selection, str):
             parsed_selection = parse_selection(selection)
 
@@ -612,13 +627,13 @@ class Headers(object):
         return headers.select(selection)
 
     @classmethod
-    def flat_project_no_headers(cls, count, *shape):
+    def flat_project_no_headers(cls, count: int, *shape):
         headers = cls(range(count))
 
         return headers.flat_project(*shape)
 
     @classmethod
-    def rename(cls, headers: "Headers", old_name: str, new_name: str):
+    def rename(cls, headers: "Headers", old_name: str, new_name: str) -> "Headers":
         new_fieldnames = []
 
         for f in headers.fieldnames:
