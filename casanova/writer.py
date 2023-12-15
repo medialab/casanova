@@ -355,10 +355,8 @@ class InferringWriter(Writer):
                     % data.__class__.__name__
                 )
 
-            if self.mapping_sample_size is not None:
-                if self.__mappings_sampled < self.mapping_sample_size and isinstance(
-                    data, Mapping
-                ):
+            if self.mapping_sample_size is not None and isinstance(data, Mapping):
+                if self.__mappings_sampled < self.mapping_sample_size:
                     self.__buffer.append(parts)
                     self.__mappings_sampled += 1
 

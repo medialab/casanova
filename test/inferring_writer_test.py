@@ -228,11 +228,11 @@ class TestInferringWriter(object):
             ["", "Darcy"],
         ]
 
-        # output = StringIO()
-        # writer = InferringWriter(output, mapping_sample_size=10, buffer_optionals=True)
-        # writer.writerow(None)
-        # writer.writerow("John")
-        # writer.writerow()
-        # writer.close()
+        output = StringIO()
+        writer = InferringWriter(output, mapping_sample_size=10, buffer_optionals=True)
+        writer.writerow(None)
+        writer.writerow("John")
+        writer.writerow()
+        writer.close()
 
-        # assert collect_csv(output) == [["value"], [""], ["John"], [""]]
+        assert collect_csv(output) == [["value"], [""], ["John"], [""]]
