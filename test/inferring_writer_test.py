@@ -169,8 +169,7 @@ class TestInferringWriter(object):
         writer = InferringWriter(output, buffer_optionals=True)
         writer.writerow()
         writer.writerow()
-
-        del writer
+        writer.close()
 
         assert collect_csv(output) == [["col1"], [""], [""]]
 
@@ -194,8 +193,7 @@ class TestInferringWriter(object):
         writer = InferringWriter(output, mapping_sample_size=10)
         writer.writerow({"name": "John"})
         writer.writerow({"surname": "Darcy"})
-
-        del writer
+        writer.close()
 
         assert collect_csv(output) == [["name", "surname"], ["John", ""], ["", "Darcy"]]
 
@@ -206,6 +204,7 @@ class TestInferringWriter(object):
         writer.writerow({"name": "John"})
         writer.writerow({"surname": "Darcy"})
         writer.writerow({"name": "Lucy"})
+        writer.close()
 
         assert collect_csv(output) == [
             ["name", "surname"],
@@ -220,8 +219,7 @@ class TestInferringWriter(object):
         writer.writerow(None)
         writer.writerow({"name": "John"})
         writer.writerow({"surname": "Darcy"})
-
-        del writer
+        writer.close()
 
         assert collect_csv(output) == [
             ["name", "surname"],
@@ -235,5 +233,6 @@ class TestInferringWriter(object):
         # writer.writerow(None)
         # writer.writerow("John")
         # writer.writerow()
+        # writer.close()
 
         # assert collect_csv(output) == [["value"], [""], ["John"], [""]]

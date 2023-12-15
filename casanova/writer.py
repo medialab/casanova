@@ -308,7 +308,7 @@ class InferringWriter(Writer):
 
     def close(self) -> None:
         if not self.__buffer_flushed and self.__buffer and self.__must_infer:
-            if self.mapping_sample_size is not None:
+            if self.mapping_sample_size is not None and self.__mappings_sampled > 0:
                 self.__set_fieldnames(list(self.__union_of_keys.keys()))
             elif self.buffering_optionals:
                 self.__set_fieldnames(["col1"])
@@ -344,11 +344,8 @@ class InferringWriter(Writer):
 
         if self.__must_infer:
             if self.buffering_optionals and data is None:
-                if self.mapping_sample_size is not None:
-                    data = {}
-                else:
-                    self.__buffer.append(parts)
-                    return
+                self.__buffer.append(parts)
+                return
 
             fieldnames = infer_fieldnames(data)
 
