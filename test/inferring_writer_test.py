@@ -173,6 +173,14 @@ class TestInferringWriter(object):
 
         assert collect_csv(output) == [["col1"], [""], [""]]
 
+        output = StringIO()
+        writer = InferringWriter(
+            output, buffer_optionals=True, fieldnames=["name", "surname"]
+        )
+        writer.writerow()
+
+        assert collect_csv(output) == [["name", "surname"], ["", ""]]
+
     def test_mapping_sample_size(self):
         output = StringIO()
         writer = InferringWriter(output, mapping_sample_size=3)
