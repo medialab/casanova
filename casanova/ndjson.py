@@ -33,3 +33,6 @@ class reader(object):
             line = next(self.__file).strip()
 
         return json.loads(line)
+
+    def __iter__(self):
+        return self
