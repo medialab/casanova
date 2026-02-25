@@ -235,3 +235,13 @@ class TestWriter(object):
 
         with pytest.raises(TypeError, match="expect"):
             writer.writerow(["one", "two", "three"])
+
+    def test_close(self):
+        buf = StringIO()
+        writer = Writer(buf, fieldnames=["test1", "test2"])
+
+        with pytest.raises(NotImplementedError, match="cannot close a file this instance did not open"):
+            writer.close()
+
+        with Writer(buf, fieldnames=["test1", "test2"]) as writer:
+            pass
