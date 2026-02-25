@@ -9,6 +9,8 @@ from typing import Optional, Iterable, Iterator, Mapping, TypeVar, Tuple
 from casanova.types import AnyCSVDialect, AnyWritableCSVRowPart
 
 import csv
+from os import PathLike
+from io import IOBase
 from dataclasses import fields, is_dataclass
 from collections import OrderedDict
 
@@ -22,7 +24,7 @@ from casanova.record import (
     infer_fieldnames,
 )
 from casanova.reader import Headers
-from casanova.utils import py310_wrap_csv_writerow, strip_null_bytes_from_row
+from casanova.utils import py310_wrap_csv_writerow, strip_null_bytes_from_row, ensure_open
 from casanova.exceptions import InconsistentRowTypesError, InvalidRowTypeError
 
 
@@ -38,6 +40,8 @@ class Writer(object):
         fieldnames: Optional[AnyFieldnames] = None,
         row_len: Optional[int] = None,
         strip_null_bytes_on_write: Optional[bool] = None,
+        encoding: str = "utf-8",
+        open_mode: str = 'w',
         dialect: Optional[AnyCSVDialect] = None,
         delimiter: Optional[str] = None,
         quotechar: Optional[str] = None,
@@ -71,6 +75,8 @@ class Writer(object):
 
         self.resuming = False
 
+
+
         if isinstance(output_file, Resumer):
             # NOTE: basic resumer does not need to know the headers
             # TODO: at one point header knowledge could be refactored
@@ -98,9 +104,20 @@ class Writer(object):
                     delimiter=delimiter,
                 )
 
+            output_type = "resumer"
             output_file = resumer.open_output_file()
+        elif isinstance(output_file, IOBase):
+            output_type = "file"
+            output_file = output_file
+        elif isinstance(output_file, (str, PathLike)):
+            output_type = "path"
+            output_file = ensure_open(output_file, mode=open_mode, encoding=encoding)
+        else:
+            raise TypeError("expecting a file or a path")
 
         # Instantiating writer
+        self.output_type = output_type
+        self.output_file = output_file
         self.dialect = dialect
         self.delimiter = delimiter
         self.quotechar = quotechar
@@ -128,7 +145,7 @@ class Writer(object):
         if lineterminator is not None:
             writer_kwargs["lineterminator"] = lineterminator
 
-        self.__writer = csv.writer(output_file, **writer_kwargs)
+        self.__writer = csv.writer(self.output_file, **writer_kwargs)
 
         if not strip_null_bytes_on_write:
             self._writerow = py310_wrap_csv_writerow(self.__writer)
@@ -169,6 +186,22 @@ class Writer(object):
 
         self.should_write_header = False
         self._writerow(self.fieldnames)
+
+    def close(self):
+        if self.output_type != "path":
+            raise NotImplementedError("cannot close a file this instance did not open")
+
+        if self.output_file is not None:
+            self.output_file.close()
+        else:
+            raise TypeError("no file to close")
+        
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        if self.output_type == "path":
+            self.close()
 
 
 T = TypeVar("T")
