@@ -448,17 +448,21 @@ class Reader(object):
                 yield self.current_row_index + start, record
 
     def close(self):
-        if self.input_type == "url":
-            self.input_file.release_conn()
-
-        if self.input_file is not None and hasattr(self.input_file, "close"):
+        if self.input_file and self.input_type == "path":
             self.input_file.close()
+        elif self.input_file and self.input_type == "url":
+            self.input_file.release_conn()
+        elif not self.input_file:
+            pass
+        else:
+            raise NotImplementedError("cannot close a file this instance did not open")
 
     def __enter__(self):
         return self
 
     def __exit__(self, *args):
-        self.close()
+        if self.input_type == "path" or self.input_type == "url":
+            self.close()
 
     @classmethod
     def count(cls, input_file, max_rows=None, **kwargs) -> int:
